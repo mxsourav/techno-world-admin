@@ -83,7 +83,7 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-5">
             <a
-              href={import.meta.env.VITE_STOREFRONT_URL || "https://technoworldbooks.in"}
+              href={import.meta.env.VITE_STOREFRONT_URL || "https://techno-world-bookslogdata.vercel.app"}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-700 transition-colors bg-slate-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-full"
