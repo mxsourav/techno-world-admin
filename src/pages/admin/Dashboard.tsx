@@ -936,7 +936,7 @@ export default function Dashboard() {
                 <label className="block text-sm font-bold text-slate-700 mb-1">Discount Type</label>
                 <select value={couponForm.discountType} onChange={(e) => setCouponForm({...couponForm, discountType: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500">
                   <option value="PERCENTAGE">Percentage (%)</option>
-                  <option value="FLAT">Flat Amount (₹)</option>
+                  <option value="FIXED">Flat Amount (₹)</option>
                 </select>
               </div>
             </div>
