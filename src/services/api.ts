@@ -207,3 +207,11 @@ export const cmsService = {
   updateSection: (key: string, data: any) => api.put<any>(`/cms/sections/${key}`, data),
   toggleSection: (key: string) => api.patch<any>(`/cms/sections/${key}/toggle`),
 };
+
+export const couponService = {
+  getAll: () => api.get<any[]>('/coupons'),
+  create: (data: any) => api.post<any>('/coupons', data),
+  update: (id: string, data: any) => api.put<any>(`/coupons/${id}`, data),
+  delete: (id: string) => api.delete<any>(`/coupons/${id}`),
+  toggle: (id: string) => api.patch<any>(`/coupons/${id}/toggle`),
+};

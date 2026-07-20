@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import {
-  Users, ShoppingCart, IndianRupee, Plus, Search, BookOpen, AlertCircle, Image
+  Users, ShoppingCart, IndianRupee, Plus, Search, BookOpen, AlertCircle, Image, Tag
 } from 'lucide-react';
 import { formatINR } from '@/utils/helpers';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService } from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, couponService } from '@/services/api';
 import type { Book } from '@/types/index';
 import { toast } from 'sonner';
 
@@ -34,6 +34,24 @@ export default function Dashboard() {
   const [mediaItems, setMediaItems] = useState<any[]>([]);
   const [cmsSections, setCmsSections] = useState<any[]>([]);
   const [cmsEditing, setCmsEditing] = useState<Record<string, any>>({});
+  
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponModal, setCouponModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<any>(null);
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    discountType: 'PERCENTAGE',
+    discountValue: 0,
+    minCartValue: '',
+    maxDiscount: '',
+    validFrom: '',
+    validUntil: '',
+    usageLimit: '',
+    perUserLimit: 1,
+    firstOrderOnly: false,
+    categoryId: '',
+    isActive: true
+  });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -118,6 +136,117 @@ export default function Dashboard() {
       }).catch(console.error);
     }
   }, [tab]);
+
+  useEffect(() => {
+    if (tab === 'coupons') {
+      fetchCoupons();
+      if (categories.length === 0) {
+        categoryService.getCategories().then(res => setCategories(res.data)).catch(console.error);
+      }
+    }
+  }, [tab, categories.length]);
+
+  const fetchCoupons = () => {
+    couponService.getAll().then(res => setCoupons(res.data)).catch(console.error);
+  };
+
+  const handleSaveCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = { ...couponForm };
+      
+      if (payload.minCartValue === '') payload.minCartValue = null as any;
+      else payload.minCartValue = Number(payload.minCartValue);
+      
+      if (payload.maxDiscount === '') payload.maxDiscount = null as any;
+      else payload.maxDiscount = Number(payload.maxDiscount);
+      
+      if (payload.usageLimit === '') payload.usageLimit = null as any;
+      else payload.usageLimit = Number(payload.usageLimit);
+      
+      payload.discountValue = Number(payload.discountValue);
+      payload.perUserLimit = Number(payload.perUserLimit);
+      
+      if (payload.categoryId === '') payload.categoryId = null as any;
+      
+      if (payload.validFrom === '') payload.validFrom = null as any;
+      else payload.validFrom = new Date(payload.validFrom).toISOString() as any;
+      
+      if (payload.validUntil === '') payload.validUntil = null as any;
+      else payload.validUntil = new Date(payload.validUntil).toISOString() as any;
+
+      if (editingCoupon) {
+        await couponService.update(editingCoupon.id, payload);
+        toast.success('Coupon updated!');
+      } else {
+        await couponService.create(payload);
+        toast.success('Coupon created!');
+      }
+      setCouponModal(false);
+      fetchCoupons();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save coupon');
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string, code: string) => {
+    if (!window.confirm(`Are you sure you want to delete coupon ${code}?`)) return;
+    try {
+      await couponService.delete(id);
+      toast.success('Coupon deleted');
+      fetchCoupons();
+    } catch (err: any) {
+      toast.error(err.message || 'Delete failed');
+    }
+  };
+
+  const handleToggleCoupon = async (id: string) => {
+    try {
+      await couponService.toggle(id);
+      toast.success('Coupon status updated');
+      fetchCoupons();
+    } catch (err: any) {
+      toast.error(err.message || 'Toggle failed');
+    }
+  };
+
+  const openEditCoupon = (coupon: any) => {
+    setEditingCoupon(coupon);
+    setCouponForm({
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minCartValue: coupon.minCartValue || '',
+      maxDiscount: coupon.maxDiscount || '',
+      validFrom: coupon.validFrom ? new Date(coupon.validFrom).toISOString().slice(0, 16) : '',
+      validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : '',
+      usageLimit: coupon.usageLimit || '',
+      perUserLimit: coupon.perUserLimit || 1,
+      firstOrderOnly: coupon.firstOrderOnly || false,
+      categoryId: coupon.categoryId || '',
+      isActive: coupon.isActive
+    });
+    setCouponModal(true);
+  };
+
+  const openCreateCoupon = () => {
+    setEditingCoupon(null);
+    setCouponForm({
+      code: '',
+      discountType: 'PERCENTAGE',
+      discountValue: 0,
+      minCartValue: '',
+      maxDiscount: '',
+      validFrom: '',
+      validUntil: '',
+      usageLimit: '',
+      perUserLimit: 1,
+      firstOrderOnly: false,
+      categoryId: '',
+      isActive: true
+    });
+    setCouponModal(true);
+  };
 
   const saveCmsSection = async (key: string) => {
     try {
@@ -606,6 +735,74 @@ export default function Dashboard() {
                 );
               })
             )}
+            )}
+          </div>
+        )}
+
+        {tab === 'coupons' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">Coupons</h2>
+              <button onClick={openCreateCoupon} className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">
+                <Plus className="h-4 w-4" /> Create Coupon
+              </button>
+            </div>
+            
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-600">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-4 font-bold">Code</th>
+                      <th className="px-6 py-4 font-bold">Type & Value</th>
+                      <th className="px-6 py-4 font-bold">Min Order</th>
+                      <th className="px-6 py-4 font-bold">Usage</th>
+                      <th className="px-6 py-4 font-bold">Status</th>
+                      <th className="px-6 py-4 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {coupons.map((coupon) => (
+                      <tr key={coupon.id} className="hover:bg-slate-50/50">
+                        <td className="px-6 py-4 font-bold text-emerald-700">{coupon.code}</td>
+                        <td className="px-6 py-4">
+                          {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                        </td>
+                        <td className="px-6 py-4">{coupon.minCartValue ? `₹${coupon.minCartValue}` : 'None'}</td>
+                        <td className="px-6 py-4">
+                          {coupon.usedCount || 0} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : ''}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-bold ${coupon.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}`}>
+                            {coupon.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => handleToggleCoupon(coupon.id)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 font-medium">
+                              {coupon.isActive ? 'Disable' : 'Enable'}
+                            </button>
+                            <button onClick={() => openEditCoupon(coupon)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 font-medium">
+                              Edit
+                            </button>
+                            <button onClick={() => handleDeleteCoupon(coupon.id, coupon.code)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 font-medium">
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {coupons.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                          No coupons found. Create one to get started.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -730,6 +927,94 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {couponModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <form onSubmit={handleSaveCoupon} className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-black text-slate-900 mb-6">{editingCoupon ? 'Edit Coupon' : 'Create Coupon'}</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Coupon Code</label>
+                <input required type="text" value={couponForm.code} onChange={(e) => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500 uppercase" placeholder="e.g. SUMMER50" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Discount Type</label>
+                <select value={couponForm.discountType} onChange={(e) => setCouponForm({...couponForm, discountType: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500">
+                  <option value="PERCENTAGE">Percentage (%)</option>
+                  <option value="FLAT">Flat Amount (₹)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Discount Value</label>
+                <input required type="number" min="1" value={couponForm.discountValue} onChange={(e) => setCouponForm({...couponForm, discountValue: e.target.value as any})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Min Cart Value (Optional)</label>
+                <input type="number" min="0" value={couponForm.minCartValue} onChange={(e) => setCouponForm({...couponForm, minCartValue: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 500" />
+              </div>
+            </div>
+
+            {couponForm.discountType === 'PERCENTAGE' && (
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-slate-700 mb-1">Max Discount Cap (₹) (Optional)</label>
+                <input type="number" min="0" value={couponForm.maxDiscount} onChange={(e) => setCouponForm({...couponForm, maxDiscount: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 200" />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Valid From</label>
+                <input type="datetime-local" value={couponForm.validFrom} onChange={(e) => setCouponForm({...couponForm, validFrom: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Valid Until</label>
+                <input type="datetime-local" value={couponForm.validUntil} onChange={(e) => setCouponForm({...couponForm, validUntil: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Total Usage Limit (Optional)</label>
+                <input type="number" min="1" value={couponForm.usageLimit} onChange={(e) => setCouponForm({...couponForm, usageLimit: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 100" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Per User Limit</label>
+                <input required type="number" min="1" value={couponForm.perUserLimit} onChange={(e) => setCouponForm({...couponForm, perUserLimit: e.target.value as any})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-slate-700 mb-1">Category Restriction (Optional)</label>
+              <select value={couponForm.categoryId} onChange={(e) => setCouponForm({...couponForm, categoryId: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500">
+                <option value="">All Categories</option>
+                {categories.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-6 mb-6">
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
+                <input type="checkbox" checked={couponForm.firstOrderOnly} onChange={(e) => setCouponForm({...couponForm, firstOrderOnly: e.target.checked})} className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
+                First Order Only
+              </label>
+              <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
+                <input type="checkbox" checked={couponForm.isActive} onChange={(e) => setCouponForm({...couponForm, isActive: e.target.checked})} className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
+                Active
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="button" onClick={() => setCouponModal(false)} className="rounded-xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
+              <button type="submit" className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">Save Coupon</button>
+            </div>
+          </form>
         </div>
       )}
 
