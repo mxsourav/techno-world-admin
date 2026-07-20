@@ -21,10 +21,22 @@ function ScrollToTop() {
   return null;
 }
 
+export function KeepAlivePing() {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || '';
+      fetch(`${baseUrl}/health`).catch(() => {});
+    }, 14 * 60 * 1000); // 14 mins
+    return () => clearInterval(interval);
+  }, []);
+  return null;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <div className="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900">
+        <KeepAlivePing />
         <ScrollToTop />
         <Routes>
           {/* Admin Routes */}
