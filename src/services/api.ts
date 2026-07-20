@@ -168,6 +168,9 @@ export const adminService = {
     formData.append('file', file);
     return api.upload<any>(`/admin/books/${id}/pdf`, formData);
   },
+  deleteBook: (id: string) => api.delete<any>(`/admin/books/${id}`),
+  deleteAllBooks: () => api.delete<any>(`/admin/books/all`),
+  updateBook: (id: string, payload: any) => api.patch<any>(`/admin/books/${id}`, payload),
 };
 
 export const searchService = {
