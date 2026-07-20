@@ -81,7 +81,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\extract_test_2.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_extract_test_2_js",
-      "community": 45,
+      "community": 46,
       "norm_label": "extract_test_2.js"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\extract_test_2.js",
       "source_location": "L4",
       "id": "extract_test_2_extractimages",
-      "community": 45,
+      "community": 46,
       "norm_label": "extractimages()"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\extract_test_3.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_extract_test_3_js",
-      "community": 46,
+      "community": 47,
       "norm_label": "extract_test_3.js"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\extract_test_3.js",
       "source_location": "L4",
       "id": "extract_test_3_extractimages",
-      "community": 46,
+      "community": 47,
       "norm_label": "extractimages()"
     },
     {
@@ -153,7 +153,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\search_text.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_search_text_js",
-      "community": 47,
+      "community": 48,
       "norm_label": "search_text.js"
     },
     {
@@ -162,7 +162,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\search_text.js",
       "source_location": "L4",
       "id": "search_text_search",
-      "community": 47,
+      "community": 48,
       "norm_label": "search()"
     },
     {
@@ -171,7 +171,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_spatial_test_js",
-      "community": 48,
+      "community": 49,
       "norm_label": "spatial_test.js"
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test.js",
       "source_location": "L4",
       "id": "spatial_test_spatialextraction",
-      "community": 48,
+      "community": 49,
       "norm_label": "spatialextraction()"
     },
     {
@@ -189,7 +189,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test2.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_spatial_test2_js",
-      "community": 49,
+      "community": 50,
       "norm_label": "spatial_test2.js"
     },
     {
@@ -198,7 +198,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test2.js",
       "source_location": "L4",
       "id": "spatial_test2_spatialextraction",
-      "community": 49,
+      "community": 50,
       "norm_label": "spatialextraction()"
     },
     {
@@ -207,7 +207,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test3.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_spatial_test3_js",
-      "community": 50,
+      "community": 51,
       "norm_label": "spatial_test3.js"
     },
     {
@@ -216,7 +216,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\spatial_test3.js",
       "source_location": "L4",
       "id": "spatial_test3_spatialextraction",
-      "community": 50,
+      "community": 51,
       "norm_label": "spatialextraction()"
     },
     {
@@ -234,7 +234,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\text_debug.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_text_debug_js",
-      "community": 51,
+      "community": 52,
       "norm_label": "text_debug.js"
     },
     {
@@ -243,7 +243,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\text_debug.js",
       "source_location": "L4",
       "id": "text_debug_debug",
-      "community": 51,
+      "community": 52,
       "norm_label": "debug()"
     },
     {
@@ -252,7 +252,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\text_debug_2.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_text_debug_2_js",
-      "community": 52,
+      "community": 53,
       "norm_label": "text_debug_2.js"
     },
     {
@@ -261,7 +261,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\text_debug_2.js",
       "source_location": "L4",
       "id": "text_debug_2_debug",
-      "community": 52,
+      "community": 53,
       "norm_label": "debug()"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\scripts\\extractBooks.js",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_scripts_extractbooks_js",
-      "community": 53,
+      "community": 54,
       "norm_label": "extractbooks.js"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\scripts\\extractBooks.js",
       "source_location": "L19",
       "id": "extractbooks_extract",
-      "community": 53,
+      "community": 54,
       "norm_label": "extract()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\App.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_src_app_tsx",
-      "community": 54,
+      "community": 35,
       "norm_label": "app.tsx"
     },
     {
@@ -333,8 +333,17 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\App.tsx",
       "source_location": "L11",
       "id": "app_scrolltotop",
-      "community": 54,
+      "community": 35,
       "norm_label": "scrolltotop()"
+    },
+    {
+      "label": "KeepAlivePing()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\App.tsx",
+      "source_location": "L24",
+      "id": "app_keepaliveping",
+      "community": 35,
+      "norm_label": "keepaliveping()"
     },
     {
       "label": "main.tsx",
@@ -639,7 +648,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\alert.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_alert_tsx",
-      "community": 35,
+      "community": 36,
       "norm_label": "alert.tsx"
     },
     {
@@ -648,7 +657,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\alert.tsx",
       "source_location": "L22",
       "id": "alert_alert",
-      "community": 35,
+      "community": 36,
       "norm_label": "alert()"
     },
     {
@@ -657,7 +666,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\alert.tsx",
       "source_location": "L41",
       "id": "alert_cn",
-      "community": 35,
+      "community": 36,
       "norm_label": "cn()"
     },
     {
@@ -837,7 +846,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\calendar.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_calendar_tsx",
-      "community": 36,
+      "community": 37,
       "norm_label": "calendar.tsx"
     },
     {
@@ -846,7 +855,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\calendar.tsx",
       "source_location": "L18",
       "id": "calendar_calendar",
-      "community": 36,
+      "community": 37,
       "norm_label": "calendar()"
     },
     {
@@ -855,7 +864,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\calendar.tsx",
       "source_location": "L210",
       "id": "calendar_cn",
-      "community": 36,
+      "community": 37,
       "norm_label": "cn()"
     },
     {
@@ -945,7 +954,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\chart.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_chart_tsx",
-      "community": 37,
+      "community": 38,
       "norm_label": "chart.tsx"
     },
     {
@@ -954,7 +963,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\chart.tsx",
       "source_location": "L27",
       "id": "chart_usechart",
-      "community": 37,
+      "community": 38,
       "norm_label": "usechart()"
     },
     {
@@ -963,7 +972,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\chart.tsx",
       "source_location": "L57",
       "id": "chart_cn",
-      "community": 37,
+      "community": 38,
       "norm_label": "cn()"
     },
     {
@@ -1692,7 +1701,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\popover.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_popover_tsx",
-      "community": 38,
+      "community": 39,
       "norm_label": "popover.tsx"
     },
     {
@@ -1701,7 +1710,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\popover.tsx",
       "source_location": "L8",
       "id": "popover_popover",
-      "community": 38,
+      "community": 39,
       "norm_label": "popover()"
     },
     {
@@ -1710,7 +1719,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\popover.tsx",
       "source_location": "L14",
       "id": "popover_popovertrigger",
-      "community": 38,
+      "community": 39,
       "norm_label": "popovertrigger()"
     },
     {
@@ -1728,7 +1737,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\radio-group.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_radio_group_tsx",
-      "community": 39,
+      "community": 40,
       "norm_label": "radio-group.tsx"
     },
     {
@@ -1737,7 +1746,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\radio-group.tsx",
       "source_location": "L9",
       "id": "radio_group_radiogroup",
-      "community": 39,
+      "community": 40,
       "norm_label": "radiogroup()"
     },
     {
@@ -1746,7 +1755,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\radio-group.tsx",
       "source_location": "L22",
       "id": "radio_group_radiogroupitem",
-      "community": 39,
+      "community": 40,
       "norm_label": "radiogroupitem()"
     },
     {
@@ -1755,7 +1764,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\resizable.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_resizable_tsx",
-      "community": 40,
+      "community": 41,
       "norm_label": "resizable.tsx"
     },
     {
@@ -1764,7 +1773,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\resizable.tsx",
       "source_location": "L7",
       "id": "resizable_resizablepanelgroup",
-      "community": 40,
+      "community": 41,
       "norm_label": "resizablepanelgroup()"
     },
     {
@@ -1773,7 +1782,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\resizable.tsx",
       "source_location": "L23",
       "id": "resizable_resizablepanel",
-      "community": 40,
+      "community": 41,
       "norm_label": "resizablepanel()"
     },
     {
@@ -1782,7 +1791,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\scroll-area.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_scroll_area_tsx",
-      "community": 41,
+      "community": 42,
       "norm_label": "scroll-area.tsx"
     },
     {
@@ -1791,7 +1800,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\scroll-area.tsx",
       "source_location": "L8",
       "id": "scroll_area_scrollarea",
-      "community": 41,
+      "community": 42,
       "norm_label": "scrollarea()"
     },
     {
@@ -1800,7 +1809,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\scroll-area.tsx",
       "source_location": "L31",
       "id": "scroll_area_scrollbar",
-      "community": 41,
+      "community": 42,
       "norm_label": "scrollbar()"
     },
     {
@@ -2088,7 +2097,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\slider.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_kimi_agent_build_book_e_commerce_site_app_src_components_ui_slider_tsx",
-      "community": 42,
+      "community": 43,
       "norm_label": "slider.tsx"
     },
     {
@@ -2097,7 +2106,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\slider.tsx",
       "source_location": "L8",
       "id": "slider_slider",
-      "community": 42,
+      "community": 43,
       "norm_label": "slider()"
     },
     {
@@ -2106,7 +2115,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\Kimi_Agent_Build Book E\u2011Commerce Site\\app\\src\\components\\ui\\slider.tsx",
       "source_location": "L33",
       "id": "slider_cn",
-      "community": 42,
+      "community": 43,
       "norm_label": "cn()"
     },
     {
@@ -2385,7 +2394,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\hooks\\useAutoFeaturedBooks.ts",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_src_hooks_useautofeaturedbooks_ts",
-      "community": 43,
+      "community": 44,
       "norm_label": "useautofeaturedbooks.ts"
     },
     {
@@ -2394,7 +2403,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\hooks\\useAutoFeaturedBooks.ts",
       "source_location": "L27",
       "id": "useautofeaturedbooks_processpdf",
-      "community": 43,
+      "community": 44,
       "norm_label": "processpdf()"
     },
     {
@@ -2403,7 +2412,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\hooks\\useAutoFeaturedBooks.ts",
       "source_location": "L241",
       "id": "useautofeaturedbooks_useautofeaturedbooks",
-      "community": 43,
+      "community": 44,
       "norm_label": "useautofeaturedbooks()"
     },
     {
@@ -2520,7 +2529,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\pages\\Listing.tsx",
       "source_location": "L1",
       "id": "c_users_rodd_desktop_techno_world_admin_src_pages_listing_tsx",
-      "community": 44,
+      "community": 45,
       "norm_label": "listing.tsx"
     },
     {
@@ -2529,7 +2538,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\pages\\Listing.tsx",
       "source_location": "L81",
       "id": "listing_toggle",
-      "community": 44,
+      "community": 45,
       "norm_label": "toggle()"
     },
     {
@@ -2538,7 +2547,7 @@
       "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\pages\\Listing.tsx",
       "source_location": "L84",
       "id": "listing_clearall",
-      "community": 44,
+      "community": 45,
       "norm_label": "clearall()"
     },
     {
@@ -3111,6 +3120,18 @@
       "_tgt": "app_scrolltotop",
       "source": "c_users_rodd_desktop_techno_world_admin_src_app_tsx",
       "target": "app_scrolltotop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\rodd\\Desktop\\techno-world-admin\\src\\App.tsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "c_users_rodd_desktop_techno_world_admin_src_app_tsx",
+      "_tgt": "app_keepaliveping",
+      "source": "c_users_rodd_desktop_techno_world_admin_src_app_tsx",
+      "target": "app_keepaliveping",
       "confidence_score": 1.0
     },
     {

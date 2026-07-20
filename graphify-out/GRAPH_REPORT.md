@@ -1,11 +1,11 @@
 # Graph Report - C:\Users\rodd\Desktop\techno-world-admin  (2026-07-20)
 
 ## Corpus Check
-- 107 files · ~2,630,228 words
+- 107 files · ~2,630,298 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 316 nodes · 219 edges · 103 communities detected
+- 317 nodes · 220 edges · 103 communities detected
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -319,7 +319,7 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 45 - "Community 45"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 46 - "Community 46"
@@ -551,25 +551,23 @@ Cohesion: 1.0
 Nodes (0): 
 
 ## Knowledge Gaps
-- **Thin community `Community 45`** (2 nodes): `extract_test_2.js`, `extractImages()`
+- **Thin community `Community 46`** (2 nodes): `extract_test_2.js`, `extractImages()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (2 nodes): `extract_test_3.js`, `extractImages()`
+- **Thin community `Community 47`** (2 nodes): `extract_test_3.js`, `extractImages()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (2 nodes): `search_text.js`, `search()`
+- **Thin community `Community 48`** (2 nodes): `search_text.js`, `search()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (2 nodes): `spatial_test.js`, `spatialExtraction()`
+- **Thin community `Community 49`** (2 nodes): `spatial_test.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (2 nodes): `spatial_test2.js`, `spatialExtraction()`
+- **Thin community `Community 50`** (2 nodes): `spatial_test2.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (2 nodes): `spatial_test3.js`, `spatialExtraction()`
+- **Thin community `Community 51`** (2 nodes): `spatial_test3.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (2 nodes): `text_debug.js`, `debug()`
+- **Thin community `Community 52`** (2 nodes): `text_debug.js`, `debug()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (2 nodes): `text_debug_2.js`, `debug()`
+- **Thin community `Community 53`** (2 nodes): `text_debug_2.js`, `debug()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (2 nodes): `extractBooks.js`, `extract()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (2 nodes): `ScrollToTop()`, `App.tsx`
+- **Thin community `Community 54`** (2 nodes): `extractBooks.js`, `extract()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 55`** (2 nodes): `BookCover()`, `BookCover.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.

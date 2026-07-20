@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { MapPin, Phone, Facebook, Instagram } from 'lucide-react';
+import { MapPin, Phone, Globe, Camera } from 'lucide-react';
 
 export default function Footer() {
   const [uptime, setUptime] = useState('');
@@ -84,12 +84,12 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li>
               <a href="#" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
-                <Facebook className="h-4 w-4" /> Facebook
+                <Globe className="h-4 w-4" /> Facebook
               </a>
             </li>
             <li>
               <a href="#" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
-                <Instagram className="h-4 w-4" /> Instagram
+                <Camera className="h-4 w-4" /> Instagram
               </a>
             </li>
           </ul>
