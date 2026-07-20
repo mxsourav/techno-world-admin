@@ -153,27 +153,20 @@ export default function Dashboard() {
   const handleSaveCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = { ...couponForm };
-      
-      if (payload.minCartValue === '') payload.minCartValue = null as any;
-      else payload.minCartValue = Number(payload.minCartValue);
-      
-      if (payload.maxDiscount === '') payload.maxDiscount = null as any;
-      else payload.maxDiscount = Number(payload.maxDiscount);
-      
-      if (payload.usageLimit === '') payload.usageLimit = null as any;
-      else payload.usageLimit = Number(payload.usageLimit);
-      
-      payload.discountValue = Number(payload.discountValue);
-      payload.perUserLimit = Number(payload.perUserLimit);
-      
-      if (payload.categoryId === '') payload.categoryId = null as any;
-      
-      if (payload.validFrom === '') payload.validFrom = null as any;
-      else payload.validFrom = new Date(payload.validFrom).toISOString() as any;
-      
-      if (payload.validUntil === '') payload.validUntil = null as any;
-      else payload.validUntil = new Date(payload.validUntil).toISOString() as any;
+      const payload: any = {
+        code: couponForm.code,
+        type: couponForm.discountType,
+        value: Number(couponForm.discountValue),
+        minOrderAmount: couponForm.minCartValue ? Number(couponForm.minCartValue) : null,
+        maxDiscount: couponForm.maxDiscount ? Number(couponForm.maxDiscount) : null,
+        usageLimit: couponForm.usageLimit ? Number(couponForm.usageLimit) : null,
+        usageLimitPerUser: Number(couponForm.perUserLimit),
+        isFirstOrderOnly: couponForm.firstOrderOnly,
+        categoryId: couponForm.categoryId || null,
+        isActive: couponForm.isActive,
+        validFrom: couponForm.validFrom ? new Date(couponForm.validFrom).toISOString() : null,
+        validUntil: couponForm.validUntil ? new Date(couponForm.validUntil).toISOString() : null
+      };
 
       if (editingCoupon) {
         await couponService.update(editingCoupon.id, payload);
@@ -214,15 +207,15 @@ export default function Dashboard() {
     setEditingCoupon(coupon);
     setCouponForm({
       code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      minCartValue: coupon.minCartValue || '',
+      discountType: coupon.type,
+      discountValue: coupon.value,
+      minCartValue: coupon.minOrderAmount || '',
       maxDiscount: coupon.maxDiscount || '',
       validFrom: coupon.validFrom ? new Date(coupon.validFrom).toISOString().slice(0, 16) : '',
       validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : '',
       usageLimit: coupon.usageLimit || '',
-      perUserLimit: coupon.perUserLimit || 1,
-      firstOrderOnly: coupon.firstOrderOnly || false,
+      perUserLimit: coupon.usageLimitPerUser || 1,
+      firstOrderOnly: coupon.isFirstOrderOnly || false,
       categoryId: coupon.categoryId || '',
       isActive: coupon.isActive
     });
@@ -735,7 +728,6 @@ export default function Dashboard() {
                 );
               })
             )}
-            )}
           </div>
         )}
 
@@ -766,9 +758,9 @@ export default function Dashboard() {
                       <tr key={coupon.id} className="hover:bg-slate-50/50">
                         <td className="px-6 py-4 font-bold text-emerald-700">{coupon.code}</td>
                         <td className="px-6 py-4">
-                          {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                          {coupon.type === 'PERCENTAGE' ? `${coupon.value}%` : `₹${coupon.value}`}
                         </td>
-                        <td className="px-6 py-4">{coupon.minCartValue ? `₹${coupon.minCartValue}` : 'None'}</td>
+                        <td className="px-6 py-4">{coupon.minOrderAmount ? `₹${coupon.minOrderAmount}` : 'None'}</td>
                         <td className="px-6 py-4">
                           {coupon.usedCount || 0} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : ''}
                         </td>

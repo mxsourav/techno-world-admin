@@ -1,12 +1,12 @@
-# Graph Report - C:\Users\rodd\Desktop\techno-world-admin  (2026-07-20)
+# Graph Report - C:\Users\rodd\Desktop\techno-world-admin  (2026-07-21)
 
 ## Corpus Check
-- 107 files · ~2,630,829 words
+- 107 files · ~2,632,317 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 320 nodes · 223 edges · 103 communities detected
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
+- 326 nodes · 233 edges · 102 communities detected
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -112,25 +112,26 @@
 - [[_COMMUNITY_Community 99|Community 99]]
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 101|Community 101]]
-- [[_COMMUNITY_Community 102|Community 102]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `useAuthStore()` - 4 edges
-2. `extractImages()` - 2 edges
-3. `main()` - 2 edges
-4. `testPdf()` - 2 edges
+1. `fetchCoupons()` - 4 edges
+2. `useAuthStore()` - 4 edges
+3. `handleToggleCoupon()` - 3 edges
+4. `extractImages()` - 2 edges
 5. `main()` - 2 edges
-6. `extractText()` - 2 edges
+6. `testPdf()` - 2 edges
 7. `main()` - 2 edges
-8. `dump()` - 2 edges
-9. `run()` - 2 edges
-10. `AdminLayout()` - 2 edges
+8. `extractText()` - 2 edges
+9. `main()` - 2 edges
+10. `dump()` - 2 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AdminLayout()` --calls--> `useAuthStore()`  [INFERRED]
   C:\Users\rodd\Desktop\techno-world-admin\src\components\admin\AdminLayout.tsx → C:\Users\rodd\Desktop\techno-world-admin\src\store\AuthStore.tsx
 - `AdminProtectedRoute()` --calls--> `useAuthStore()`  [INFERRED]
   C:\Users\rodd\Desktop\techno-world-admin\src\components\admin\AdminProtectedRoute.tsx → C:\Users\rodd\Desktop\techno-world-admin\src\store\AuthStore.tsx
+- `toggle()` --calls--> `handleToggleCoupon()`  [INFERRED]
+  C:\Users\rodd\Desktop\techno-world-admin\src\pages\Listing.tsx → C:\Users\rodd\Desktop\techno-world-admin\src\pages\admin\Dashboard.tsx
 - `share()` --calls--> `formatINR()`  [INFERRED]
   C:\Users\rodd\Desktop\techno-world-admin\src\pages\Product.tsx → C:\Users\rodd\Desktop\techno-world-admin\src\utils\helpers.ts
 - `AdminLogin()` --calls--> `useAuthStore()`  [INFERRED]
@@ -139,8 +140,8 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.14
-Nodes (0): 
+Cohesion: 0.1
+Nodes (5): fetchCoupons(), handleDeleteCoupon(), handleSaveCoupon(), handleToggleCoupon(), toggle()
 
 ### Community 1 - "Community 1"
 Cohesion: 0.2
@@ -319,7 +320,7 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 45 - "Community 45"
-Cohesion: 0.67
+Cohesion: 1.0
 Nodes (0): 
 
 ### Community 46 - "Community 46"
@@ -546,124 +547,120 @@ Nodes (0):
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 102 - "Community 102"
-Cohesion: 1.0
-Nodes (0): 
-
 ## Knowledge Gaps
-- **Thin community `Community 46`** (2 nodes): `extract_test_2.js`, `extractImages()`
+- **Thin community `Community 45`** (2 nodes): `extract_test_2.js`, `extractImages()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (2 nodes): `extract_test_3.js`, `extractImages()`
+- **Thin community `Community 46`** (2 nodes): `extract_test_3.js`, `extractImages()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (2 nodes): `search_text.js`, `search()`
+- **Thin community `Community 47`** (2 nodes): `search_text.js`, `search()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (2 nodes): `spatial_test.js`, `spatialExtraction()`
+- **Thin community `Community 48`** (2 nodes): `spatial_test.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (2 nodes): `spatial_test2.js`, `spatialExtraction()`
+- **Thin community `Community 49`** (2 nodes): `spatial_test2.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (2 nodes): `spatial_test3.js`, `spatialExtraction()`
+- **Thin community `Community 50`** (2 nodes): `spatial_test3.js`, `spatialExtraction()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (2 nodes): `text_debug.js`, `debug()`
+- **Thin community `Community 51`** (2 nodes): `text_debug.js`, `debug()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (2 nodes): `text_debug_2.js`, `debug()`
+- **Thin community `Community 52`** (2 nodes): `text_debug_2.js`, `debug()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (2 nodes): `extractBooks.js`, `extract()`
+- **Thin community `Community 53`** (2 nodes): `extractBooks.js`, `extract()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (2 nodes): `BookCover()`, `BookCover.tsx`
+- **Thin community `Community 54`** (2 nodes): `BookCover()`, `BookCover.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (2 nodes): `Footer.tsx`, `Footer()`
+- **Thin community `Community 55`** (2 nodes): `Footer.tsx`, `Footer()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (2 nodes): `AspectRatio()`, `aspect-ratio.tsx`
+- **Thin community `Community 56`** (2 nodes): `AspectRatio()`, `aspect-ratio.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (2 nodes): `Badge()`, `badge.tsx`
+- **Thin community `Community 57`** (2 nodes): `Badge()`, `badge.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (2 nodes): `ButtonGroup()`, `button-group.tsx`
+- **Thin community `Community 58`** (2 nodes): `ButtonGroup()`, `button-group.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (2 nodes): `cn()`, `button.tsx`
+- **Thin community `Community 59`** (2 nodes): `cn()`, `button.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (2 nodes): `checkbox.tsx`, `Checkbox()`
+- **Thin community `Community 60`** (2 nodes): `checkbox.tsx`, `Checkbox()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (2 nodes): `collapsible.tsx`, `Collapsible()`
+- **Thin community `Community 61`** (2 nodes): `collapsible.tsx`, `Collapsible()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (2 nodes): `empty.tsx`, `cn()`
+- **Thin community `Community 62`** (2 nodes): `empty.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (2 nodes): `field.tsx`, `cn()`
+- **Thin community `Community 63`** (2 nodes): `field.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (2 nodes): `hover-card.tsx`, `HoverCard()`
+- **Thin community `Community 64`** (2 nodes): `hover-card.tsx`, `HoverCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (2 nodes): `input-group.tsx`, `cn()`
+- **Thin community `Community 65`** (2 nodes): `input-group.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (2 nodes): `input.tsx`, `Input()`
+- **Thin community `Community 66`** (2 nodes): `input.tsx`, `Input()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (2 nodes): `kbd.tsx`, `cn()`
+- **Thin community `Community 67`** (2 nodes): `kbd.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (2 nodes): `label.tsx`, `Label()`
+- **Thin community `Community 68`** (2 nodes): `label.tsx`, `Label()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (2 nodes): `separator.tsx`, `Separator()`
+- **Thin community `Community 69`** (2 nodes): `separator.tsx`, `Separator()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (2 nodes): `skeleton.tsx`, `Skeleton()`
+- **Thin community `Community 70`** (2 nodes): `skeleton.tsx`, `Skeleton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `spinner.tsx`, `Spinner()`
+- **Thin community `Community 71`** (2 nodes): `spinner.tsx`, `Spinner()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `textarea.tsx`, `cn()`
+- **Thin community `Community 72`** (2 nodes): `textarea.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (2 nodes): `tooltip.tsx`, `TooltipContent()`
+- **Thin community `Community 73`** (2 nodes): `tooltip.tsx`, `TooltipContent()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (2 nodes): `use-mobile.ts`, `useIsMobile()`
+- **Thin community `Community 74`** (2 nodes): `use-mobile.ts`, `useIsMobile()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (2 nodes): `utils.ts`, `cn()`
+- **Thin community `Community 75`** (2 nodes): `utils.ts`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (2 nodes): `About()`, `About.tsx`
+- **Thin community `Community 76`** (2 nodes): `About()`, `About.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (2 nodes): `Cart.tsx`, `useCartTotals()`
+- **Thin community `Community 77`** (2 nodes): `Cart.tsx`, `useCartTotals()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (2 nodes): `Home.tsx`, `byCategory()`
+- **Thin community `Community 78`** (2 nodes): `Home.tsx`, `byCategory()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (2 nodes): `Wishlist.tsx`, `loadData()`
+- **Thin community `Community 79`** (2 nodes): `Wishlist.tsx`, `loadData()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (1 nodes): `check-error.js`
+- **Thin community `Community 80`** (1 nodes): `check-error.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 82`** (1 nodes): `eslint.config.js`
+- **Thin community `Community 81`** (1 nodes): `eslint.config.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 83`** (1 nodes): `postcss.config.js`
+- **Thin community `Community 82`** (1 nodes): `postcss.config.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (1 nodes): `tailwind.config.js`
+- **Thin community `Community 83`** (1 nodes): `tailwind.config.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 85`** (1 nodes): `vite.config.ts`
+- **Thin community `Community 84`** (1 nodes): `vite.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (1 nodes): `main.tsx`
+- **Thin community `Community 85`** (1 nodes): `main.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (1 nodes): `AboutTechnoWorld.tsx`
+- **Thin community `Community 86`** (1 nodes): `AboutTechnoWorld.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 88`** (1 nodes): `BookCard.tsx`
+- **Thin community `Community 87`** (1 nodes): `BookCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (1 nodes): `PublishedByTechnoWorld.tsx`
+- **Thin community `Community 88`** (1 nodes): `PublishedByTechnoWorld.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 90`** (1 nodes): `StudyGuides.tsx`
+- **Thin community `Community 89`** (1 nodes): `StudyGuides.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 91`** (1 nodes): `progress.tsx`
+- **Thin community `Community 90`** (1 nodes): `progress.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 92`** (1 nodes): `sonner.tsx`
+- **Thin community `Community 91`** (1 nodes): `sonner.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 93`** (1 nodes): `switch.tsx`
+- **Thin community `Community 92`** (1 nodes): `switch.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (1 nodes): `toggle.tsx`
+- **Thin community `Community 93`** (1 nodes): `toggle.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 95`** (1 nodes): `featuredBooks.ts`
+- **Thin community `Community 94`** (1 nodes): `featuredBooks.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 96`** (1 nodes): `blog.ts`
+- **Thin community `Community 95`** (1 nodes): `blog.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 97`** (1 nodes): `Account.tsx`
+- **Thin community `Community 96`** (1 nodes): `Account.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 98`** (1 nodes): `Blog.tsx`
+- **Thin community `Community 97`** (1 nodes): `Blog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 99`** (1 nodes): `Checkout.tsx`
+- **Thin community `Community 98`** (1 nodes): `Checkout.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 100`** (1 nodes): `Help.tsx`
+- **Thin community `Community 99`** (1 nodes): `Help.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 101`** (1 nodes): `Track.tsx`
+- **Thin community `Community 100`** (1 nodes): `Track.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 102`** (1 nodes): `index.ts`
+- **Thin community `Community 101`** (1 nodes): `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
@@ -672,4 +669,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 3 inferred relationships involving `useAuthStore()` (e.g. with `AdminLayout()` and `AdminProtectedRoute()`) actually correct?**
   _`useAuthStore()` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.14 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
