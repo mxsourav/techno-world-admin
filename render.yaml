@@ -6,8 +6,6 @@ services:
   - type: web
     name: techno-world-admin
     runtime: static
-    region: singapore
-    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     headers:
