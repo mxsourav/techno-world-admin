@@ -1,11 +1,11 @@
 # Graph Report - C:\Users\rodd\Desktop\techno-world-admin  (2026-07-20)
 
 ## Corpus Check
-- 107 files · ~2,630,278 words
+- 107 files · ~2,630,832 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 317 nodes · 220 edges · 103 communities detected
+- 320 nodes · 223 edges · 103 communities detected
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -139,7 +139,7 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.18
+Cohesion: 0.14
 Nodes (0): 
 
 ### Community 1 - "Community 1"
@@ -671,3 +671,5 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Are the 3 inferred relationships involving `useAuthStore()` (e.g. with `AdminLayout()` and `AdminProtectedRoute()`) actually correct?**
   _`useAuthStore()` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.14 - nodes in this community are weakly interconnected._

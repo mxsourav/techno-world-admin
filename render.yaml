@@ -19,4 +19,8 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://techno-world-api.onrender.com/api/v1
+      - key: VITE_STOREFRONT_URL
+        value: https://techno-world-bookslogdata.vercel.app
+      - key: NODE_VERSION
+        value: "20"
     autoDeploy: true
