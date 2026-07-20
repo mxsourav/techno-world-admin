@@ -344,12 +344,21 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
-        <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx" onChange={handleFileUpload} />
-        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">
-          <Plus className="h-3.5 w-3.5" /> Bulk CSV Import
-        </button>
+        {(tab === 'products' || tab === 'inventory') && (
+          <div className="flex gap-2">
+            <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx" onChange={handleFileUpload} />
+            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">
+              <Plus className="h-3.5 w-3.5" /> Bulk CSV Import
+            </button>
+          </div>
+        )}
+        {tab === 'coupons' && (
+          <button onClick={openCreateCoupon} className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">
+            <Plus className="h-4 w-4" /> Create Coupon
+          </button>
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -733,12 +742,6 @@ export default function Dashboard() {
 
         {tab === 'coupons' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">Coupons</h2>
-              <button onClick={openCreateCoupon} className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">
-                <Plus className="h-4 w-4" /> Create Coupon
-              </button>
-            </div>
             
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
