@@ -53,7 +53,7 @@ function KeepAlivePing() {
   useEffect(() => {
     // Ping backend every 14 minutes to prevent Render free-tier sleep
     const interval = setInterval(() => {
-      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || '';
+      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || (import.meta.env.PROD ? 'https://techno-world-api-qw4j.onrender.com' : 'http://localhost:5000');
       fetch(`${baseUrl}/health`).catch(() => {});
     }, 14 * 60 * 1000); // 14 minutes
     

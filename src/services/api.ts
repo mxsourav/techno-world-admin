@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://techno-world-api.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://techno-world-api-qw4j.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
 
 export const getImageUrl = (path?: string) => {
   if (!path) return '';
