@@ -23,7 +23,7 @@ export default function PublishedByTechnoWorld() {
               Explore our exclusive in-house publications carefully prepared for students, educators, and competitive exam aspirants.
             </p>
           </div>
-          <Link to="/search?q=Techno%20World" className="group flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300">
+          <Link to="/search?publisher=Techno%20World%20Publications" className="group flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300">
             View All <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>

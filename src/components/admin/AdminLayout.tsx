@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/AuthStore';
 const TABS = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', name: 'Products', icon: Package },
-  { id: 'inventory', name: 'Inventory', icon: Package },
+
   { id: 'orders', name: 'Orders', icon: ShoppingCart },
   { id: 'customers', name: 'Customers', icon: Users },
   { id: 'coupons', name: 'Coupons', icon: Tag },
@@ -25,10 +25,10 @@ export default function AdminLayout() {
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
       {/* Sidebar - Dark/Premium */}
-      <aside className="w-64 flex-shrink-0 bg-slate-950 flex flex-col border-r border-slate-900">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
+      <aside className="w-64 flex-shrink-0 bg-slate-950 flex flex-col border-r border-slate-900 h-full">
+        <div className="p-6 flex items-center gap-3 border-b border-slate-800/50 flex-shrink-0">
           <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-900/50">
             <Store className="h-5 w-5 text-white" />
           </div>
@@ -59,7 +59,7 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800/50">
+        <div className="p-4 border-t border-slate-800/50 flex-shrink-0">
           <button
             onClick={logout}
             className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
@@ -71,9 +71,9 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 h-full">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-slate-200 sticky top-0 z-10">
+        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-slate-200 flex-shrink-0 z-10">
           {/* Breadcrumbs */}
           <div className="flex items-center text-sm font-medium">
             <span className="text-slate-400">Admin</span>
@@ -83,7 +83,7 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-5">
             <a
-              href={import.meta.env.VITE_STOREFRONT_URL || "https://techno-world-bookslogdata.vercel.app"}
+              href="/"
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-700 transition-colors bg-slate-100 hover:bg-emerald-50 px-3.5 py-1.5 rounded-full"
@@ -98,7 +98,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-slate-50 p-6">
           <Outlet />
         </main>
       </div>

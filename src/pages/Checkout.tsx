@@ -1,10 +1,10 @@
 /* eslint-disable no-useless-escape */
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { MapPin, CreditCard, CheckCircle2, Smartphone, Landmark, Banknote, Wallet, PartyPopper, Download } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, Smartphone, Landmark, Banknote, Wallet, PartyPopper, Download, Tag, AlertCircle } from 'lucide-react';
 import { formatINR } from '@/utils/helpers';
 import { useStore } from '@/store/StoreContext';
-import { useCartTotals } from './Cart';
+import { useCartTotals } from '@/hooks/useCartTotals';
 import type { Address, Order } from '@/types';
 import { toast } from 'sonner';
 
@@ -19,14 +19,15 @@ const PAYMENTS = [
 const INDIAN_STATES = ['West Bengal', 'Maharashtra', 'Delhi', 'Karnataka', 'Tamil Nadu', 'Uttar Pradesh', 'Telangana', 'Gujarat', 'Rajasthan', 'Kerala', 'Bihar', 'Madhya Pradesh', 'Punjab', 'Odisha', 'Assam', 'Other'];
 
 export default function Checkout() {
-  const { user, addresses, addAddress, clearCart } = useStore();
-  const { items, subtotal, shipping, discount, total, loading, error } = useCartTotals();
+  const { user, addresses, addAddress, clearCart, applyCoupon, clearCoupon } = useStore();
+  const { items, subtotal, shipping, discount, total, coupon, appliedCoupon, couponError, isValid, errors, loading, error } = useCartTotals();
   const [placed, setPlaced] = useState<Order | null>(null);
   const [selectedAddr, setSelectedAddr] = useState<string>('new');
   const [payment, setPayment] = useState('upi');
   const [form, setForm] = useState({ name: user?.name ?? '', phone: user?.phone ?? '', line1: '', city: '', state: 'West Bengal', pincode: '', type: 'Home' as 'Home' | 'Work' });
   const [upiId, setUpiId] = useState('');
   const [card, setCard] = useState({ number: '', expiry: '', cvv: '', name: '' });
+  const [couponInput, setCouponInput] = useState('');
 
   if (loading) {
     return (
@@ -53,7 +54,7 @@ export default function Checkout() {
         <PartyPopper className="mx-auto h-16 w-16 text-amber-500" />
         <h1 className="mt-4 text-2xl font-extrabold text-slate-900">Order placed successfully!</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Order <b className="text-slate-800">{placed.id}</b> · {placed.items.length} item(s) · {formatINR(placed.total)} · {placed.payment}
+          Order <b className="text-slate-800">{placed.id}</b> · {placed.items?.length} item(s) · {formatINR(placed.total)} · {placed.payment}
         </p>
         <div className="mt-6 rounded-xl border border-slate-100 bg-white p-5 text-left shadow-sm">
           <p className="flex items-center gap-2 text-sm font-bold text-slate-800"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Confirmation sent via WhatsApp, SMS & email</p>
@@ -76,7 +77,7 @@ export default function Checkout() {
     );
   }
 
-  if (items.length === 0) {
+  if (items?.length === 0) {
     return (
       <div className="mx-auto max-w-xl px-6 py-20 text-center">
         <p className="text-4xl">🛒</p>
@@ -108,42 +109,82 @@ export default function Checkout() {
 
     setIsSubmitting(true);
     try {
-      // Import orderService locally to avoid circular deps if any, or just import at top. We need it imported at top.
       const { orderService } = await import('@/services/api');
       
       const orderPayload = {
-        items: items.map(i => ({ bookId: i.bookId, quantity: i.qty })),
-        addressId: address.id, // For a real app, you'd save the address to DB first and get ID. Here we pass ID.
+        items: items.map((i: any) => ({ bookId: i.bookId, quantity: i.quantity })),
+        addressId: address.id,
         paymentMethod: PAYMENTS.find(p => p.id === payment)!.name,
+        couponCode: coupon,
       };
 
       const res = await orderService.create(orderPayload);
-      
-      toast.success('Payment successful!');
-      
-      // Simulate real order object based on what the frontend expects
-      const createdOrder: Order = {
-        id: res.data.orderNumber,
-        items: items.map(i => ({ bookId: i.bookId, qty: i.qty, price: i.book.price })),
-        subtotal,
-        shipping,
-        discount,
-        total: res.data.totalAmount,
-        status: res.data.status,
-        placedAt: new Date().toISOString(),
-        payment: res.data.paymentMethod,
-        address,
-        trackingId: `TW${Math.floor(10000000 + Math.random() * 90000000)}`,
-        courier: 'Delhivery',
-        expectedDelivery: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+      const serverOrder = res.data;
+
+      const finishOrder = () => {
+        const createdOrder: Order = {
+          id: serverOrder.orderNumber,
+          items: items.map((i: any) => ({ bookId: i.bookId, qty: i.quantity, price: i.unitPrice })),
+          subtotal,
+          shipping,
+          discount,
+          total: serverOrder.totalAmount,
+          status: serverOrder.status,
+          placedAt: new Date().toISOString(),
+          payment: serverOrder.paymentMethod,
+          address,
+          trackingId: `TW${Math.floor(10000000 + Math.random() * 90000000)}`,
+          courier: 'Delhivery',
+          expectedDelivery: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        
+        setPlaced(createdOrder);
+        if (clearCart) clearCart();
+        window.scrollTo(0, 0);
       };
-      
-      setPlaced(createdOrder);
-      if (clearCart) clearCart();
-      window.scrollTo(0, 0);
+
+      if (payment !== 'cod' && serverOrder.razorpayOrderId) {
+        const { loadRazorpay } = await import('@/utils/loadRazorpay');
+        const loaded = await loadRazorpay();
+        if (!loaded) {
+          throw new Error('Razorpay SDK failed to load. Are you online?');
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Fallback for demo
+          amount: Math.round(serverOrder.totalAmount * 100),
+          currency: 'INR',
+          name: 'Techno World Books',
+          description: 'Book Purchase',
+          order_id: serverOrder.razorpayOrderId,
+          handler: function (response: any) {
+            toast.success('Payment successful!');
+            finishOrder();
+          },
+          prefill: {
+            name: form.name,
+            contact: form.phone
+          },
+          theme: {
+            color: '#059669' // Emerald-600
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+          toast.error('Payment failed: ' + response.error.description);
+          setIsSubmitting(false);
+        });
+        rzp.open();
+        // Do not set isSubmitting to false yet, let handler or fail event do it
+      } else {
+        toast.success('Order placed successfully!');
+        finishOrder();
+        setIsSubmitting(false);
+      }
+
     } catch (err: any) {
       toast.error(err.message || 'Failed to place order');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -159,7 +200,7 @@ export default function Checkout() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">1</span>
               <MapPin className="h-4 w-4" /> Delivery Address
             </p>
-            {addresses.length > 0 && (
+            {addresses?.length > 0 && (
               <div className="mb-4 space-y-2">
                 {addresses.map((a) => (
                   <label key={a.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${selectedAddr === a.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
@@ -234,20 +275,71 @@ export default function Checkout() {
         <aside className="h-fit rounded-xl border border-slate-100 bg-white p-5 shadow-sm lg:sticky lg:top-36">
           <p className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-400">Order Summary</p>
           <div className="max-h-48 space-y-2 overflow-auto border-b border-dashed border-slate-200 pb-3">
-            {items.map((i) => (
+            {items.map((i: any) => (
               <div key={i.bookId} className="flex justify-between gap-2 text-sm">
-                <span className="line-clamp-1 text-slate-600">{i.book.title} × {i.qty}</span>
-                <span className="shrink-0 font-semibold">{formatINR(i.book.price * i.qty)}</span>
+                <span className="line-clamp-1 text-slate-600">{i.title} × {i.quantity}</span>
+                <span className="shrink-0 font-semibold">{formatINR(i.totalPrice)}</span>
               </div>
             ))}
           </div>
+
+          {/* Coupon Code Section in Checkout */}
+          <div className="my-3 border-b border-dashed border-slate-200 pb-3">
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-emerald-800">
+                  <Tag className="h-3.5 w-3.5" /> &ldquo;{appliedCoupon}&rdquo; applied ({formatINR(discount)} OFF)
+                </span>
+                <button onClick={clearCoupon} className="font-bold text-rose-600 hover:text-rose-700 underline">Remove</button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex gap-2">
+                  <input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Promo code (e.g. TEST20)"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-emerald-500 font-mono uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!couponInput.trim()) return toast.error('Enter a promo code');
+                      applyCoupon(couponInput.trim());
+                    }}
+                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="mt-1.5 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                    ✕ {couponError}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <dl className="mt-3 space-y-1.5 text-sm">
             <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd>{formatINR(subtotal)}</dd></div>
-            {discount > 0 && <div className="flex justify-between"><dt className="text-slate-500">Coupon</dt><dd className="text-emerald-700">− {formatINR(discount)}</dd></div>}
-            <div className="flex justify-between"><dt className="text-slate-500">Delivery</dt><dd>{shipping === 0 ? 'FREE' : formatINR(shipping)}</dd></div>
+            {discount > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Coupon discount</dt>
+                <dd className="font-bold text-emerald-700">− {formatINR(discount)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between"><dt className="text-slate-500">Delivery</dt><dd>{shipping === 0 ? <span className="font-semibold text-emerald-700">FREE</span> : formatINR(shipping)}</dd></div>
             <div className="flex justify-between border-t pt-2 text-base font-extrabold"><span>Total</span><span>{formatINR(total)}</span></div>
           </dl>
-          <button disabled={isSubmitting} onClick={handlePlaceOrder} className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 disabled:opacity-50">
+          {errors && errors?.length > 0 && (
+            <div className="mt-3 rounded-lg bg-rose-50 p-3 text-xs text-rose-700">
+              <ul className="list-inside list-disc">
+                {errors.map((e: string, i: number) => <li key={i}>{e}</li>)}
+              </ul>
+            </div>
+          )}
+          <button disabled={isSubmitting || !isValid} onClick={handlePlaceOrder} className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 disabled:opacity-50">
             {isSubmitting ? 'Processing...' : payment === 'cod' ? `Place Order · ${formatINR(total)}` : `Pay ${formatINR(total)} Securely`}
           </button>
           <p className="mt-2 text-center text-[11px] text-slate-400">🔒 256-bit SSL encrypted · PCI-DSS compliant · Demo checkout, no real charge</p>

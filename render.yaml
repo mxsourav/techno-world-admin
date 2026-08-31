@@ -1,26 +1,7 @@
-# ─── Render Blueprint ───────────────────────────────────────
-# Deploys the standalone Admin Panel React SPA
-# https://docs.render.com/infrastructure-as-code
-
 services:
   - type: web
-    name: techno-world-admin
-    runtime: static
-    buildCommand: npm install && npm run build
+    name: book-ecommerce-site
+    env: static
+    buildCommand: pnpm install && pnpm run build
     staticPublishPath: dist
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=0, must-revalidate
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        value: https://techno-world-api.onrender.com/api/v1
-      - key: VITE_STOREFRONT_URL
-        value: https://techno-world-bookslogdata.vercel.app
-      - key: NODE_VERSION
-        value: "20"
     autoDeploy: true

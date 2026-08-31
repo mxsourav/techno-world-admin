@@ -10,7 +10,7 @@ export default function HeroFeaturedBooks() {
   const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const featuredBooks = AUTO_FEATURED_BOOKS ? autoBooks : manualFeaturedBooks;
+  const featuredBooks = (AUTO_FEATURED_BOOKS ? autoBooks : manualFeaturedBooks).slice(0, 5);
 
   const startTimer = () => {
     timerRef.current = setInterval(() => {

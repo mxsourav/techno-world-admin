@@ -1,5 +1,5 @@
 import type { Book } from '@/types';
-import { Trophy, Stethoscope, Settings, Backpack, GraduationCap, BookOpen, Lightbulb, Flower2, Globe2, Gem, Building2 } from 'lucide-react';
+import { Trophy, Stethoscope, Settings, Backpack, GraduationCap, BookOpen, Lightbulb, Flower2, Globe2, Gem } from 'lucide-react';
 
 const rv = (user: string, rating: number, title: string, body: string, date: string): import('@/types').Review => ({
   id: Math.random().toString(36).slice(2, 9),
@@ -17,7 +17,6 @@ export const CATEGORIES = [
   { slug: 'bengali', name: 'Bengali Story', icon: <Flower2 className="w-4 h-4" /> },
   { slug: 'international', name: 'International', icon: <Globe2 className="w-4 h-4" /> },
   { slug: 'rare', name: 'Rare', icon: <Gem className="w-4 h-4" /> },
-  { slug: 'techno-world', name: 'Our Publications', icon: <Building2 className="w-4 h-4" /> },
 ];
 
 export const BOOKS: Book[] = [

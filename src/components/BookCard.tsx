@@ -1,5 +1,5 @@
-import { Link } from 'react-router';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Heart, ShoppingCart, Star, Zap } from 'lucide-react';
 import type { Book } from '@/types';
 import { discountPct, formatINR } from '@/utils/helpers';
 import { useStore } from '@/store/StoreContext';
@@ -21,6 +21,7 @@ export function RatingStars({ rating, size = 3.5 }: { rating: number; size?: num
 
 export function BookCard({ book }: { book: Book }) {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
+  const navigate = useNavigate();
   const pct = discountPct(book);
   const wish = isWishlisted(book.id);
   return (
@@ -32,6 +33,11 @@ export function BookCard({ book }: { book: Book }) {
       >
         <Heart className={`h-4 w-4 ${wish ? 'fill-rose-500' : ''}`} />
       </button>
+      {book.edition && (
+        <span className="absolute left-3 top-4 z-10 rounded-sm bg-emerald-600/95 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white shadow-md ring-1 ring-emerald-400/50 backdrop-blur-sm">
+          {book.edition}
+        </span>
+      )}
       <Link to={`/book/${book.slug}`} className="block">
         <BookCover book={book} className="text-sm transition-transform duration-300 group-hover:-translate-y-1" />
         <div className="mt-3 flex-1">
@@ -53,12 +59,25 @@ export function BookCard({ book }: { book: Book }) {
           {book.stock <= 5 && <p className="mt-0.5 text-[11px] font-medium text-orange-600">Only {book.stock} left!</p>}
         </div>
       </Link>
-      <button
-        onClick={() => addToCart(book.id)}
-        className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-amber-400 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-amber-500"
-      >
-        <ShoppingCart className="h-3.5 w-3.5" /> Add to Cart
-      </button>
+      <div className="mt-2 flex gap-1.5">
+        <button
+          onClick={(e) => { e.preventDefault(); addToCart(book.id); }}
+          className="flex flex-1 items-center justify-center rounded-lg bg-slate-100 py-1.5 transition hover:bg-slate-200"
+          title="Add to Cart"
+        >
+          <ShoppingCart className="h-4 w-4 text-slate-700" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            addToCart(book.id);
+            navigate('/checkout');
+          }}
+          className="flex-[3] flex items-center justify-center gap-1 rounded-lg bg-amber-400 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-amber-500"
+        >
+          <Zap className="h-3 w-3" /> Buy Now
+        </button>
+      </div>
     </div>
   );
 }

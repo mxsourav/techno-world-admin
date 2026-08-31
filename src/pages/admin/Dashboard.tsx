@@ -1,104 +1,44 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import {
-  Users, ShoppingCart, IndianRupee, Plus, Search, BookOpen, AlertCircle, Image, Tag
-} from 'lucide-react';
+import { BookOpen, Plus, Search, ShoppingCart, Users, Download, IndianRupee, AlertCircle, Pause, Play, Trash2, Edit3, CheckCircle2, Clock } from 'lucide-react';
 import { formatINR } from '@/utils/helpers';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, couponService } from '@/services/api';
 import type { Book } from '@/types/index';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService } from '@/services/api';
 import { toast } from 'sonner';
+import PromotionEditModal from '@/components/admin/PromotionEditModal';
+import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
 
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tab = searchParams.get('tab') || 'dashboard';
 
-  const [stockOverride, setStockOverride] = useState<Record<string, number>>({});
-  const [prodQuery, setProdQuery] = useState('');
+
   
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importAnalysis, setImportAnalysis] = useState<any>(null);
   
-  const [previewBookId, setPreviewBookId] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [isUploading, setIsUploading] = useState(false);
+
 
   const [stats, setStats] = useState({ 
     revenue: 0, totalOrders: 0, aov: 0, lowStock: 0, 
     totalBooks: 0, outOfStock: 0, totalUsers: 0 
   });
   const [categories, setCategories] = useState<any[]>([]);
-  const [products, setProducts] = useState<Book[]>([]);
+
   const [lowStockBooks, setLowStockBooks] = useState<Book[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [mediaItems, setMediaItems] = useState<any[]>([]);
   const [cmsSections, setCmsSections] = useState<any[]>([]);
-  const [cmsEditing, setCmsEditing] = useState<Record<string, any>>({});
-  
-  const [coupons, setCoupons] = useState<any[]>([]);
-  const [couponModal, setCouponModal] = useState(false);
-  const [editingCoupon, setEditingCoupon] = useState<any>(null);
-  const [couponForm, setCouponForm] = useState({
-    code: '',
-    discountType: 'PERCENTAGE',
-    discountValue: 0,
-    minCartValue: '',
-    maxDiscount: '',
-    validFrom: '',
-    validUntil: '',
-    usageLimit: '',
-    perUserLimit: 1,
-    firstOrderOnly: false,
-    categoryId: '',
-    isActive: true
-  });
+  const [cmsEditing, setCmsEditing] = useState<Record<string, any>>({});  const [isUploading, setIsUploading] = useState(false);
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [editingPromotion, setEditingPromotion] = useState<any>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
-  
-  const [editingBook, setEditingBook] = useState<any>(null);
+  const [importResult, setImportResult] = useState<any>(null);
 
-  const handleDeleteBook = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
-    try {
-      await adminService.deleteBook(id);
-      toast.success('Book deleted');
-      setProducts(products.filter(b => b.id !== id));
-      bookService.getBooks({ limit: 6 }).then(res => setLowStockBooks(res.data)).catch(console.error);
-    } catch (err: any) {
-      toast.error(err.message || 'Delete failed');
-    }
-  };
 
-  const handleDeleteAllBooks = async () => {
-    if (!window.confirm(`DANGER: Are you sure you want to delete ALL books in the catalog? This cannot be undone.`)) return;
-    try {
-      await adminService.deleteAllBooks();
-      toast.success('All books deleted');
-      setProducts([]);
-      setLowStockBooks([]);
-    } catch (err: any) {
-      toast.error(err.message || 'Delete failed');
-    }
-  };
-
-  const handleUpdateBook = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingBook) return;
-    try {
-      await adminService.updateBook(editingBook.id, {
-        title: editingBook.title,
-        price: Number(editingBook.price),
-        mrp: Number(editingBook.mrp),
-        stock: Number(editingBook.stock),
-      });
-      toast.success('Book updated!');
-      setProducts(products.map(b => b.id === editingBook.id ? { ...b, ...editingBook } : b));
-      setEditingBook(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Update failed');
-    }
-  };
 
   useEffect(() => {
     if (tab === 'dashboard') {
@@ -108,11 +48,6 @@ export default function Dashboard() {
     }
   }, [tab]);
 
-  useEffect(() => {
-    if (tab === 'products' || tab === 'inventory') {
-      bookService.getBooks({ search: prodQuery, limit: 50 }).then(res => setProducts(res.data)).catch(console.error);
-    }
-  }, [tab, prodQuery]);
 
   useEffect(() => {
     if (tab === 'orders') {
@@ -139,107 +74,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (tab === 'coupons') {
-      fetchCoupons();
-      if (categories.length === 0) {
-        categoryService.getCategories().then(res => setCategories(res.data)).catch(console.error);
-      }
+      promotionService.getAll().then(res => setPromotions(res.data)).catch(console.error);
     }
-  }, [tab, categories.length]);
-
-  const fetchCoupons = () => {
-    couponService.getAll().then(res => setCoupons(res.data)).catch(console.error);
-  };
-
-  const handleSaveCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload: any = {
-        code: couponForm.code,
-        type: couponForm.discountType,
-        value: Number(couponForm.discountValue),
-        minOrderAmount: couponForm.minCartValue ? Number(couponForm.minCartValue) : null,
-        maxDiscount: couponForm.maxDiscount ? Number(couponForm.maxDiscount) : null,
-        usageLimit: couponForm.usageLimit ? Number(couponForm.usageLimit) : null,
-        usageLimitPerUser: Number(couponForm.perUserLimit),
-        isFirstOrderOnly: couponForm.firstOrderOnly,
-        categoryId: couponForm.categoryId || null,
-        isActive: couponForm.isActive,
-        validFrom: couponForm.validFrom ? new Date(couponForm.validFrom).toISOString() : null,
-        validUntil: couponForm.validUntil ? new Date(couponForm.validUntil).toISOString() : null
-      };
-
-      if (editingCoupon) {
-        await couponService.update(editingCoupon.id, payload);
-        toast.success('Coupon updated!');
-      } else {
-        await couponService.create(payload);
-        toast.success('Coupon created!');
-      }
-      setCouponModal(false);
-      fetchCoupons();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save coupon');
-    }
-  };
-
-  const handleDeleteCoupon = async (id: string, code: string) => {
-    if (!window.confirm(`Are you sure you want to delete coupon ${code}?`)) return;
-    try {
-      await couponService.delete(id);
-      toast.success('Coupon deleted');
-      fetchCoupons();
-    } catch (err: any) {
-      toast.error(err.message || 'Delete failed');
-    }
-  };
-
-  const handleToggleCoupon = async (id: string) => {
-    try {
-      await couponService.toggle(id);
-      toast.success('Coupon status updated');
-      fetchCoupons();
-    } catch (err: any) {
-      toast.error(err.message || 'Toggle failed');
-    }
-  };
-
-  const openEditCoupon = (coupon: any) => {
-    setEditingCoupon(coupon);
-    setCouponForm({
-      code: coupon.code,
-      discountType: coupon.type,
-      discountValue: coupon.value,
-      minCartValue: coupon.minOrderAmount || '',
-      maxDiscount: coupon.maxDiscount || '',
-      validFrom: coupon.validFrom ? new Date(coupon.validFrom).toISOString().slice(0, 16) : '',
-      validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : '',
-      usageLimit: coupon.usageLimit || '',
-      perUserLimit: coupon.usageLimitPerUser || 1,
-      firstOrderOnly: coupon.isFirstOrderOnly || false,
-      categoryId: coupon.categoryId || '',
-      isActive: coupon.isActive
-    });
-    setCouponModal(true);
-  };
-
-  const openCreateCoupon = () => {
-    setEditingCoupon(null);
-    setCouponForm({
-      code: '',
-      discountType: 'PERCENTAGE',
-      discountValue: 0,
-      minCartValue: '',
-      maxDiscount: '',
-      validFrom: '',
-      validUntil: '',
-      usageLimit: '',
-      perUserLimit: 1,
-      firstOrderOnly: false,
-      categoryId: '',
-      isActive: true
-    });
-    setCouponModal(true);
-  };
+  }, [tab]);
 
   const saveCmsSection = async (key: string) => {
     try {
@@ -289,13 +126,29 @@ export default function Dashboard() {
         strategy: 'SKIP', // or OVERWRITE
       });
       toast.success(`Import success! Added: ${(res as any).recordsAdded}, Updated: ${(res as any).recordsUpdated}, Skipped: ${(res as any).recordsSkipped}`);
-      setIsImportModalOpen(false);
+      setImportResult(res);
       setImportAnalysis(null);
     } catch (err: any) {
       toast.error(err.message || 'Import failed');
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const getStock = (_id: string, def: number) => def;
+
+  const downloadErrorsCsv = () => {
+    if (!importResult?.errors?.length) return;
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "Row,Error Message\n" 
+        + importResult.errors.map((e: any) => `${e.row},"${e.message.replace(/"/g, '""')}"`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "import_errors.csv");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const updateOrderStatus = async (id: string, status: string) => {
@@ -308,62 +161,24 @@ export default function Dashboard() {
     }
   };
 
-  const getStock = (id: string, def: number) => stockOverride[id] ?? def;
-
-  const handleOpenPreview = async (id: string) => {
-    setPreviewBookId(id);
-    setPreviewData(null);
-    try {
-      const res = await adminService.getBookPreview(id);
-      if (res.success) setPreviewData(res.data);
-    } catch (err: any) {
-      toast.error('Failed to load preview');
-      setPreviewBookId(null);
-    }
-  };
-
-  const handleFileUploadPreview = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'pdf') => {
-    const file = e.target.files?.[0];
-    if (!file || !previewBookId) return;
-    setIsUploading(true);
-    try {
-      if (type === 'cover') {
-        const res = await adminService.uploadBookCover(previewBookId, file);
-        toast.success(res.message);
-        setPreviewData((prev: any) => ({ ...prev, coverUrl: res.data.coverUrl }));
-      } else {
-        const res = await adminService.uploadBookPdf(previewBookId, file);
-        toast.success(res.message);
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
-        {(tab === 'products' || tab === 'inventory') && (
-          <div className="flex gap-2">
+        {['dashboard', 'products', 'inventory'].includes(tab) && (
+          <>
             <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx" onChange={handleFileUpload} />
             <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">
               <Plus className="h-3.5 w-3.5" /> Bulk CSV Import
             </button>
-          </div>
-        )}
-        {tab === 'coupons' && (
-          <button onClick={openCreateCoupon} className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">
-            <Plus className="h-4 w-4" /> Create Coupon
-          </button>
+          </>
         )}
       </div>
 
       <div className="min-w-0 flex-1">
         {tab === 'dashboard' && (
-          <div>
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
                 { icon: IndianRupee, t: 'Revenue (30d)', v: formatINR(stats.revenue), s: '+18.2% vs last month', c: 'emerald' },
@@ -380,98 +195,108 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="mb-6 text-sm font-bold text-slate-800">Weekly sales</p>
-              <div className="flex h-48 items-end gap-4">
-                {[42, 58, 50, 71, 66, 88, 95].map((v, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500">{v}k</span>
-                    <div className="w-full rounded-t-md bg-gradient-to-t from-emerald-600 to-emerald-400" style={{ height: `${v}%` }} />
-                    <span className="text-xs font-medium text-slate-400">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</span>
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Main Column */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <p className="text-sm font-bold text-slate-800">Recent Orders</p>
+                    <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700">View All</button>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="space-y-4">
+                    {((stats as any).recentOrders || []).map((o: any) => (
+                      <div key={o.id} className="flex items-center justify-between border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{o.orderNumber}</p>
+                          <p className="text-xs text-slate-500 mt-1">{o.user?.name || 'Guest'} · {o.items?.length || 0} items</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-slate-900 text-sm">{formatINR(o.totalAmount)}</p>
+                          <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${o.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                            {o.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {!(stats as any).recentOrders?.length && <p className="text-sm text-slate-500">No recent orders found.</p>}
+                  </div>
+                </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="mb-4 text-sm font-bold text-slate-800">Top categories</p>
-                {categories.slice(0, 6).map((c, i) => {
-                  const pct = [92, 78, 64, 55, 41, 33][i] || Math.floor(Math.random() * 50) + 10;
-                  return (
-                    <div key={c.slug} className="mb-3.5 last:mb-0">
-                      <div className="flex justify-between text-sm mb-1.5"><span className="font-semibold text-slate-700">{c.name}</span><span className="text-slate-500 font-medium">{pct}%</span></div>
-                      <div className="h-2 rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} /></div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p className="mb-4 text-sm font-bold text-slate-800">Top Categories</p>
+                    {categories.slice(0, 5).map((c, i) => {
+                      const pct = [92, 78, 64, 55, 41][i] || Math.floor(Math.random() * 50) + 10;
+                      return (
+                        <div key={c.slug} className="mb-3.5 last:mb-0">
+                          <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold text-slate-700">{c.name}</span><span className="text-slate-500 font-medium">{pct}%</span></div>
+                          <div className="h-2 rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} /></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p className="mb-4 text-sm font-bold text-slate-800">Coupon Usage & Marketing</p>
+                    <div className="flex flex-col h-full justify-center text-center text-sm text-slate-500 p-4 border-2 border-dashed border-slate-100 rounded-lg">
+                      <p className="font-medium text-slate-600 mb-1">Coupon System Pending</p>
+                      <p className="text-xs">Analytics will appear here once the coupon module is fully implemented.</p>
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="mb-4 text-sm font-bold text-slate-800">⚠️ Low stock alerts ({stats.lowStock || 0})</p>
-                <div className="space-y-3">
-                  {lowStockBooks.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm last:border-0 last:pb-0">
-                      <span className="line-clamp-1 font-medium text-slate-700">{b.title}</span>
-                      <span className={`ml-3 shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${getStock(b.id, b.stock) <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {getStock(b.id, b.stock)} left
-                      </span>
+
+              {/* Sidebar Column */}
+              <div className="space-y-6">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-rose-800 flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Low Stock Alerts</p>
+                    <span className="bg-rose-200 text-rose-800 text-xs font-bold px-2 py-0.5 rounded-full">{stats.lowStock || 0}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {lowStockBooks.map((b) => (
+                      <div key={b.id} className="flex flex-col border-b border-rose-200/50 pb-3 text-sm last:border-0 last:pb-0">
+                        <span className="line-clamp-2 font-medium text-rose-900 leading-tight">{b.title}</span>
+                        <div className="mt-2 flex justify-between items-center">
+                          <span className="font-mono text-xs text-rose-700">{b.isbn || 'No ISBN'}</span>
+                          <span className="shrink-0 rounded bg-white px-2 py-0.5 text-xs font-bold text-rose-700 shadow-sm">
+                            {getStock(b.id, b.stock)} left
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {lowStockBooks.length === 0 && <p className="text-xs text-rose-600">All stock levels are healthy.</p>}
+                  </div>
+                  <button className="w-full mt-4 bg-white border border-rose-200 text-rose-700 text-xs font-bold py-2 rounded-lg hover:bg-rose-100 transition-colors">
+                    Manage Inventory
+                  </button>
+                </div>
+                
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <p className="mb-4 text-sm font-bold text-slate-800">Latest Reviews</p>
+                  <div className="space-y-4">
+                    <div className="border-b border-slate-100 pb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-sm text-slate-800">Great Quality</span>
+                        <span className="text-amber-500 text-xs tracking-wider">★★★★★</span>
+                      </div>
+                      <p className="text-xs text-slate-500 line-clamp-2">"The book arrived in perfect condition and the content is exactly what I needed for my exams."</p>
                     </div>
-                  ))}
+                    <div className="border-b border-slate-100 pb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-sm text-slate-800">Fast Delivery</span>
+                        <span className="text-amber-500 text-xs tracking-wider">★★★★☆</span>
+                      </div>
+                      <p className="text-xs text-slate-500 line-clamp-2">"Delivered within 2 days. The packaging could be slightly better but overall good."</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {(tab === 'products' || tab === 'inventory') && (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm font-bold text-slate-800">{tab === 'products' ? 'Product Management' : 'Inventory Management'} ({products.length} titles)</p>
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input value={prodQuery} onChange={(e) => setProdQuery(e.target.value)} placeholder="Title or ISBN…" className="w-56 text-sm outline-none" />
-              </div>
-              <button onClick={handleDeleteAllBooks} className="flex items-center gap-2 rounded-lg bg-red-50 text-red-600 px-3 py-2 text-sm font-bold hover:bg-red-100 transition-colors">
-                Delete All Books
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                    <th className="pb-3 pr-4 font-semibold">Book</th><th className="pb-3 pr-4 font-semibold">ISBN</th><th className="pb-3 pr-4 font-semibold">Category</th>
-                    <th className="pb-3 pr-4 font-semibold">Price</th><th className="pb-3 pr-4 font-semibold">Stock</th><th className="pb-3 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {products.map((b) => (
-                    <tr key={b.id}>
-                      <td className="max-w-xs py-3 pr-4"><span className="line-clamp-1 font-semibold text-slate-900">{b.title}</span></td>
-                      <td className="pr-4 font-mono text-slate-500">{b.isbn}</td>
-                      <td className="pr-4 text-slate-600">{(b.category as any)?.name || 'N/A'}</td>
-                      <td className="pr-4 font-semibold text-slate-900">{formatINR(b.price)}</td>
-                      <td className="pr-4">
-                        <input
-                          type="number"
-                          value={getStock(b.id, b.stock)}
-                          min={0}
-                          onChange={(e) => setStockOverride({ ...stockOverride, [b.id]: Math.max(0, parseInt(e.target.value) || 0) })}
-                          className={`w-20 rounded-lg border px-2 py-1.5 text-center font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 ${getStock(b.id, b.stock) <= 5 ? 'border-rose-300 bg-rose-50 text-rose-700' : 'border-slate-200'}`}
-                        />
-                      </td>
-                      <td className="space-x-2 whitespace-nowrap">
-                        <button onClick={() => setEditingBook(b)} className="rounded-md bg-slate-100 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-200 transition-colors">Edit</button>
-                        <button onClick={() => handleOpenPreview(b.id)} className="rounded-md bg-emerald-50 px-3 py-1.5 font-bold text-emerald-700 hover:bg-emerald-100 transition-colors ml-2">Media</button>
-                        <button onClick={() => handleDeleteBook(b.id, b.title)} className="rounded-md bg-red-50 px-3 py-1.5 font-bold text-red-700 hover:bg-red-100 transition-colors ml-2">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
+        {tab === 'products' && <ProductsWorkspace />}
         {tab === 'orders' && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="mb-6 text-sm font-bold text-slate-800">Order Management</p>
@@ -732,6 +557,81 @@ export default function Dashboard() {
                           </div>
                         </>
                       )}
+                      {section.sectionKey === 'promo-banners' && (
+                        <>
+                          <div className="space-y-4">
+                            <p className="text-xs text-slate-500 mb-2">Manage your promotional banners here. They will appear on the homepage below the hero section.</p>
+                            {(cfg.banners || []).map((banner: any, idx: number) => (
+                              <div key={idx} className="rounded-lg border border-slate-200 p-4 space-y-3 bg-slate-50 relative">
+                                <div className="absolute top-3 right-3 flex gap-2">
+                                  <button onClick={() => {
+                                    const banners = [...(cfg.banners || [])];
+                                    banners[idx] = { ...banners[idx], isActive: !banners[idx].isActive };
+                                    updateField('banners', banners);
+                                  }} className={`text-xs font-bold px-2 py-1 rounded ${banner.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                                    {banner.isActive ? 'Active' : 'Inactive'}
+                                  </button>
+                                  <button onClick={() => {
+                                    const banners = (cfg.banners || []).filter((_: any, i: number) => i !== idx);
+                                    updateField('banners', banners);
+                                  }} className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-100 px-2 py-1 rounded">Remove</button>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 pt-6">
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1">Image URL</label>
+                                    <input value={banner.imageUrl || ''} onChange={e => {
+                                      const banners = [...(cfg.banners || [])];
+                                      banners[idx] = { ...banners[idx], imageUrl: e.target.value };
+                                      updateField('banners', banners);
+                                    }} placeholder="/banners/example.jpg" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1">Link URL</label>
+                                    <input value={banner.linkUrl || ''} onChange={e => {
+                                      const banners = [...(cfg.banners || [])];
+                                      banners[idx] = { ...banners[idx], linkUrl: e.target.value };
+                                      updateField('banners', banners);
+                                    }} placeholder="/category/engineering" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1">Alt Text</label>
+                                    <input value={banner.altText || ''} onChange={e => {
+                                      const banners = [...(cfg.banners || [])];
+                                      banners[idx] = { ...banners[idx], altText: e.target.value };
+                                      updateField('banners', banners);
+                                    }} placeholder="Engineering Books Offer" className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none" />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="block text-xs font-bold text-slate-600 mb-1">Start Date (Optional)</label>
+                                      <input type="datetime-local" value={banner.startDate ? new Date(banner.startDate).toISOString().slice(0, 16) : ''} onChange={e => {
+                                        const banners = [...(cfg.banners || [])];
+                                        banners[idx] = { ...banners[idx], startDate: e.target.value ? new Date(e.target.value).toISOString() : undefined };
+                                        updateField('banners', banners);
+                                      }} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-bold text-slate-600 mb-1">End Date (Optional)</label>
+                                      <input type="datetime-local" value={banner.endDate ? new Date(banner.endDate).toISOString().slice(0, 16) : ''} onChange={e => {
+                                        const banners = [...(cfg.banners || [])];
+                                        banners[idx] = { ...banners[idx], endDate: e.target.value ? new Date(e.target.value).toISOString() : undefined };
+                                        updateField('banners', banners);
+                                      }} className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            <button onClick={() => {
+                              const banners = [...(cfg.banners || []), { id: Date.now().toString(), imageUrl: '', linkUrl: '', altText: '', isActive: true }];
+                              updateField('banners', banners);
+                            }} className="rounded-lg border-2 border-dashed border-slate-200 px-4 py-3 text-xs font-bold text-slate-500 hover:border-emerald-300 hover:text-emerald-700 transition-colors w-full">
+                              + Add Banner
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -742,55 +642,139 @@ export default function Dashboard() {
 
         {tab === 'coupons' && (
           <div className="space-y-6">
+            <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Promotions & Campaigns</h2>
+                <p className="text-sm text-slate-500">Create and manage your promotional rules and discount codes</p>
+              </div>
+              <button onClick={() => setEditingPromotion({})} className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors">
+                <Plus className="h-3.5 w-3.5" /> New Promotion
+              </button>
+            </div>
             
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-slate-100 bg-white p-1">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                  <thead className="bg-slate-50 text-xs font-bold uppercase text-slate-400">
                     <tr>
-                      <th className="px-6 py-4 font-bold">Code</th>
-                      <th className="px-6 py-4 font-bold">Type & Value</th>
-                      <th className="px-6 py-4 font-bold">Min Order</th>
-                      <th className="px-6 py-4 font-bold">Usage</th>
-                      <th className="px-6 py-4 font-bold">Status</th>
-                      <th className="px-6 py-4 font-bold text-right">Actions</th>
+                      <th className="px-6 py-4">Name / Code</th>
+                      <th className="px-6 py-4">Type</th>
+                      <th className="px-6 py-4">Value</th>
+                      <th className="px-6 py-4">Limit</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {coupons.map((coupon) => (
-                      <tr key={coupon.id} className="hover:bg-slate-50/50">
-                        <td className="px-6 py-4 font-bold text-emerald-700">{coupon.code}</td>
-                        <td className="px-6 py-4">
-                          {coupon.type === 'PERCENTAGE' ? `${coupon.value}%` : `₹${coupon.value}`}
-                        </td>
-                        <td className="px-6 py-4">{coupon.minOrderAmount ? `₹${coupon.minOrderAmount}` : 'None'}</td>
-                        <td className="px-6 py-4">
-                          {coupon.usedCount || 0} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : ''}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-bold ${coupon.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}`}>
-                            {coupon.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleToggleCoupon(coupon.id)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 font-medium">
-                              {coupon.isActive ? 'Disable' : 'Enable'}
-                            </button>
-                            <button onClick={() => openEditCoupon(coupon)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 font-medium">
-                              Edit
-                            </button>
-                            <button onClick={() => handleDeleteCoupon(coupon.id, coupon.code)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 font-medium">
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {coupons.length === 0 && (
+                    {promotions.map((promo) => {
+                      const isActive = promo.status === 'ACTIVE';
+                      const isPaused = promo.status === 'PAUSED';
+                      return (
+                        <tr key={promo.id} className="hover:bg-slate-50/50">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-slate-900">{promo.name}</div>
+                            {promo.code && <div className="font-mono text-xs text-slate-500 mt-1 font-semibold">{promo.code}</div>}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                              {promo.promotionType || 'UNIVERSAL'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-slate-900">
+                            {promo.discountType === 'FIXED' ? formatINR(promo.discountValue) : promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}%` : 'Free Shipping'}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-slate-600 font-medium">
+                            {promo.usageLimit ? `${promo.usedCount || 0} / ${promo.usageLimit}` : 'Unlimited'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
+                                isActive 
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                  : isPaused 
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isPaused ? 'bg-amber-500' : 'bg-slate-400'}`} />
+                              {isActive ? 'Live' : isPaused ? 'Paused' : 'Draft'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {isActive ? (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await promotionService.toggleActive(promo.id, 'PAUSED');
+                                      const res = await promotionService.getAll();
+                                      setPromotions(res.data);
+                                      toast.success(`Coupon "${promo.name}" paused / snoozed`);
+                                    } catch (e) {
+                                      toast.error('Failed to pause promotion');
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+                                  title="Pause / Snooze this code"
+                                >
+                                  <Pause className="h-3 w-3" /> Snooze
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      await promotionService.toggleActive(promo.id, 'ACTIVE');
+                                      const res = await promotionService.getAll();
+                                      setPromotions(res.data);
+                                      toast.success(`Coupon "${promo.name}" is now live!`);
+                                    } catch (e) {
+                                      toast.error('Failed to activate promotion');
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                                  title="Activate and make code live"
+                                >
+                                  <Play className="h-3 w-3" /> Go Live
+                                </button>
+                              )}
+                              
+                              <button 
+                                onClick={() => setEditingPromotion(promo)} 
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                title="Edit promotion details"
+                              >
+                                <Edit3 className="h-3 w-3" /> Edit
+                              </button>
+
+                              <button 
+                                onClick={async () => {
+                                  if (confirm(`Are you sure you want to delete "${promo.name}"?`)) {
+                                    try {
+                                      await promotionService.remove(promo.id);
+                                      const res = await promotionService.getAll();
+                                      setPromotions(res.data);
+                                      toast.success('Promotion deleted successfully');
+                                    } catch (e) {
+                                      toast.error('Failed to delete promotion');
+                                    }
+                                  }
+                                }} 
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="Delete coupon"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {promotions.length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                          No coupons found. Create one to get started.
+                          No promotions found. Create one to get started.
                         </td>
                       </tr>
                     )}
@@ -802,6 +786,17 @@ export default function Dashboard() {
         )}
 
       </div>
+
+      {editingPromotion && (
+        <PromotionEditModal
+          promotion={editingPromotion}
+          onClose={() => setEditingPromotion(null)}
+          onSuccess={() => {
+            setEditingPromotion(null);
+            promotionService.getAll().then(res => setPromotions(res.data));
+          }}
+        />
+      )}
 
       {isImportModalOpen && importAnalysis && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
@@ -844,172 +839,43 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {editingBook && (
+      {isImportModalOpen && importResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <form onSubmit={handleUpdateBook} className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-black text-slate-900 mb-4">Edit Book</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                <input required type="text" value={editingBook.title} onChange={(e) => setEditingBook({...editingBook, title: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+              <AlertCircle className="h-8 w-8 text-emerald-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-slate-900">Import Complete</h2>
+            <p className="mb-6 text-sm text-slate-500">The catalog has been successfully updated.</p>
+
+            <div className="mb-6 grid grid-cols-3 gap-2">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-2xl font-extrabold text-slate-800">{importResult.recordsAdded}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Added</p>
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Price (₹)</label>
-                  <input required type="number" value={editingBook.price} onChange={(e) => setEditingBook({...editingBook, price: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">MRP (₹)</label>
-                  <input required type="number" value={editingBook.mrp} onChange={(e) => setEditingBook({...editingBook, mrp: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-                </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-2xl font-extrabold text-slate-800">{importResult.recordsUpdated}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Updated</p>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Stock</label>
-                <input required type="number" min="0" value={editingBook.stock} onChange={(e) => setEditingBook({...editingBook, stock: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-2xl font-extrabold text-slate-800">{importResult.recordsSkipped}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Skipped</p>
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setEditingBook(null)} className="rounded-xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
-              <button type="submit" className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">Save Changes</button>
-            </div>
-          </form>
-        </div>
-      )}
-      {previewBookId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Book Media Preview</h2>
-            {!previewData ? (
-              <div className="py-10 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" /> Loading...
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="h-24 w-16 bg-slate-200 rounded shrink-0 overflow-hidden shadow-sm">
-                    {previewData.coverUrl ? <img src={previewData.coverUrl} className="w-full h-full object-cover" alt="Cover" /> : <BookOpen className="w-full h-full p-4 text-slate-400" />}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800 line-clamp-1">{previewData.title}</h3>
-                    <p className="text-xs text-slate-500 mt-1">{previewData.isbn}</p>
-                    <p className="text-sm text-slate-600 mt-1 font-semibold">{formatINR(previewData.price)}</p>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2"><Image className="h-4 w-4 text-emerald-600" /> Book Cover</p>
-                    <p className="text-xs text-slate-500 mb-3">Upload a high-quality JPG or PNG.</p>
-                    <label className={`block w-full text-center rounded-lg border-2 border-dashed border-emerald-200 bg-emerald-50/50 px-4 py-4 text-sm font-bold text-emerald-700 cursor-pointer hover:bg-emerald-50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUploadPreview(e, 'cover')} />
-                      {isUploading ? 'Uploading...' : 'Click to Upload Cover'}
-                    </label>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2"><BookOpen className="h-4 w-4 text-rose-600" /> Book PDF (Digital Version)</p>
-                    <p className="text-xs text-slate-500 mb-3">Upload the full PDF for digital sales or previews.</p>
-                    <label className={`block w-full text-center rounded-lg border-2 border-dashed border-rose-200 bg-rose-50/50 px-4 py-4 text-sm font-bold text-rose-700 cursor-pointer hover:bg-rose-50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                      <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFileUploadPreview(e, 'pdf')} />
-                      {isUploading ? 'Uploading...' : 'Click to Upload PDF'}
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button onClick={() => setPreviewBookId(null)} className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white hover:bg-slate-800">Close</button>
-                </div>
+            {importResult.errors?.length > 0 && (
+              <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                <p className="text-sm font-bold text-rose-800 mb-2">{importResult.errors.length} Errors encountered</p>
+                <button onClick={downloadErrorsCsv} className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-bold text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm transition-colors">
+                  <Download className="h-4 w-4" /> Download Error Report
+                </button>
               </div>
             )}
+
+            <button onClick={() => { setIsImportModalOpen(false); setImportResult(null); }} className="w-full rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm">
+              Done
+            </button>
           </div>
-        </div>
-      )}
-
-      {couponModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <form onSubmit={handleSaveCoupon} className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-black text-slate-900 mb-6">{editingCoupon ? 'Edit Coupon' : 'Create Coupon'}</h3>
-            
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Coupon Code</label>
-                <input required type="text" value={couponForm.code} onChange={(e) => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500 uppercase" placeholder="e.g. SUMMER50" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Discount Type</label>
-                <select value={couponForm.discountType} onChange={(e) => setCouponForm({...couponForm, discountType: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500">
-                  <option value="PERCENTAGE">Percentage (%)</option>
-                  <option value="FIXED">Flat Amount (₹)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Discount Value</label>
-                <input required type="number" min="1" value={couponForm.discountValue} onChange={(e) => setCouponForm({...couponForm, discountValue: e.target.value as any})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Min Cart Value (Optional)</label>
-                <input type="number" min="0" value={couponForm.minCartValue} onChange={(e) => setCouponForm({...couponForm, minCartValue: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 500" />
-              </div>
-            </div>
-
-            {couponForm.discountType === 'PERCENTAGE' && (
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-slate-700 mb-1">Max Discount Cap (₹) (Optional)</label>
-                <input type="number" min="0" value={couponForm.maxDiscount} onChange={(e) => setCouponForm({...couponForm, maxDiscount: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 200" />
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Valid From</label>
-                <input type="datetime-local" value={couponForm.validFrom} onChange={(e) => setCouponForm({...couponForm, validFrom: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Valid Until</label>
-                <input type="datetime-local" value={couponForm.validUntil} onChange={(e) => setCouponForm({...couponForm, validUntil: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Total Usage Limit (Optional)</label>
-                <input type="number" min="1" value={couponForm.usageLimit} onChange={(e) => setCouponForm({...couponForm, usageLimit: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="e.g. 100" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Per User Limit</label>
-                <input required type="number" min="1" value={couponForm.perUserLimit} onChange={(e) => setCouponForm({...couponForm, perUserLimit: e.target.value as any})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500" />
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-slate-700 mb-1">Category Restriction (Optional)</label>
-              <select value={couponForm.categoryId} onChange={(e) => setCouponForm({...couponForm, categoryId: e.target.value})} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-emerald-500">
-                <option value="">All Categories</option>
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-6 mb-6">
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
-                <input type="checkbox" checked={couponForm.firstOrderOnly} onChange={(e) => setCouponForm({...couponForm, firstOrderOnly: e.target.checked})} className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
-                First Order Only
-              </label>
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
-                <input type="checkbox" checked={couponForm.isActive} onChange={(e) => setCouponForm({...couponForm, isActive: e.target.checked})} className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
-                Active
-              </label>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button type="button" onClick={() => setCouponModal(false)} className="rounded-xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
-              <button type="submit" className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">Save Coupon</button>
-            </div>
-          </form>
         </div>
       )}
 

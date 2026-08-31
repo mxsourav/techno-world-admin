@@ -1,5 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
+export const getImageUrl = (path?: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const baseUrl = API_URL.replace('/api/v1', '');
+  return `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+};
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -29,6 +36,78 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   return data;
 }
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const newToken = data.data?.accessToken || data.accessToken || '';
+    if (newToken) {
+      localStorage.setItem('tw_admin_token', newToken);
+    }
+    return newToken;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers || {});
+  const token = localStorage.getItem('tw_admin_token');
+  if (token && token !== 'undefined' && token !== 'null' && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const mergedOptions: RequestInit = {
+    ...options,
+    headers,
+    credentials: 'include',
+  };
+
+  let response = await fetch(url, mergedOptions);
+
+  if (response.status === 401) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await refreshAccessToken();
+      isRefreshing = false;
+
+      if (newToken) {
+        onRefreshed(newToken);
+        headers.set('Authorization', `Bearer ${newToken}`);
+        return fetch(url, { ...options, headers, credentials: 'include' });
+      } else {
+        localStorage.removeItem('tw_admin_token');
+      }
+    } else {
+      return new Promise<Response>((resolve) => {
+        subscribeTokenRefresh((newToken) => {
+          headers.set('Authorization', `Bearer ${newToken}`);
+          resolve(fetch(url, { ...options, headers, credentials: 'include' }));
+        });
+      });
+    }
+  }
+
+  return response;
+}
+
 export const api = {
   get: async <T>(endpoint: string, params?: Record<string, string | number | boolean>): Promise<ApiResponse<T>> => {
     try {
@@ -41,7 +120,7 @@ export const api = {
         });
       }
 
-      const response = await fetch(url.toString(), {
+      const response = await fetchWithAuth(url.toString(), {
         headers: { 'Content-Type': 'application/json' },
       });
       
@@ -55,7 +134,7 @@ export const api = {
 
   post: async <T>(endpoint: string, body?: any): Promise<ApiResponse<T>> => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined,
@@ -70,7 +149,7 @@ export const api = {
 
   upload: async <T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
@@ -84,7 +163,7 @@ export const api = {
 
   patch: async <T>(endpoint: string, body?: any): Promise<ApiResponse<T>> => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined,
@@ -98,7 +177,7 @@ export const api = {
 
   put: async <T>(endpoint: string, body?: any): Promise<ApiResponse<T>> => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined,
@@ -112,7 +191,7 @@ export const api = {
 
   delete: async <T>(endpoint: string): Promise<ApiResponse<T>> => {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -150,6 +229,13 @@ export const bookService = {
 };
 
 export const adminService = {
+  getAdminCatalog: (params?: any) => api.get<any[]>('/admin/books/catalog', params),
+  createBook: (data: any) => api.post<any>('/admin/books', data),
+  updateBook: (id: string, data: any) => api.patch<any>(`/admin/books/${id}`, data),
+  quickUpdateStock: (id: string, data: { stock?: number, reservedStock?: number }) => api.patch<any>(`/admin/books/${id}/stock`, data),
+  deleteBook: (id: string) => api.delete<any>(`/admin/books/${id}`),
+  deleteAllBooks: () => api.delete<any>('/admin/books/all'),
+  getBookLogs: (id: string) => api.get<any>(`/admin/books/${id}/logs`),
   getStats: () => api.get<any>('/admin/stats'),
   analyzeImport: (file: File) => {
     const formData = new FormData();
@@ -168,9 +254,6 @@ export const adminService = {
     formData.append('file', file);
     return api.upload<any>(`/admin/books/${id}/pdf`, formData);
   },
-  deleteBook: (id: string) => api.delete<any>(`/admin/books/${id}`),
-  deleteAllBooks: () => api.delete<any>(`/admin/books/all`),
-  updateBook: (id: string, payload: any) => api.patch<any>(`/admin/books/${id}`, payload),
 };
 
 export const searchService = {
@@ -180,8 +263,8 @@ export const searchService = {
 export const orderService = {
   create: (data: { items: { bookId: string; quantity: number }[]; addressId?: string; paymentMethod?: string }) =>
     api.post<any>('/orders', data),
-  getUserOrders: (userId?: string) => api.get<any[]>('/orders', userId ? { userId } : {}),
-  getAllOrders: () => api.get<any[]>('/orders/admin/all'),
+  getUserOrders: () => api.get<any>('/orders/my-orders'),
+  getAllOrders: () => api.get<any>('/orders/admin/all'),
   updateStatus: (id: string, status: string) => api.patch<any>(`/orders/admin/${id}/status`, { status }),
 };
 
@@ -208,10 +291,24 @@ export const cmsService = {
   toggleSection: (key: string) => api.patch<any>(`/cms/sections/${key}/toggle`),
 };
 
-export const couponService = {
-  getAll: () => api.get<any[]>('/coupons'),
-  create: (data: any) => api.post<any>('/coupons', data),
-  update: (id: string, data: any) => api.put<any>(`/coupons/${id}`, data),
-  delete: (id: string) => api.delete<any>(`/coupons/${id}`),
-  toggle: (id: string) => api.patch<any>(`/coupons/${id}/toggle`),
+export const promotionService = {
+  getAll: () => api.get<any[]>('/promotions'),
+  create: (data: any) => api.post<any>('/promotions', data),
+  update: (id: string, data: any) => api.put<any>(`/promotions/${id}`, data),
+  remove: (id: string) => api.delete<any>(`/promotions/${id}`),
+  toggleActive: (id: string, status?: string) => api.patch<any>(`/promotions/${id}/toggle`, status ? { status } : undefined)
 };
+
+export const campaignService = {
+  getAll: () => api.get<any[]>('/campaigns'),
+  getById: (id: string) => api.get<any>(`/campaigns/${id}`),
+  create: (data: any) => api.post<any>('/campaigns', data),
+  update: (id: string, data: any) => api.put<any>(`/campaigns/${id}`, data),
+  remove: (id: string) => api.delete<any>(`/campaigns/${id}`),
+};
+
+export const pricingService = {
+  calculate: (data: { items: { bookId: string; quantity: number }[]; couponCode?: string | null; userId?: string | null }) =>
+    api.post<any>('/pricing/calculate', data),
+};
+

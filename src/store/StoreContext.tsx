@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState, useCall
 import type { CartItem, Order, Address, User } from '@/types';
 
 
+
 interface StoreState {
   cart: CartItem[];
   savedForLater: CartItem[];
@@ -56,21 +57,17 @@ const loadArray = <T,>(key: string): T[] => {
   }
 };
 
-export const COUPONS: Record<string, { pct: number; desc: string }> = {
-  BOOKWORM10: { pct: 10, desc: '10% off on all books' },
-  STUDENT15: { pct: 15, desc: '15% student discount' },
-  NEWUSER20: { pct: 20, desc: '20% off first order (max ₹500)' },
-};
+// Coupons are now validated via the backend API — no hardcoded list needed
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>(() => loadArray('twb_cart'));
-  const [savedForLater, setSavedForLater] = useState<CartItem[]>(() => loadArray('twb_saved'));
-  const [wishlist, setWishlist] = useState<string[]>(() => loadArray('twb_wishlist'));
+  const [cart, setCart] = useState<CartItem[]>(() => { const raw = loadArray<any>('twb_cart'); return raw.map(i => ({ bookId: i.bookId || i.id, qty: i.qty || i.quantity || 1 })).filter(i => i.bookId && typeof i.bookId === 'string' && i.bookId.startsWith('c')); });
+  const [savedForLater, setSavedForLater] = useState<CartItem[]>(() => { const raw = loadArray<any>('twb_saved'); return raw.map(i => ({ bookId: i.bookId || i.id, qty: i.qty || i.quantity || 1 })).filter(i => i.bookId && typeof i.bookId === 'string' && i.bookId.startsWith('c')); });
+  const [wishlist, setWishlist] = useState<string[]>(() => { const raw = loadArray<any>('twb_wishlist'); return raw.map(i => typeof i === 'string' ? i : i.id || i.bookId).filter(id => typeof id === 'string' && id.startsWith('c')); });
   const [orders, setOrders] = useState<Order[]>(() => loadArray('twb_orders'));
   const [user, setUser] = useState<User | null>(() => load('twb_user', null));
   const [addresses, setAddresses] = useState<Address[]>(() => loadArray('twb_addresses'));
   const [searchHistory, setSearchHistory] = useState<string[]>(() => loadArray('twb_history'));
-  const [recentlyViewed, setRecentlyViewed] = useState<string[]>(() => loadArray('twb_recent'));
+  const [recentlyViewed, setRecentlyViewed] = useState<string[]>(() => { const raw = loadArray<any>('twb_recent'); return raw.map(i => typeof i === 'string' ? i : i.id || i.bookId).filter(id => typeof id === 'string' && id.startsWith('c')); });
   const [coupon, setCoupon] = useState<string | null>(() => load('twb_coupon', null));
 
   useEffect(() => { localStorage.setItem('twb_cart', JSON.stringify(cart)); }, [cart]);
@@ -159,15 +156,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyCoupon = useCallback((code: string) => {
-    const c = code.trim().toUpperCase();
-    if (COUPONS[c]) {
-      setCoupon(c);
-      return { ok: true, message: `${c} applied — ${COUPONS[c].desc}` };
-    }
-    return { ok: false, message: 'Invalid coupon code' };
+    setCoupon(code.trim().toUpperCase());
+    return { ok: true, message: 'Coupon applied, validating...' };
   }, []);
 
-  const clearCoupon = useCallback(() => setCoupon(null), []);
+  const clearCoupon = useCallback(() => { setCoupon(null); }, []);
   const clearCart = useCallback(() => setCart([]), []);
 
   const value = useMemo<StoreState>(() => ({

@@ -349,6 +349,7 @@ export default function Header() {
                   </Link>
                 ))}
                 <div className="mt-3 border-t pt-3">
+                  <Link to="/search?publisher=Techno%20World%20Publications" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">🏢 Our Publications</Link>
                   <Link to="/track" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">📦 Track Order</Link>
                   <Link to="/blog" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">✍️ Blog & Book Lists</Link>
                   <Link to="/help" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">❓ Help Center</Link>
@@ -394,8 +395,8 @@ export default function Header() {
             )}
             <Link to="/wishlist" className="relative rounded-lg p-2 hover:bg-emerald-800" aria-label="Wishlist">
               <Heart className="h-6 w-6 sm:h-7 sm:w-7" />
-              {wishlist.length > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold">{wishlist.length}</span>
+              {wishlist?.length > 0 && (
+                <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold">{wishlist?.length}</span>
               )}
             </Link>
             <Link to="/cart" className="relative rounded-lg p-2 hover:bg-emerald-800" aria-label="Cart">
@@ -411,19 +412,20 @@ export default function Header() {
       {/* category strip */}
       <nav className="hidden border-t border-white/5 bg-[#0a2e1f] md:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-1">
-          <div className="relative flex flex-1 min-w-0 items-center before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-4 before:bg-gradient-to-r before:from-[#0a2e1f] before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-8 after:bg-gradient-to-l after:from-[#0a2e1f] after:to-transparent">
-            <div className="flex w-full items-center gap-1 overflow-x-auto px-4 pr-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <span className="mr-2 flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-emerald-300">
+          <div className="relative flex flex-1 min-w-0 items-center before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-4 before:bg-gradient-to-r before:from-[#0a2e1f] before:to-transparent before:pointer-events-none after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-8 after:bg-gradient-to-l after:from-[#0a2e1f] after:to-transparent after:pointer-events-none">
+            <div className="flex w-full items-center gap-1 overflow-x-auto px-4 pb-1 pt-1 pr-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <span className="mr-1 flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-emerald-300">
                 <ChevronDown className="h-3.5 w-3.5" /> Shop by category
               </span>
               {categories.map((c: any) => (
-                <Link key={c.slug} to={`/category/${c.slug}`} className="whitespace-nowrap rounded-full px-3 py-1 text-xs text-emerald-100 transition hover:bg-white/10 hover:text-white">
+                <Link key={c.slug} to={`/category/${c.slug}`} className="whitespace-nowrap rounded-full px-2.5 py-1 text-xs text-emerald-100 transition hover:bg-white/10 hover:text-white">
                   {c.name.replace(' Books', '')}
                 </Link>
               ))}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 pl-6 border-l border-white/10">
+            <Link to="/search?publisher=Techno%20World%20Publications" className="whitespace-nowrap rounded-full px-4 py-1 text-xs font-bold text-emerald-100 transition-colors hover:bg-white/10 hover:text-white">Our Publications</Link>
             <Link to="/about" className="whitespace-nowrap rounded-full px-4 py-1 text-xs font-bold text-emerald-100 transition-colors hover:bg-white/10 hover:text-white">About</Link>
             <Link to="/blog" className="whitespace-nowrap rounded-full px-4 py-1 text-xs font-bold text-amber-300 transition-colors hover:bg-white/10">Blog</Link>
           </div>

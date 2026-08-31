@@ -16,16 +16,19 @@ export default function AdminLogin() {
     setLoading(true);
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      const res = await fetch('http://localhost:5000/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
       
       const data = await res.json();
       
       if (res.ok && data.success) {
-        login(data.data.accessToken, data.data.user);
+        const token = data.data?.accessToken || data.accessToken || '';
+        const userData = data.data?.user || data.user;
+        login(token, userData);
         toast.success('Welcome back!');
         navigate('/admin/dashboard');
       } else {

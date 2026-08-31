@@ -17,6 +17,7 @@ export default function Listing() {
   const { category } = useParams();
   const [params] = useSearchParams();
   const query = params.get('q') ?? '';
+  const publisherQuery = params.get('publisher');
 
   const [base, setBase] = useState<Book[]>([]);
   const [catObj, setCatObj] = useState<any>(null);
@@ -34,6 +35,7 @@ export default function Listing() {
 
     const fetchParams: any = { limit: 1000 };
     if (category) fetchParams.category = category;
+    if (publisherQuery) fetchParams.publisher = publisherQuery;
     if (query && query.toLowerCase() === 'bestseller') fetchParams.bestSeller = true;
     else if (query) fetchParams.search = query;
 
@@ -45,14 +47,20 @@ export default function Listing() {
       status: err?.status || 500,
       message: err?.status === 404 ? 'Category not found' : err?.status === 0 ? 'Network Error. Please check your connection.' : 'Failed to load books.'
     })).finally(() => setLoading(false));
-  }, [category, query]);
+  }, [category, query, publisherQuery]);
 
   const publishers = useMemo(() => [...new Set(base.map((b) => b.publisher).filter(Boolean))], [base]);
   const languages = useMemo(() => [...new Set(base.map((b) => b.language).filter(Boolean))], [base]);
+  const subjects = useMemo(() => [...new Set(base.map((b) => b.category).filter(Boolean))], [base]);
+  const editions = useMemo(() => [...new Set(base.map((b) => b.edition).filter(Boolean))], [base]);
+  const bookTypes = ['Paperback', 'Hardcover', 'E-Book'];
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 15000]);
   const [selPubs, setSelPubs] = useState<string[]>([]);
   const [selLangs, setSelLangs] = useState<string[]>([]);
+  const [selSubjects, setSelSubjects] = useState<string[]>([]);
+  const [selTypes, setSelTypes] = useState<string[]>([]);
+  const [selEditions, setSelEditions] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [minDiscount, setMinDiscount] = useState(0);
   const [sort, setSort] = useState<SortKey>('relevance');
@@ -65,6 +73,9 @@ export default function Listing() {
         b.price <= priceRange[1] &&
         (selPubs.length === 0 || selPubs.includes(b.publisher)) &&
         (selLangs.length === 0 || (b.language && selLangs.includes(b.language))) &&
+        (selSubjects.length === 0 || selSubjects.includes(b.category)) &&
+        (selEditions.length === 0 || (b.edition && selEditions.includes(b.edition))) &&
+        (selTypes.length === 0 || true) &&
         (!inStockOnly || b.stock > 0) &&
         (b.mrp ? ((b.mrp - b.price) / b.mrp) * 100 >= minDiscount : true)
     );
@@ -76,13 +87,14 @@ export default function Listing() {
       case 'newest': list = [...list].sort((a, b) => (b.pubDate || '').localeCompare(a.pubDate || '')); break;
     }
     return list;
-  }, [base, priceRange, selPubs, selLangs, inStockOnly, minDiscount, sort]);
+  }, [base, priceRange, selPubs, selLangs, selSubjects, selEditions, selTypes, inStockOnly, minDiscount, sort]);
 
   const toggle = (arr: string[], v: string, set: (x: string[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   const clearAll = () => {
     setPriceRange([0, 15000]); setSelPubs([]); setSelLangs([]); setInStockOnly(false); setMinDiscount(0);
+    setSelSubjects([]); setSelTypes([]); setSelEditions([]);
   };
 
   const Filters = (
@@ -105,12 +117,40 @@ export default function Listing() {
         </div>
       </div>
       <div>
+        <p className="mb-2 text-sm font-bold text-slate-800">Subject</p>
+        <div className="max-h-44 space-y-2 overflow-auto pr-1">
+          {subjects.map((s) => (
+            <label key={s} className="flex items-center gap-2 text-sm text-slate-600">
+              <Checkbox checked={selSubjects.includes(s)} onCheckedChange={() => toggle(selSubjects, s, setSelSubjects)} /> {s}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-bold text-slate-800">Book Type</p>
+        {bookTypes.map((t) => (
+          <label key={t} className="flex items-center gap-2 py-1 text-sm text-slate-600">
+            <Checkbox checked={selTypes.includes(t)} onCheckedChange={() => toggle(selTypes, t, setSelTypes)} /> {t}
+          </label>
+        ))}
+      </div>
+      <div>
         <p className="mb-2 text-sm font-bold text-slate-800">Language</p>
         {languages.map((l) => (
           <label key={l} className="flex items-center gap-2 py-1 text-sm text-slate-600">
             <Checkbox checked={selLangs.includes(l)} onCheckedChange={() => toggle(selLangs, l, setSelLangs)} /> {l}
           </label>
         ))}
+      </div>
+      <div>
+        <p className="mb-2 text-sm font-bold text-slate-800">Edition</p>
+        <div className="max-h-44 space-y-2 overflow-auto pr-1">
+          {editions.map((e) => (
+            <label key={e} className="flex items-center gap-2 text-sm text-slate-600">
+              <Checkbox checked={selEditions.includes(e)} onCheckedChange={() => toggle(selEditions, e, setSelEditions)} /> {e}
+            </label>
+          ))}
+        </div>
       </div>
       <div>
         <p className="mb-2 text-sm font-bold text-slate-800">Discount</p>
@@ -161,7 +201,7 @@ export default function Listing() {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
-            {catObj ? catObj.name : `Results for "${query}"`}
+            {catObj ? catObj.name : publisherQuery ? `Books by ${publisherQuery}` : `Results for "${query}"`}
           </h1>
           <p className="text-xs text-slate-500">{filtered.length} book{filtered.length !== 1 ? 's' : ''} found</p>
         </div>

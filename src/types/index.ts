@@ -15,7 +15,11 @@ export interface Book {
   author: string;
   publisher: string;
   isbn: string;
+  isbn13?: string;
+  sku?: string;
   edition: string;
+  coverImage?: string;
+  coverUrl?: string;
   pubDate: string;
   language: string;
   pages: number;

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router';
 import { BadgePercent, Sparkles, Gift, Truck, ArrowRight, Trophy, Flame, TrendingUp, Sparkle, Stethoscope, Settings, GraduationCap, Library, BookOpen, Quote, Languages, Globe2, Gem, Heart, Clock, ShieldCheck, Package, MessageCircle, Tag, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-import { bookService, categoryService } from '@/services/api';
+import { bookService } from '@/services/api';
 import type { Book } from '@/types';
 import { useStore } from '@/store/StoreContext';
 import { BookRow } from '@/components/BookCard';
@@ -10,6 +10,7 @@ import { SearchBar } from '@/components/Header';
 import HeroFeaturedBooks from '@/components/HeroFeaturedBooks';
 import PublishedByTechnoWorld from '@/components/PublishedByTechnoWorld';
 import StudyGuides from '@/components/StudyGuides';
+import PromoBanners from '@/components/PromoBanners';
 import { useAutoFeaturedBooks } from '@/hooks/useAutoFeaturedBooks';
 
 const PUBLISHERS = ['NCERT', 'Arihant Publications', 'McGraw Hill', 'Elsevier', 'Penguin', 'Ananda Publishers', 'MTG Learning Media', 'Dhanpat Rai'];
@@ -19,7 +20,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const [books, setBooks] = useState<Book[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -32,19 +33,16 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    Promise.all([
-      bookService.getBooks({ limit: 100 }).catch(() => ({ success: false, data: [] })),
-      categoryService.getCategories().catch(() => ({ success: false, data: [] }))
-    ])
-    .then(([booksRes, catRes]) => {
-      if (booksRes.success && booksRes.data?.length > 0) {
-        setBooks(booksRes.data);
-      } else if (!booksRes.success) {
-        setError(true);
-      }
-      if (catRes.success && catRes.data?.length > 0) setCategories(catRes.data);
-    })
-    .finally(() => setLoading(false));
+    bookService.getBooks({ limit: 100 })
+      .then((booksRes) => {
+        if (booksRes.success && booksRes.data?.length > 0) {
+          setBooks(booksRes.data);
+        } else if (!booksRes.success) {
+          setError(true);
+        }
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, []);
 
   const bestsellers = books.filter((b) => b.bestseller);
@@ -109,7 +107,7 @@ export default function Home() {
                   backgroundImage: "linear-gradient(to bottom, #FFFFFF 0%, #B8C4BE 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0px 3px 5px rgba(0,0,0,0.4))"
+                  filter: "drop-shadow(0px 4px 8px rgba(0,0,0,0.8))"
                 }}
               >
                 Every book India reads,
@@ -120,7 +118,7 @@ export default function Home() {
                   backgroundImage: "linear-gradient(to bottom, #FFE885 0%, #E6A300 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0px 4px 6px rgba(0,0,0,0.5))"
+                  filter: "drop-shadow(0px 5px 10px rgba(0,0,0,0.9))"
                 }}
               >
                 one search away.
@@ -213,23 +211,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CATEGORY GRID */}
-      <section className="mx-auto max-w-7xl px-4 py-8 pb-12 sm:px-6">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
-          {categories.slice(0, 8).map((c: any) => (
-            <Link
-              key={c.slug}
-              to={`/category/${c.slug}`}
-              className="group flex flex-col items-center gap-3 rounded-2xl bg-white p-4 text-center shadow-sm transition hover:shadow-md border border-slate-100"
-            >
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white">
-                {c.icon || <BookOpen className="h-6 w-6" />}
-              </div>
-              <span className="text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">{c.name.replace(' Books', '').replace('Competitive Exam', 'Exams')}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* PROMO BANNERS SECTION */}
+      <PromoBanners />
 
       <PublishedByTechnoWorld />
       
