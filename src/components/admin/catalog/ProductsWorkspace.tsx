@@ -4,7 +4,7 @@ import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
-import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2 } from 'lucide-react';
+import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check } from 'lucide-react';
 
 export default function ProductsWorkspace() {
   const [activeTab, setActiveTab] = useState('all');
@@ -16,6 +16,11 @@ export default function ProductsWorkspace() {
   const [viewingBook, setViewingBook] = useState<any>(null);
   const [editingBook, setEditingBook] = useState<any>(null);
   const [viewingLogs, setViewingLogs] = useState<any>(null);
+  
+  // Quick Description Editor state
+  const [editingDescId, setEditingDescId] = useState<string | null>(null);
+  const [descInput, setDescInput] = useState('');
+  const [isSavingDesc, setIsSavingDesc] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -212,6 +217,21 @@ export default function ProductsWorkspace() {
                           <div className="flex items-center gap-2 mt-1.5 text-[10px] uppercase font-bold text-slate-400">
                             {book.sku && <span className="rounded bg-slate-100 px-1.5 py-0.5">SKU: {book.sku}</span>}
                             {book.isbn13 && <span>ISBN: {book.isbn13}</span>}
+                            {(!book.description || book.description === 'No description provided.' || book.description.trim() === '') ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingBook(book);
+                                }}
+                                className="rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-amber-700 font-bold hover:bg-amber-100 transition-colors cursor-pointer lowercase"
+                              >
+                                ⚠️ Add description
+                              </button>
+                            ) : (
+                              <span className="text-emerald-700 font-bold lowercase flex items-center gap-0.5">
+                                <Check className="h-2.5 w-2.5" /> Description added
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -353,7 +373,7 @@ export default function ProductsWorkspace() {
                 </div>
               </div>
 
-              {/* Performance / Sales */}
+               {/* Performance / Sales */}
               <div className="rounded-xl border border-slate-200 p-4">
                  <h4 className="font-bold text-slate-800 mb-4">Performance</h4>
                  <div className="grid grid-cols-3 gap-4">
@@ -370,6 +390,95 @@ export default function ProductsWorkspace() {
                      <p className="text-lg font-extrabold text-rose-700">45</p>
                    </div>
                  </div>
+              </div>
+
+              {/* Book Description & Syllabus Card with 1-Click Quick Editor */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-emerald-600" />
+                    <h4 className="font-bold text-slate-800">Book Description & Syllabus</h4>
+                  </div>
+                  {editingDescId !== viewingBook.id ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingDescId(viewingBook.id);
+                        setDescInput(viewingBook.description || '');
+                      }}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" /> Edit Description
+                    </button>
+                  ) : null}
+                </div>
+
+                {editingDescId === viewingBook.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      rows={6}
+                      value={descInput}
+                      onChange={(e) => setDescInput(e.target.value)}
+                      placeholder="Enter comprehensive book description, syllabus, chapters outline, and exam features..."
+                      className="w-full rounded-lg border border-slate-300 p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                    />
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-slate-400">
+                        {descInput.length} characters
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingDescId(null)}
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isSavingDesc}
+                          onClick={async () => {
+                            setIsSavingDesc(true);
+                            try {
+                              await adminService.updateBook(viewingBook.id, { description: descInput });
+                              toast.success('Book description updated successfully!');
+                              setViewingBook({ ...viewingBook, description: descInput });
+                              setEditingDescId(null);
+                              fetchData();
+                            } catch (err: any) {
+                              toast.error(err.message || 'Failed to update description');
+                            } finally {
+                              setIsSavingDesc(false);
+                            }
+                          }}
+                          className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          {isSavingDesc ? 'Saving...' : 'Save Description'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100 text-xs text-slate-700 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap">
+                    {viewingBook.description && viewingBook.description.trim() !== '' && viewingBook.description !== 'No description provided.' ? (
+                      viewingBook.description
+                    ) : (
+                      <div className="text-center py-3">
+                        <p className="text-slate-400 italic text-xs mb-2">No description provided yet for this book.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingDescId(viewingBook.id);
+                            setDescInput('');
+                          }}
+                          className="rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold hover:bg-emerald-100"
+                        >
+                          + Add Description Now
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
             </div>
