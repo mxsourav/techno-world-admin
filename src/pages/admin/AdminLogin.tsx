@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
+import { authService } from '@/services/api';
 import technoLogo from '@/assets/images/techno_world.png';
 
 export default function AdminLogin() {
@@ -11,31 +12,25 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuthStore();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const res = await fetch('http://localhost:5000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password })
-      });
+      const res = await authService.login({ email, password });
       
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        const token = data.data?.accessToken || data.accessToken || '';
-        const userData = data.data?.user || data.user;
+      if (res.success) {
+        const token = res.data?.accessToken || res.data?.token || '';
+        const userData = res.data?.user || res.data;
         login(token, userData);
         toast.success('Welcome back!');
         navigate('/admin/dashboard');
       } else {
-        toast.error(data.message || 'Invalid credentials');
+        toast.error(res.message || 'Invalid credentials');
       }
-    } catch (error) {
-      toast.error('Network error');
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed. Please check backend connection.');
     } finally {
       setLoading(false);
     }

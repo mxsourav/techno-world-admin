@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://techno-world-api.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
 
 export const getImageUrl = (path?: string) => {
   if (!path) return '';
@@ -310,5 +310,11 @@ export const campaignService = {
 export const pricingService = {
   calculate: (data: { items: { bookId: string; quantity: number }[]; couponCode?: string | null; userId?: string | null }) =>
     api.post<any>('/pricing/calculate', data),
+};
+
+export const authService = {
+  login: (data: { email: string; password: string }) => api.post<any>('/auth/login', data),
+  logout: () => api.post<any>('/auth/logout'),
+  me: () => api.get<any>('/auth/me'),
 };
 
