@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Clock, User, Info } from 'lucide-react';
 import { adminService } from '@/services/api';
 import { toast } from 'sonner';

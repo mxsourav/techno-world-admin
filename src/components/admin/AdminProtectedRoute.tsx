@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router';
+import { Navigate } from 'react-router';
 import { useAuthStore } from '@/store/AuthStore';
 
 export default function AdminProtectedRoute({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Copy, Eye, Ticket, Settings2, Users, PackageOpen, AlertCircle, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { X, Save, Copy, Eye, Settings2, Users, PackageOpen, AlertCircle, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { promotionService, categoryService } from '@/services/api';
 import { toast } from 'sonner';
 

@@ -9,13 +9,11 @@ import { bookService } from '@/services/api';
 import type { Book } from '@/types';
 import { toast } from 'sonner';
 
-import { pricingService } from '@/services/api';
-
 import { useCartTotals } from '@/hooks/useCartTotals';
 
 export default function Cart() {
   const { removeFromCart, setQty, saveForLater, applyCoupon, clearCoupon, savedForLater, moveToCart } = useStore();
-  const { items, subtotal, mrpTotal, shipping, discount, total, coupon, appliedCoupon, loading, error, couponError, isValid, errors } = useCartTotals();
+  const { items, subtotal, mrpTotal, shipping, discount, total, appliedCoupon, loading, error, couponError, isValid, errors } = useCartTotals();
   const [code, setCode] = useState('');
   const [fbt, setFbt] = useState<Book[]>([]);
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-escape */
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { MapPin, CreditCard, CheckCircle2, Smartphone, Landmark, Banknote, Wallet, PartyPopper, Download, Tag, AlertCircle } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, Smartphone, Landmark, Banknote, Wallet, PartyPopper, Download, Tag } from 'lucide-react';
 import { formatINR } from '@/utils/helpers';
 import { useStore } from '@/store/StoreContext';
 import { useCartTotals } from '@/hooks/useCartTotals';
@@ -157,7 +157,7 @@ export default function Checkout() {
           name: 'Techno World Books',
           description: 'Book Purchase',
           order_id: serverOrder.razorpayOrderId,
-          handler: function (response: any) {
+          handler: function (_response: any) {
             toast.success('Payment successful!');
             finishOrder();
           },
