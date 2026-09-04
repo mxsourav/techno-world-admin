@@ -53,12 +53,16 @@ export interface CartItem {
 export interface Address {
   id: string;
   name: string;
+  email?: string;
   phone: string;
   line1: string;
+  line2?: string;
+  postOffice: string; // MANDATORY: Local Post Office
+  landmark?: string;   // OPTIONAL: Landmark
   city: string;
   state: string;
   pincode: string;
-  type: 'Home' | 'Work';
+  type: 'Home' | 'Work' | 'Other';
 }
 
 export interface Order {

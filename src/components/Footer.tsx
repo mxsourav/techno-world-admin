@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { MapPin, Phone, Globe, Camera } from 'lucide-react';
+import { useStore } from '@/store/StoreContext';
+import { useAuthStore } from '@/store/AuthStore';
+import { toast } from 'sonner';
 
 export default function Footer() {
+  const { user, logout: storeLogout } = useStore();
+  const { logout: authLogout } = useAuthStore();
+  const navigate = useNavigate();
   const [uptime, setUptime] = useState('');
+
+  const handleLogout = () => {
+    storeLogout();
+    authLogout();
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
   
   // Use today's date minus 12 hours so it starts showing hours/mins/secs
   // then rolls over to days organically as time passes.
@@ -60,36 +73,49 @@ export default function Footer() {
         <div className="md:col-span-2 lg:col-span-3 lg:pl-10">
           <h3 className="mb-2 text-sm font-bold text-white uppercase tracking-wider">Useful Links</h3>
           <ul className="space-y-1.5 text-sm">
-            <li><Link to="#" className="hover:text-amber-400 transition-colors">About Us</Link></li>
-            <li><Link to="#" className="hover:text-amber-400 transition-colors">Contact Us</Link></li>
-            <li><Link to="#" className="hover:text-amber-400 transition-colors">Privacy Policy</Link></li>
-            <li><Link to="#" className="hover:text-amber-400 transition-colors">Terms of Service</Link></li>
-            <li><Link to="#" className="hover:text-amber-400 transition-colors">Shipping Policy</Link></li>
+            <li><Link to="/about" className="hover:text-amber-400 transition-colors">About Us</Link></li>
+            <li><Link to="/contact" className="hover:text-amber-400 transition-colors">Contact Us</Link></li>
+            <li><Link to="/privacy-policy" className="hover:text-amber-400 transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="hover:text-amber-400 transition-colors">Terms of Service</Link></li>
+            <li><Link to="/shipping-policy" className="hover:text-amber-400 transition-colors">Shipping Policy</Link></li>
             <li><Link to="/admin/login" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">Admin Login</Link></li>
           </ul>
         </div>
 
-        {/* Col 3: Policy */}
-        <div className="md:col-span-2 lg:col-span-2">
-          <h3 className="mb-2 text-sm font-bold text-white uppercase tracking-wider">Policy</h3>
+        {/* Col 3: Policy & Account */}
+        <div className="md:col-span-3 lg:col-span-2">
+          <h3 className="mb-2 text-sm font-bold text-white uppercase tracking-wider">Policy & Account</h3>
           <ul className="space-y-1.5 text-sm">
-            <li><Link to="/account" className="hover:text-amber-400 transition-colors">My Account</Link></li>
-            <li><Link to="/cart" className="hover:text-amber-400 transition-colors">Checkout</Link></li>
-            <li><button className="hover:text-amber-400 transition-colors">Log out</button></li>
+            <li><Link to="/profile" className="hover:text-amber-400 transition-colors">My Account</Link></li>
+            <li><Link to="/checkout" className="hover:text-amber-400 transition-colors">Checkout</Link></li>
+            <li><Link to="/refund-policy" className="hover:text-amber-400 transition-colors">Replacement & Refund Policy</Link></li>
+            <li>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hover:text-rose-400 text-left transition-colors"
+                >
+                  Log out
+                </button>
+              ) : (
+                <Link to="/profile" className="hover:text-emerald-400 transition-colors">Login / Sign In</Link>
+              )}
+            </li>
           </ul>
         </div>
 
         {/* Col 4: Follow Us */}
-        <div className="md:col-span-3 lg:col-span-3">
+        <div className="md:col-span-2 lg:col-span-3">
           <h3 className="mb-2 text-sm font-bold text-white uppercase tracking-wider">Follow Us</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <a href="#" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
                 <Globe className="h-4 w-4" /> Facebook
               </a>
             </li>
             <li>
-              <a href="#" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-amber-400 transition-colors">
                 <Camera className="h-4 w-4" /> Instagram
               </a>
             </li>

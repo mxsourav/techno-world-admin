@@ -31,7 +31,12 @@ export class ApiError extends Error {
 async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new ApiError(response.status, data.message || `Server returned ${response.status}`);
+    let msg = data.message || `Server returned ${response.status}`;
+    if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      const detailed = data.errors.map((e: any) => `${e.field ? e.field + ': ' : ''}${e.message}`).join(', ');
+      msg = `${msg}: ${detailed}`;
+    }
+    throw new ApiError(response.status, msg);
   }
   return data;
 }
@@ -254,6 +259,31 @@ export const adminService = {
     formData.append('file', file);
     return api.upload<any>(`/admin/books/${id}/pdf`, formData);
   },
+  getSettings: () => api.get<any>('/admin/settings'),
+  updateProfile: (data: { name?: string; email?: string; phone?: string | null; password?: string }) =>
+    api.patch<any>('/admin/profile', data),
+  updateSmtp: (data: {
+    senderEmail: string;
+    senderName: string;
+    host: string;
+    port: number;
+    user: string;
+    pass: string;
+    secure: boolean;
+  }) => api.put<any>('/admin/smtp', data),
+  testSmtp: (data: {
+    toEmail: string;
+    host?: string;
+    port?: number;
+    user?: string;
+    pass?: string;
+    senderEmail?: string;
+    senderName?: string;
+  }) => api.post<any>('/admin/smtp/test', data),
+  getEmailLogs: (params?: { limit?: number }) => api.get<any[]>('/admin/emails', params),
+  getCustomers: (params?: { search?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
+  getSearchTrends: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get<any>('/admin/analytics/search-trends', params),
 };
 
 export const searchService = {
@@ -261,11 +291,43 @@ export const searchService = {
 };
 
 export const orderService = {
-  create: (data: { items: { bookId: string; quantity: number }[]; addressId?: string; paymentMethod?: string }) =>
-    api.post<any>('/orders', data),
+  create: (data: {
+    items: { bookId: string; quantity: number }[];
+    addressId?: string;
+    paymentMethod?: string;
+    couponCode?: string;
+    shippingMethod?: string;
+    pickupName?: string;
+    pickupPhone?: string;
+    pickupEmail?: string;
+  }) => api.post<any>('/orders', data),
   getUserOrders: () => api.get<any>('/orders/my-orders'),
-  getAllOrders: () => api.get<any>('/orders/admin/all'),
-  updateStatus: (id: string, status: string) => api.patch<any>(`/orders/admin/${id}/status`, { status }),
+  getAllOrders: (params?: { status?: string; page?: number; limit?: number }) => api.get<any>('/orders/admin/all', params),
+  getNotifications: () => api.get<any>('/orders/admin/notifications'),
+  updateStatus: (id: string, status: string, notes?: string, reason?: string) =>
+    api.patch<any>(`/orders/admin/${id}/status`, { status, notes, reason }),
+  sendCustomEmail: (
+    id: string,
+    data: {
+      subject: string;
+      message: string;
+      templateType?: 'DELAY_NOTICE' | 'REJECT_NOTICE' | 'ACCEPT_NOTICE' | 'CUSTOM';
+      recipientEmail?: string;
+      recipientName?: string;
+    }
+  ) => api.post<any>(`/orders/admin/${id}/email`, data),
+  batchUpdateStatus: (data: { orderIds: string[]; status: string; notes?: string; reason?: string }) =>
+    api.patch<any>('/orders/admin/batch-status', data),
+  batchSendEmail: (data: { orderIds: string[]; subject: string; message: string; templateType?: string }) =>
+    api.post<any>('/orders/admin/batch-email', data),
+  updateBookDimensions: (bookId: string, data: { dimensions?: string; weight?: number }) =>
+    api.patch<any>(`/orders/admin/book/${bookId}/dimensions`, data),
+  setPickupSlots: (orderId: string, slots: string[]) =>
+    api.post<any>(`/orders/admin/${orderId}/pickup-slots`, { slots }),
+  confirmPickupSlot: (orderId: string, selectedSlot: string) =>
+    api.post<any>(`/orders/${orderId}/confirm-pickup-slot`, { selectedSlot }),
+  markOrderCollected: (orderId: string) =>
+    api.post<any>(`/orders/admin/${orderId}/mark-collected`),
 };
 
 export const mediaService = {
@@ -316,5 +378,60 @@ export const authService = {
   login: (data: { email: string; password: string }) => api.post<any>('/auth/login', data),
   logout: () => api.post<any>('/auth/logout'),
   me: () => api.get<any>('/auth/me'),
+  devGoogleBypass: (data?: { email?: string; name?: string; googleId?: string; avatarUrl?: string }) =>
+    api.post<any>('/auth/google/dev-bypass', data || {}),
 };
+
+export const profileService = {
+  getProfile: () => api.get<any>('/profile'),
+  updateProfile: (data: { name?: string; phone?: string | null; avatarUrl?: string | null }) =>
+    api.patch<any>('/profile', data),
+  getAddresses: () => api.get<any[]>('/profile/address'),
+  createAddress: (data: {
+    fullName: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    state: string;
+    pincode: string;
+    type?: 'HOME' | 'WORK' | 'OTHER';
+    isDefault?: boolean;
+  }) => api.post<any>('/profile/address', data),
+  updateAddress: (id: string, data: any) => api.patch<any>(`/profile/address/${id}`, data),
+  deleteAddress: (id: string) => api.delete<any>(`/profile/address/${id}`),
+  getPaymentMethods: () => api.get<any[]>('/profile/payment-methods'),
+  savePaymentMethod: (data: {
+    type: 'UPI' | 'CARD' | 'NETBANKING';
+    provider?: string;
+    maskedData: string;
+    holderName?: string | null;
+    isDefault?: boolean;
+  }) => api.post<any>('/profile/payment-methods', data),
+  deletePaymentMethod: (id: string) => api.delete<any>(`/profile/payment-methods/${id}`),
+  getPoints: () => api.get<any>('/profile/points'),
+  getOrders: () => api.get<any[]>('/profile/orders'),
+  getNotifications: () => api.get<any[]>('/profile/notifications'),
+  markNotificationRead: (id: string) => api.patch<any>(`/profile/notifications/${id}/read`),
+};
+
+export const shippingService = {
+  verifyPincode: (pincode: string) => api.get<any>(`/shipping/pincode/${pincode}`),
+  calculateTariff: (data: {
+    productCode?: string;
+    weight: number;
+    sourcePincode: string;
+    destinationPincode: string;
+    length?: number;
+    width?: number;
+    height?: number;
+    declaredValue?: number;
+    isCOD?: boolean;
+    codValue?: number;
+  }) => api.post<any>('/shipping/tariff', data),
+  trackShipment: (identifier: string) => api.get<any>(`/shipping/track/${identifier}`),
+  bookShipment: (orderId: string, data?: any) => api.post<any>(`/shipping/book/${orderId}`, data || {}),
+  getShippingLabel: (orderId: string) => api.get<any>(`/shipping/label/${orderId}`),
+};
+
 

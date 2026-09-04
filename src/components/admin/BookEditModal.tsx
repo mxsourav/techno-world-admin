@@ -1,9 +1,29 @@
 import React, { useState } from 'react';
 
 import { toast } from 'sonner';
-import { adminService } from '@/services/api';
+import { adminService, categoryService } from '@/services/api';
+import { CATEGORIES as WEBSITE_CATEGORIES } from '@/data/books';
 
 export default function BookEditModal({ book, onClose, onSaved }: { book: any | null, onClose: () => void, onSaved: () => void }) {
+  const initialCategory = (() => {
+    const catVal = (book?.categoryName || book?.category || '').trim();
+    if (!catVal) return '';
+    const match = WEBSITE_CATEGORIES.find(
+      c => c.slug.toLowerCase() === catVal.toLowerCase() || c.name.toLowerCase() === catVal.toLowerCase()
+    );
+    return match ? match.name : catVal;
+  })();
+
+  const initialSeoKeywords = (() => {
+    if (!book?.seoKeywords) return '';
+    if (Array.isArray(book.seoKeywords)) return book.seoKeywords.join(', ');
+    try {
+      const parsed = JSON.parse(book.seoKeywords);
+      if (Array.isArray(parsed)) return parsed.join(', ');
+    } catch {}
+    return String(book.seoKeywords);
+  })();
+
   const [formData, setFormData] = useState<any>({
     title: book?.title || '',
     publicationDate: book?.publicationDate ? new Date(book.publicationDate).toISOString().split('T')[0] : '',
@@ -24,18 +44,31 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     authorsList: book?.authorsList || (book?.author ? [book.author] : []),
     subjects: book?.subjects || [],
     bookType: book?.bookType || '',
-    category: book?.categoryName || book?.category || '',
+    category: initialCategory,
+    seoKeywords: initialSeoKeywords,
     tags: book?.tags || []
   });
   
   const [descTab, setDescTab] = useState<'edit' | 'preview'>('edit');
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>(
+    WEBSITE_CATEGORIES.map(c => ({ id: c.slug, name: c.name, slug: c.slug }))
+  );
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   
   React.useEffect(() => {
-    fetch('/api/v1/categories').then(r => r.json()).then(data => {
-      if (data?.data) setCategories(data.data);
-    }).catch(e => console.error(e));
+    categoryService.getCategories().then((res: any) => {
+      if (res?.data && Array.isArray(res.data)) {
+        const map = new Map<string, any>();
+        WEBSITE_CATEGORIES.forEach(c => map.set(c.name.toLowerCase(), { id: c.slug, name: c.name, slug: c.slug }));
+        res.data.forEach((c: any) => {
+          const key = (c.name || '').toLowerCase().trim();
+          if (key && !map.has(key)) {
+            map.set(key, c);
+          }
+        });
+        setCategories(Array.from(map.values()));
+      }
+    }).catch(e => console.error('Failed to load categories:', e));
   }, []);
 
   const [loading, setLoading] = useState(false);
@@ -308,7 +341,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
               ) : (
                 <select 
                   name="category" 
-                  value={formData.category} 
+                  value={formData.category || ''} 
                   onChange={(e) => {
                     if (e.target.value === 'ADD_NEW') {
                       setIsAddingNewCategory(true);
@@ -321,8 +354,11 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                 >
                   <option value="">Select Category...</option>
                   {categories.map(c => (
-                    <option key={c.id} value={c.slug || c.name}>{c.name}</option>
+                    <option key={c.id || c.slug} value={c.name}>{c.name}</option>
                   ))}
+                  {formData.category && !categories.some(c => c.name.toLowerCase() === (formData.category || '').toLowerCase()) && (
+                    <option value={formData.category}>{formData.category}</option>
+                  )}
                   <option value="ADD_NEW" className="font-bold text-emerald-600">+ Add New Category...</option>
                 </select>
               )}
@@ -334,6 +370,49 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Subjects (comma separated)</label>
               <input value={(formData.subjects || []).join(', ')} onChange={e => handleArrayChange('subjects', e.target.value)} placeholder="e.g. Mathematics, Zoology" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          {/* Internal Search Keywords & Indexing (Admin Only - Never visible on customer storefront) */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-bold text-slate-900">
+                Search & SEO Keywords (Internal Indexing Only)
+              </label>
+              <span className="rounded-md bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                🔒 Admin Only &bull; Hidden from Customer Storefront
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Enter comma-separated keywords, alternate spellings, exam tags, and syllabus terms (e.g. <i>NEET 2026, Physics MCQ, WBJEE, HC Verma, Class 11, Medical Entrance</i>). The customer search bar indexes these for ultra-fast query matching, but this section will never be shown to customers.
+            </p>
+            <input
+              name="seoKeywords"
+              value={formData.seoKeywords || ''}
+              onChange={handleChange}
+              placeholder="e.g. NEET 2026, Physics MCQ, WBJEE, HC Verma, Class 11, Medical Entrance"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            {/* Quick exam tags helper */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] font-bold uppercase text-slate-400">Quick Tags:</span>
+              {['NEET 2026', 'JEE Advanced', 'WBJEE', 'UPSC Prelims', 'WBCS Exam', 'CBSE Class 12', 'Physics MCQ', 'Previous Years Solved'].map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    const current = formData.seoKeywords ? String(formData.seoKeywords).trim() : '';
+                    if (!current) {
+                      setFormData({ ...formData, seoKeywords: tag });
+                    } else if (!current.toLowerCase().includes(tag.toLowerCase())) {
+                      setFormData({ ...formData, seoKeywords: `${current}, ${tag}` });
+                    }
+                  }}
+                  className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-700 transition-colors shadow-2xs"
+                >
+                  + {tag}
+                </button>
+              ))}
             </div>
           </div>
         </form>

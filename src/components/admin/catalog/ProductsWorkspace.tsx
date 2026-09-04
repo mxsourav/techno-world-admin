@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminService } from '@/services/api';
-import { formatINR } from '@/utils/helpers';
+import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
@@ -21,6 +21,11 @@ export default function ProductsWorkspace() {
   const [editingDescId, setEditingDescId] = useState<string | null>(null);
   const [descInput, setDescInput] = useState('');
   const [isSavingDesc, setIsSavingDesc] = useState(false);
+
+  // Quick SEO Keywords Editor state
+  const [editingKeywordsId, setEditingKeywordsId] = useState<string | null>(null);
+  const [keywordsInput, setKeywordsInput] = useState('');
+  const [isSavingKeywords, setIsSavingKeywords] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -215,7 +220,7 @@ export default function ProductsWorkspace() {
                           <div className="font-bold text-slate-900 line-clamp-1">{book.title}</div>
                           <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">{book.categoryName} • {book.publisherName}</div>
                           <div className="flex items-center gap-2 mt-1.5 text-[10px] uppercase font-bold text-slate-400">
-                            {book.sku && <span className="rounded bg-slate-100 px-1.5 py-0.5">SKU: {book.sku}</span>}
+                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700 font-mono">SKU: {formatClientSku(book)}</span>
                             {book.isbn13 && <span>ISBN: {book.isbn13}</span>}
                             {(!book.description || book.description === 'No description provided.' || book.description.trim() === '') ? (
                               <button
@@ -477,6 +482,147 @@ export default function ProductsWorkspace() {
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+
+              {/* Search & SEO Keywords Card (Admin Only) */}
+              <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-white shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-emerald-600" />
+                    <h4 className="font-bold text-slate-800">Search & SEO Keywords</h4>
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-200">
+                      🔒 Admin Only
+                    </span>
+                  </div>
+                  {editingKeywordsId !== viewingBook.id ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingKeywordsId(viewingBook.id);
+                        const kws = viewingBook.seoKeywords;
+                        if (Array.isArray(kws)) setKeywordsInput(kws.join(', '));
+                        else {
+                          try {
+                            const parsed = JSON.parse(kws);
+                            setKeywordsInput(Array.isArray(parsed) ? parsed.join(', ') : String(kws || ''));
+                          } catch {
+                            setKeywordsInput(String(kws || ''));
+                          }
+                        }
+                      }}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" /> Edit Keywords
+                    </button>
+                  ) : null}
+                </div>
+
+                <p className="text-[11px] text-slate-500">
+                  Customer search queries will match against these terms (alternate spellings, exam names, syllabus keywords). Customers never see these keywords on the storefront.
+                </p>
+
+                {editingKeywordsId === viewingBook.id ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={keywordsInput}
+                      onChange={(e) => setKeywordsInput(e.target.value)}
+                      placeholder="e.g. NEET 2026, Physics MCQ, WBJEE, HC Verma, Class 11, Medical Entrance"
+                      className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    />
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">Quick Exam Tags:</span>
+                      {['NEET 2026', 'JEE Advanced', 'WBJEE', 'UPSC Prelims', 'WBCS Exam', 'CBSE Class 12', 'Physics MCQ'].map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            const cur = keywordsInput.trim();
+                            if (!cur) setKeywordsInput(tag);
+                            else if (!cur.toLowerCase().includes(tag.toLowerCase())) setKeywordsInput(`${cur}, ${tag}`);
+                          }}
+                          className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-700 shadow-2xs"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingKeywordsId(null)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSavingKeywords}
+                        onClick={async () => {
+                          setIsSavingKeywords(true);
+                          try {
+                            await adminService.updateBook(viewingBook.id, { seoKeywords: keywordsInput });
+                            toast.success('Search keywords updated successfully!');
+                            setViewingBook({ ...viewingBook, seoKeywords: keywordsInput });
+                            setEditingKeywordsId(null);
+                            fetchData();
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to update keywords');
+                          } finally {
+                            setIsSavingKeywords(false);
+                          }
+                        }}
+                        className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {isSavingKeywords ? 'Saving...' : 'Save Keywords'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                    {(() => {
+                      const kws = viewingBook.seoKeywords;
+                      let kwArray: string[] = [];
+                      if (Array.isArray(kws)) kwArray = kws;
+                      else if (typeof kws === 'string' && kws.trim()) {
+                        try {
+                          const parsed = JSON.parse(kws);
+                          kwArray = Array.isArray(parsed) ? parsed : kws.split(',').map(s => s.trim());
+                        } catch {
+                          kwArray = kws.split(',').map(s => s.trim()).filter(Boolean);
+                        }
+                      }
+
+                      if (kwArray.length === 0) {
+                        return (
+                          <div className="text-center py-2">
+                            <p className="text-slate-400 italic text-xs mb-1">No custom search keywords set yet.</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingKeywordsId(viewingBook.id);
+                                setKeywordsInput('');
+                              }}
+                              className="rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold hover:bg-emerald-100"
+                            >
+                              + Add SEO Keywords
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="flex flex-wrap gap-1.5">
+                          {kwArray.map((kw, i) => (
+                            <span key={i} className="inline-flex items-center rounded-md bg-white border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-2xs">
+                              🏷️ {kw}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

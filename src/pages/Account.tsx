@@ -46,9 +46,9 @@ export default function Account() {
         {[
           { icon: Package, t: 'Orders', to: '/track', n: orders.length },
           { icon: Heart, t: 'Wishlist', to: '/wishlist', n: wishlist.length },
-          { icon: MapPin, t: 'Addresses', to: '/account', n: addresses.length },
-          { icon: RotateCcw, t: 'Returns', to: '/help', n: 0 },
-          { icon: Bell, t: 'Alerts', to: '/account', n: 2 },
+          { icon: MapPin, t: 'Addresses', to: '/profile?tab=addresses', n: addresses.length },
+          { icon: RotateCcw, t: 'Replacements', to: '/refund-policy', n: 0 },
+          { icon: Bell, t: 'Alerts', to: '/profile?tab=notifications', n: 2 },
           { icon: Gift, t: 'Refer & Earn', to: '/account', n: 0 },
         ].map((x) => (
           <Link key={x.t} to={x.to} onClick={(e) => { if (x.t === 'Refer & Earn') { e.preventDefault(); toast.success('Referral link copied! Both you and your friend get ₹100 in points.'); } }}
@@ -84,7 +84,14 @@ export default function Account() {
                   <button onClick={() => toast.success('Invoice downloaded (PDF)')} className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50">
                     <Download className="h-3 w-3" /> Invoice
                   </button>
-                  <button onClick={() => toast.success('Return request submitted. Pickup within 48h.')} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50">Return</button>
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSdP7BBi2SNX67XU0xoBDzqiXSaL4nyBBIwDfVacG8M9kVR1RQ/viewform?usp=publish-editor"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
+                  >
+                    Replacement
+                  </a>
                 </div>
               </div>
             ))}
