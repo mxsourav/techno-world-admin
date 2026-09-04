@@ -35,8 +35,8 @@ import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 
 export default function Profile() {
-  const { logout: authLogout, login: authLogin } = useAuthStore();
-  const { logout: storeLogout } = useStore();
+  const { logout: authLogout, login: authLogin, accessToken } = useAuthStore();
+  const { logout: storeLogout, user: storeUser } = useStore();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -309,7 +309,10 @@ export default function Profile() {
   };
 
   // If not logged in, prompt user to log in via Developer Google OAuth Bypass
-  if (!loading && !profileData) {
+  // Check BOTH profileData (from API) AND storeUser/accessToken (from login state)
+  const isLoggedIn = !!(profileData || storeUser || accessToken);
+
+  if (!loading && !isLoggedIn) {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow">
@@ -346,6 +349,38 @@ export default function Profile() {
             Sign in with Google (Dev Bypass)
           </button>
           
+          <Link to="/" className="block text-xs font-semibold text-slate-500 hover:text-slate-800">
+            Back to Bookstore
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // User is logged in but profile API call failed or still loading — show retry UI
+  if (!loading && !profileData && isLoggedIn) {
+    return (
+      <div className="mx-auto max-w-md px-6 py-24 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shadow">
+          <AlertTriangle className="h-8 w-8" />
+        </div>
+        <h1 className="mt-4 text-2xl font-extrabold text-slate-900">
+          Welcome, {storeUser?.name || 'Reader'}!
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          We're having trouble loading your profile data. The server may be starting up — please try again.
+        </p>
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchFullProfile();
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-emerald-700 transition-all"
+          >
+            <Loader2 className="h-4 w-4" />
+            Retry Loading Profile
+          </button>
           <Link to="/" className="block text-xs font-semibold text-slate-500 hover:text-slate-800">
             Back to Bookstore
           </Link>

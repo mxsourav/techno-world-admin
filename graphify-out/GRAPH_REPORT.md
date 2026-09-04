@@ -1,7 +1,7 @@
 # Graph Report - C:\Users\rodd\Desktop\techno-world-admin  (2026-09-04)
 
 ## Corpus Check
-- 125 files · ~2,696,383 words
+- 125 files · ~2,698,010 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -700,7 +700,7 @@ Nodes (0):
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 83`** (2 nodes): `utils.ts`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (2 nodes): `Checkout.tsx`, `finishOrder()`
+- **Thin community `Community 84`** (2 nodes): `Checkout.tsx`, `if()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 85`** (2 nodes): `Contact.tsx`, `handleSubmit()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
