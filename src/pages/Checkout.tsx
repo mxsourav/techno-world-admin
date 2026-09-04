@@ -25,6 +25,7 @@ export default function Checkout() {
   const [selectedAddr, setSelectedAddr] = useState<string>('new');
   const [shippingMethod, setShippingMethod] = useState<string>('NORMAL_POST');
   const [payment, setPayment] = useState('upi');
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState({
     name: user?.name ?? '',
     email: (user?.email && !user.email.includes('technoworld.com') && !user.email.includes('google.dev') && !user.email.includes('@mail.com')) ? user.email : '',
@@ -71,6 +72,13 @@ export default function Checkout() {
       return true;
     });
   }, [dbAddresses, storeAddresses]);
+
+  useEffect(() => {
+    if (addresses.length > 0 && selectedAddr === 'new') {
+      const def = addresses.find((a: any) => a.isDefault) || addresses[0];
+      if (def) setSelectedAddr(def.id);
+    }
+  }, [addresses]);
 
   const selectedAddressObj = useMemo(() => {
     if (selectedAddr !== 'new') {
@@ -148,6 +156,57 @@ export default function Checkout() {
     loading,
     error,
   } = useCartTotals(activePincode, selectedAddressObj?.id, effectivePricingAddress, effectiveShippingMethod, payment);
+
+  const effectiveDeliveryOptions = useMemo(() => {
+    if (deliveryOptions && Array.isArray(deliveryOptions) && deliveryOptions.length > 0) {
+      const valid = deliveryOptions.filter((opt: any) => opt && opt.eligible !== false);
+      if (valid.length > 0) return valid;
+    }
+    const cleanPin = activePincode || form.pincode.replace(/\D/g, '').slice(0, 6);
+    const isKolkata = cleanPin && /^700\d{3}$/.test(cleanPin);
+    const standardFee = subtotal >= 499 ? 0 : 49;
+    return [
+      {
+        method: 'NORMAL_POST',
+        id: 'NORMAL_POST',
+        label: 'Standard Delivery',
+        description: 'Reliable delivery via India Post network',
+        price: standardFee,
+        priceLabel: standardFee === 0 ? 'FREE' : `₹${standardFee}`,
+        estimatedDays: '5–7 Business Days',
+        eligible: true,
+      },
+      {
+        method: 'SPEED_POST',
+        id: 'SPEED_POST',
+        label: 'Speed Post',
+        description: 'Priority handling with real-time tracking',
+        price: 199,
+        priceLabel: '₹199',
+        estimatedDays: '2–4 Business Days',
+        eligible: true,
+      },
+      ...(isKolkata ? [{
+        method: 'EXPRESS_LOCAL',
+        id: 'EXPRESS_LOCAL',
+        label: 'Express Delivery',
+        description: 'Same-day local delivery partner (Porter / Rapido)',
+        price: 149,
+        priceLabel: '₹149',
+        estimatedDays: 'Same Day',
+        eligible: true,
+      }] : []),
+    ];
+  }, [deliveryOptions, activePincode, form.pincode, subtotal]);
+
+  useEffect(() => {
+    if (fulfillmentMode === 'DELIVERY' && effectiveDeliveryOptions.length > 0) {
+      const exists = effectiveDeliveryOptions.some((o: any) => (o.method || o.id) === shippingMethod);
+      if (!exists) {
+        setShippingMethod(effectiveDeliveryOptions[0].method || (effectiveDeliveryOptions[0] as any).id || 'NORMAL_POST');
+      }
+    }
+  }, [effectiveDeliveryOptions, fulfillmentMode, shippingMethod]);
 
   const [pincodeStatus, setPincodeStatus] = useState<{
     loading: boolean;
@@ -305,6 +364,97 @@ export default function Checkout() {
       </div>
     );
   }
+
+  const handleProceedToDelivery = () => {
+    const userEmail = (form.email || user?.email || pickupForm.email || '').trim();
+    if (!userEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail)) {
+      return toast.error('Valid Email ID is mandatory for order confirmation and tracking');
+    }
+
+    if (fulfillmentMode === 'PICKUP') {
+      const collectorName = pickupForm.name.trim();
+      const collectorPhone = pickupForm.phone.replace(/\D/g, '');
+      if (!collectorName) return toast.error("Collector's Full Name is required for Store Pickup");
+      if (!collectorPhone || collectorPhone.length < 10) {
+        return toast.error("Please enter a valid 10-digit mobile phone number");
+      }
+      setActiveStep(2);
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+      return;
+    }
+
+    if (selectedAddr !== 'new') {
+      const chosen = addresses.find((a: any) => a.id === selectedAddr);
+      if (!chosen) {
+        return toast.error('Please select an address or add a new one');
+      }
+      if (!chosen.pincode || chosen.pincode.replace(/\D/g, '').length < 6) {
+        return toast.error('Selected address does not have a valid 6-digit PIN code');
+      }
+      setActiveStep(2);
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    } else {
+      if (!form.name.trim()) return toast.error('Full Name is required');
+      if (!form.phone || form.phone.replace(/\D/g, '').length < 10) {
+        return toast.error('Please enter a valid 10-digit mobile number');
+      }
+      if (!form.line1.trim()) return toast.error('Street Address / House No is required');
+      if (!form.postOffice.trim()) return toast.error('Local Post Office Name is mandatory');
+      if (!form.city.trim()) return toast.error('City is required');
+      if (!form.pincode || form.pincode.replace(/\D/g, '').length < 6) {
+        return toast.error('Please enter a valid 6-digit PIN code');
+      }
+
+      const newAddr: Address = {
+        id: 'addr_' + Date.now(),
+        name: form.name.trim(),
+        phone: form.phone.replace(/\D/g, '').slice(0, 10),
+        email: userEmail,
+        line1: form.line1.trim(),
+        line2: form.line2.trim(),
+        postOffice: form.postOffice.trim(),
+        landmark: form.landmark.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        pincode: form.pincode.replace(/\D/g, '').slice(0, 6),
+        type: form.type,
+      };
+      addAddress(newAddr);
+
+      profileService.createAddress({
+        fullName: newAddr.name,
+        phone: newAddr.phone,
+        addressLine1: newAddr.line1,
+        addressLine2: newAddr.line2 || undefined,
+        postOffice: newAddr.postOffice,
+        landmark: newAddr.landmark || undefined,
+        city: newAddr.city,
+        state: newAddr.state,
+        pincode: newAddr.pincode,
+        type: (newAddr.type || 'HOME').toUpperCase() as any,
+        isDefault: addresses.length === 0,
+      }).then((res: any) => {
+        if (res.success && res.data) {
+          setDbAddresses(prev => [...prev, res.data]);
+          setSelectedAddr(res.data.id);
+        }
+      }).catch(() => {});
+
+      setSelectedAddr(newAddr.id);
+      setActiveStep(2);
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    }
+  };
+
+  const handleProceedToPayment = () => {
+    if (fulfillmentMode === 'DELIVERY') {
+      if (!shippingMethod) {
+        setShippingMethod('NORMAL_POST');
+      }
+    }
+    setActiveStep(3);
+    window.scrollTo({ top: 260, behavior: 'smooth' });
+  };
 
   const handlePlaceOrder = async () => {
     const userEmail = (form.email || user?.email || pickupForm.email || '').trim();
@@ -574,6 +724,7 @@ export default function Checkout() {
                 onClick={() => {
                   setFulfillmentMode('DELIVERY');
                   if (shippingMethod === 'SELF_PICKUP') setShippingMethod('NORMAL_POST');
+                  setActiveStep(1);
                 }}
                 className={`flex items-center gap-2.5 sm:gap-3 rounded-xl border p-3 text-left transition-all ${
                   fulfillmentMode === 'DELIVERY'
@@ -598,6 +749,7 @@ export default function Checkout() {
                   setFulfillmentMode('PICKUP');
                   setShippingMethod('SELF_PICKUP');
                   if (payment === 'cod') setPayment('upi');
+                  setActiveStep(1);
                 }}
                 className={`flex items-center gap-2.5 sm:gap-3 rounded-xl border p-3 text-left transition-all ${
                   fulfillmentMode === 'PICKUP'
@@ -621,186 +773,237 @@ export default function Checkout() {
             </div>
           </div>
 
-          {fulfillmentMode === 'PICKUP' ? (
-            /* STORE SELF-PICKUP DETAILS */
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-700">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">1</span>
-                <Store className="h-4 w-4" /> Collector Information & Pickup Desk
-              </p>
-
-              {/* Collector Contact Form */}
-              <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-700">
-                      Collector Full Name <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      value={pickupForm.name}
-                      onChange={(e) => setPickupForm({ ...pickupForm, name: e.target.value })}
-                      placeholder="Person who will collect the book"
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-700">
-                      Collector Mobile / WhatsApp <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="flex rounded-lg border border-slate-200 focus-within:border-emerald-500">
-                      <span className="flex items-center bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 border-r border-slate-200">+91</span>
-                      <input
-                        value={pickupForm.phone}
-                        onChange={(e) => setPickupForm({ ...pickupForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        placeholder="10-digit mobile number"
-                        className="w-full rounded-r-lg px-3 py-2 text-sm outline-none"
-                      />
-                    </div>
-                    <p className="mt-1 text-[11px] text-slate-400">Can be different from your account if a friend or family member is collecting.</p>
-                  </div>
+          {/* STEP 1: ADDRESS / PICKUP DETAILS */}
+          {activeStep === 1 ? (
+            fulfillmentMode === 'PICKUP' ? (
+              /* STORE SELF-PICKUP DETAILS EXPANDED */
+              <section className="rounded-xl border border-emerald-500 bg-white p-5 shadow-sm ring-1 ring-emerald-500/20">
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-800">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">1</span>
+                    <Store className="h-4 w-4 text-emerald-700" /> Collector Information &amp; Pickup Desk
+                  </p>
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">Active Step</span>
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-700">
-                    Email Address for Official Tax Invoice <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    value={pickupForm.email}
-                    onChange={(e) => setPickupForm({ ...pickupForm, email: e.target.value })}
-                    placeholder="youremail@example.com"
-                    type="email"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-                  />
-                  <p className="mt-1 text-[11px] text-slate-400">Invoice will be emailed here and available in your Account Center for pickup verification.</p>
-                </div>
-              </div>
-
-              {/* Store Address & Location Card */}
-              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-emerald-100 p-2 text-emerald-800 shrink-0 mt-0.5">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Techno World Books — College Street Dispatch Desk</p>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      90/6A, Mahatma Gandhi Rd, opp. Grace Cinema, Calcutta University, College Street, Kolkata, West Bengal 700007
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      Operating Hours: Monday – Saturday, 11:00 AM – 7:30 PM (Per appointed slot)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Strict Independence Disclaimer */}
-              <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
-                <div className="flex items-start gap-2.5">
-                  <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
-                  <div className="space-y-1.5">
-                    <p className="font-bold text-slate-800">Enterprise Division & Offline Retail Notice</p>
-                    <p className="leading-relaxed">
-                      Techno World Books Online and the College Street offline retail bookstore operate under the same parent brand trademark, but run as completely separate corporate divisions with independent inventory and accounting systems.
-                    </p>
-                    <p className="leading-relaxed">
-                      Offline retail counter exchanges, returns, or over-the-counter replacements are strictly not possible. You can place your order online, receive your official invoice in your account / email upon acceptance, and present that invoice at our College Street dispatch desk at your selected appointment time to collect your books.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          ) : (
-            /* DELIVERY ADDRESS */
-            <section className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-              <p className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-700">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">1</span>
-                <MapPin className="h-4 w-4" /> Delivery Address
-              </p>
-              {addresses?.length > 0 && (
-                <div className="mb-4 space-y-2">
-                  {addresses.map((a: any) => (
-                    <label key={a.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${selectedAddr === a.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
-                      <input type="radio" checked={selectedAddr === a.id} onChange={() => setSelectedAddr(a.id)} className="mt-1" />
-                      <span className="text-sm">
-                        <b>{a.name || a.fullName}</b> <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold">{a.type || 'HOME'}</span><br />
-                        <span className="text-slate-500">{a.line1 || a.addressLine1}, {a.city}, {a.state} — <b>{a.pincode}</b> · +91 {a.phone}</span>
-                      </span>
-                    </label>
-                  ))}
-                  <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold ${selectedAddr === 'new' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
-                    <input type="radio" checked={selectedAddr === 'new'} onChange={() => setSelectedAddr('new')} /> + Add a new address
-                  </label>
-                </div>
-              )}
-              {/* Mandatory Email for Order Confirmation */}
-              <div className="mb-4 rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Customer Email ID <span className="text-rose-600">* (Mandatory for order invoices & tracking)</span>
-                </label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="e.g. yourname@gmail.com"
-                  required
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 shadow-sm"
-                />
-              </div>
-
-              {selectedAddr === 'new' && (
+                {/* Collector Contact Form */}
                 <div className="space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full Name *" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                    <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Mobile Number *" type="tel" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                  </div>
-                  <input value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} placeholder="House/Flat No., Building Name, Street *" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                  <input value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} placeholder="Apartment, Suite, Unit, etc. (optional)" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                  
-                  {/* Mandatory Post Office Name Input */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">
-                      Local Post Office Name <span className="text-rose-600">* (Mandatory for postal dispatch)</span>
-                    </label>
-                    <input
-                      value={form.postOffice}
-                      onChange={(e) => setForm({ ...form, postOffice: e.target.value })}
-                      placeholder="e.g. Bowbazar SO, Park Street PO, College Street SO"
-                      required
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
-                    />
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-700">
+                        Collector Full Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        value={pickupForm.name}
+                        onChange={(e) => setPickupForm({ ...pickupForm, name: e.target.value })}
+                        placeholder="Person who will collect the book"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-700">
+                        Collector Mobile / WhatsApp <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="flex rounded-lg border border-slate-200 focus-within:border-emerald-500">
+                        <span className="flex items-center bg-slate-50 px-2.5 text-xs font-semibold text-slate-500 border-r border-slate-200">+91</span>
+                        <input
+                          value={pickupForm.phone}
+                          onChange={(e) => setPickupForm({ ...pickupForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                          placeholder="10-digit mobile number"
+                          className="w-full rounded-r-lg px-3 py-2 text-sm outline-none"
+                        />
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-400">Can be different from your account if a friend or family member is collecting.</p>
+                    </div>
                   </div>
 
-                  <input value={form.landmark} onChange={(e) => setForm({ ...form, landmark: e.target.value })} placeholder="Landmark (e.g. Near Metro Station)" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="City *" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                    <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500">
-                      {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <div className="flex gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-700">
+                      Email Address for Official Tax Invoice <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      value={pickupForm.email}
+                      onChange={(e) => setPickupForm({ ...pickupForm, email: e.target.value })}
+                      placeholder="youremail@example.com"
+                      type="email"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    />
+                    <p className="mt-1 text-[11px] text-slate-400">Invoice will be emailed here and available in your Account Center for pickup verification.</p>
+                  </div>
+                </div>
+
+                {/* Store Address & Location Card */}
+                <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-emerald-100 p-2 text-emerald-800 shrink-0 mt-0.5">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">Techno World Books — College Street Dispatch Desk</p>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        90/6A, Mahatma Gandhi Rd, opp. Grace Cinema, Calcutta University, College Street, Kolkata, West Bengal 700007
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        Operating Hours: Monday – Saturday, 11:00 AM – 7:30 PM (Per appointed slot)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Strict Independence Disclaimer */}
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
+                  <div className="flex items-start gap-2.5">
+                    <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+                    <div className="space-y-1.5">
+                      <p className="font-bold text-slate-800">Enterprise Division &amp; Offline Retail Notice</p>
+                      <p className="leading-relaxed">
+                        Techno World Books Online and the College Street offline retail bookstore operate under the same parent brand trademark, but run as completely separate corporate divisions with independent inventory and accounting systems.
+                      </p>
+                      <p className="leading-relaxed">
+                        Offline retail counter exchanges, returns, or over-the-counter replacements are strictly not possible. You can place your order online, receive your official invoice in your account / email upon acceptance, and present that invoice at our College Street dispatch desk at your selected appointment time to collect your books.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleProceedToDelivery}
+                    className="w-full sm:w-auto rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    Confirm Collector Info &amp; Continue →
+                  </button>
+                </div>
+              </section>
+            ) : (
+              /* DELIVERY ADDRESS EXPANDED */
+              <section className="rounded-xl border border-emerald-500 bg-white p-5 shadow-sm ring-1 ring-emerald-500/20">
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-800">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">1</span>
+                    <MapPin className="h-4 w-4 text-emerald-700" /> Delivery Address
+                  </p>
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">Active Step</span>
+                </div>
+
+                {/* Mandatory Email for Order Confirmation */}
+                <div className="mb-4 rounded-xl bg-slate-50 p-3.5 border border-slate-200">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Customer Email ID <span className="text-rose-600">* (Mandatory for order invoices &amp; tracking)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="e.g. yourname@gmail.com"
+                    required
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 shadow-sm"
+                  />
+                </div>
+
+                {addresses?.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {addresses.map((a: any) => (
+                      <label key={a.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${selectedAddr === a.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
+                        <input type="radio" checked={selectedAddr === a.id} onChange={() => setSelectedAddr(a.id)} className="mt-1" />
+                        <span className="text-sm">
+                          <b>{a.name || a.fullName}</b> <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold">{a.type || 'HOME'}</span><br />
+                          <span className="text-slate-500">
+                            {a.line1 || a.addressLine1}
+                            {(a.line2 || a.addressLine2) ? `, ${a.line2 || a.addressLine2}` : ''}
+                            {(a.postOffice || a.localPostOffice) ? `, PO: ${a.postOffice || a.localPostOffice}` : ''}
+                            , {a.city}, {a.state} — <b>{a.pincode}</b> · +91 {a.phone}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                    <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold ${selectedAddr === 'new' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
+                      <input type="radio" checked={selectedAddr === 'new'} onChange={() => setSelectedAddr('new')} /> + Add a new address
+                    </label>
+                  </div>
+                )}
+
+                {selectedAddr === 'new' && (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-bold text-slate-700">Full Name *</label>
+                        <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full Name *" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-bold text-slate-700">Mobile Number *</label>
+                        <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10-digit Mobile Number *" type="tel" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-700">Street Address / House No *</label>
+                      <input value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} placeholder="House/Flat No., Building Name, Street *" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-700">Apartment, Suite, Unit (optional)</label>
+                      <input value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} placeholder="Apartment, Suite, Unit, etc. (optional)" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                    </div>
+                    
+                    {/* Mandatory Post Office Name Input */}
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-slate-700">
+                        Local Post Office Name <span className="text-rose-600">* (Mandatory for postal dispatch)</span>
+                      </label>
                       <input
-                        value={form.pincode}
-                        onChange={(e) => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-                        placeholder="6-digit Pincode"
-                        inputMode="numeric"
+                        value={form.postOffice}
+                        onChange={(e) => setForm({ ...form, postOffice: e.target.value })}
+                        placeholder="e.g. Bowbazar SO, Park Street PO, College Street SO"
+                        required
                         className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
                       />
-                      <div className="flex shrink-0 gap-2">
-                        {(['Home', 'Work'] as const).map((t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setForm({ ...form, type: t })}
-                            className={`rounded-lg border px-4 py-2 text-xs font-bold ${
-                              form.type === t
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                : 'border-slate-200 text-slate-500'
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        ))}
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-700">Landmark (optional)</label>
+                      <input value={form.landmark} onChange={(e) => setForm({ ...form, landmark: e.target.value })} placeholder="Landmark (e.g. Near Metro Station)" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-bold text-slate-700">City / District *</label>
+                        <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="City *" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-bold text-slate-700">State *</label>
+                        <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500">
+                          {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-bold text-slate-700">PIN Code *</label>
+                        <div className="flex gap-2">
+                          <input
+                            value={form.pincode}
+                            onChange={(e) => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                            placeholder="6-digit Pincode"
+                            inputMode="numeric"
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                          />
+                          <div className="flex shrink-0 gap-1.5">
+                            {(['Home', 'Work'] as const).map((t) => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => setForm({ ...form, type: t })}
+                                className={`rounded-lg border px-3 py-2 text-xs font-bold ${
+                                  form.type === t
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                    : 'border-slate-200 text-slate-500'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -823,151 +1026,318 @@ export default function Checkout() {
                       </p>
                     )}
                   </div>
-                </div>
-              )}
-            </section>
-          )}
+                )}
 
-          {/* Step 2: Fulfillment / Delivery Method */}
-          {fulfillmentMode === 'PICKUP' ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-700">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">2</span>
-                <Store className="h-4 w-4" /> Fulfillment Method
-              </p>
-              <div className="rounded-xl border-2 border-emerald-600 bg-emerald-50/50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Store className="h-5 w-5 text-emerald-700" />
-                    <div>
-                      <p className="text-sm font-bold text-emerald-950">Store Self-Pickup (College Street Desk)</p>
-                      <p className="text-xs text-emerald-800 mt-0.5">Ready per appointed time slot · Zero shipping fee</p>
-                    </div>
-                  </div>
-                  <span className="rounded-md bg-emerald-700 px-2.5 py-1 text-xs font-black text-white">FREE</span>
-                </div>
-                <p className="text-[11px] text-slate-600 mt-2.5 border-t border-emerald-100 pt-2 leading-relaxed">
-                  📅 Once your order is placed, our admin team will offer <b>3 to 4 pickup time slots</b> in your Notification Center & Order Details. Choose the one that suits your schedule and collect your books using your official invoice!
-                </p>
-              </div>
-            </section>
-          ) : (
-            isShippingCalculated && (
-              <section className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                <p className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-700">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">2</span>
-                  <Truck className="h-4 w-4" /> Choose Delivery Method
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {deliveryOptions?.filter((opt: any) => opt.eligible !== false).map((opt: any) => {
-                    const methodId = opt.method || opt.id;
-                    const isSelected = shippingMethod === methodId;
-                    const isExpress = methodId === 'EXPRESS_LOCAL';
-                    const Icon = methodId === 'SPEED_POST' ? Zap : methodId === 'EXPRESS_LOCAL' ? Truck : Package;
-                    return (
-                      <label
-                        key={methodId}
-                        className={`relative flex cursor-pointer flex-col gap-2 rounded-xl border p-4 transition-all ${
-                          isSelected 
-                            ? isExpress 
-                              ? 'border-purple-800 bg-purple-50 ring-1 ring-purple-800' 
-                              : 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500'
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        {isExpress && <div className="absolute inset-y-0 left-0 w-1.5 rounded-l-xl bg-gradient-to-b from-purple-800 to-purple-600" />}
-                        <div className="flex items-start justify-between gap-3 ml-1">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name="shippingMethod"
-                              checked={isSelected}
-                              onChange={() => setShippingMethod(methodId)}
-                              className="mt-0.5"
-                            />
-                            <div>
-                              <p className={`text-sm font-bold flex items-center gap-1.5 ${isSelected && isExpress ? 'text-purple-900' : 'text-slate-800'}`}>
-                                <Icon className={`h-4 w-4 ${isSelected && isExpress ? 'text-purple-700' : isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
-                                {opt.label}
-                              </p>
-                              <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{opt.description}</p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-extrabold text-slate-900">
-                              {opt.price === 0 ? <span className="text-emerald-600">FREE</span> : formatINR(opt.price)}
-                            </p>
-                            <p className="text-[10px] font-medium text-slate-500 mt-1 whitespace-nowrap">{opt.estimatedDays}</p>
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleProceedToDelivery}
+                    className="w-full sm:w-auto rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    Deliver to this Address →
+                  </button>
                 </div>
               </section>
             )
-          )}
-
-          {/* payment */}
-          <section className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-            <p className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-700">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">3</span>
-              <CreditCard className="h-4 w-4" /> Payment Method
-            </p>
-            <div className="space-y-2">
-              {PAYMENTS.map((p) => {
-                const isCod = p.id === 'cod';
-                const isPickupDisabled = fulfillmentMode === 'PICKUP' && isCod;
-                return (
-                  <label
-                    key={p.id}
-                    className={`flex items-center gap-3 rounded-lg border p-3.5 transition-all ${
-                      isPickupDisabled
-                        ? 'cursor-not-allowed opacity-50 bg-slate-50 border-slate-200'
-                        : payment === p.id
-                        ? 'cursor-pointer border-emerald-500 bg-emerald-50'
-                        : 'cursor-pointer border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      disabled={isPickupDisabled}
-                      checked={payment === p.id && !isPickupDisabled}
-                      onChange={() => !isPickupDisabled && setPayment(p.id)}
-                    />
-                    <p.icon className="h-5 w-5 text-emerald-700" />
-                    <span className="text-sm">
-                      <b className="text-slate-800">{p.name}</b>
-                      {isPickupDisabled ? (
-                        <span className="block text-xs text-rose-600 font-medium">Prepaid only for Store Pickup (COD is not available)</span>
-                      ) : (
-                        <span className="block text-xs text-slate-500">{p.desc}</span>
-                      )}
+          ) : (
+            /* STEP 1 COLLAPSED / COMPLETED */
+            <div className="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white mt-0.5">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                      {fulfillmentMode === 'PICKUP' ? '1. STORE PICKUP DETAILS' : '1. DELIVERY ADDRESS'}
                     </span>
-                    {p.id === 'upi' && <span className="ml-auto rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">FASTEST</span>}
-                  </label>
-                );
-              })}
-            </div>
-            {payment === 'upi' && (
-              <input value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="yourname@upi" className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 sm:max-w-xs" />
-            )}
-            {payment === 'card' && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <input value={card.number} onChange={(e) => setCard({ ...card, number: e.target.value.replace(/[^\d]/g, '').slice(0, 16) })} placeholder="Card number" inputMode="numeric" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 sm:col-span-2" />
-                <input value={card.name} onChange={(e) => setCard({ ...card, name: e.target.value })} placeholder="Name on card" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                <div className="flex gap-3">
-                  <input value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value.slice(0, 5) })} placeholder="MM/YY" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                  <input value={card.cvv} onChange={(e) => setCard({ ...card, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="CVV" type="password" inputMode="numeric" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                    <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">Confirmed</span>
+                  </div>
+                  {fulfillmentMode === 'PICKUP' ? (
+                    <div className="mt-1 text-sm font-semibold text-slate-800">
+                      <span>{pickupForm.name || user?.name}</span> · <span className="text-slate-600">+91 {pickupForm.phone || user?.phone}</span> · <span className="text-slate-500 font-normal">{pickupForm.email || form.email}</span>
+                      <p className="text-xs text-slate-500 font-normal mt-0.5">Techno World Books — College Street Dispatch Desk (Appointed Slot)</p>
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-sm font-semibold text-slate-800">
+                      <span>{selectedAddressObj?.name || selectedAddressObj?.fullName || form.name}</span> · <span className="text-slate-600">+91 {selectedAddressObj?.phone || form.phone}</span>
+                      <p className="text-xs text-slate-600 font-normal mt-0.5 leading-relaxed">
+                        {selectedAddressObj?.line1 || selectedAddressObj?.addressLine1 || form.line1}
+                        {(selectedAddressObj?.line2 || selectedAddressObj?.addressLine2 || form.line2) ? `, ${selectedAddressObj?.line2 || selectedAddressObj?.addressLine2 || form.line2}` : ''}
+                        {(selectedAddressObj?.postOffice || form.postOffice) ? `, PO: ${selectedAddressObj?.postOffice || form.postOffice}` : ''}
+                        , {selectedAddressObj?.city || form.city}, {selectedAddressObj?.state || form.state} — <b>{selectedAddressObj?.pincode || form.pincode}</b>
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-            {payment === 'cod' && fulfillmentMode !== 'PICKUP' && (
-              <p className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900 font-medium">
-                💵 ₹20 Cash on Delivery handling fee added to your order total. Please keep exact change ready upon delivery.
-              </p>
-            )}
-          </section>
+              <button
+                type="button"
+                onClick={() => setActiveStep(1)}
+                className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
+              >
+                Change
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: CHOOSE DELIVERY METHOD */}
+          {activeStep === 1 ? (
+            /* Inactive Step 2 placeholder */
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 opacity-75 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">2</span>
+                <div>
+                  <p className="text-sm font-bold text-slate-700">2. Choose Delivery Method</p>
+                  <p className="text-xs text-slate-400">Confirm delivery address above to select shipping speed</p>
+                </div>
+              </div>
+            </div>
+          ) : activeStep === 2 ? (
+            /* Active Step 2 expanded */
+            <section className="rounded-xl border border-emerald-500 bg-white p-5 shadow-sm ring-1 ring-emerald-500/20">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-800">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">2</span>
+                  {fulfillmentMode === 'PICKUP' ? (
+                    <>
+                      <Store className="h-4 w-4 text-emerald-700" /> Fulfillment Method
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="h-4 w-4 text-emerald-700" /> Choose Delivery Method
+                    </>
+                  )}
+                </p>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">Active Step</span>
+              </div>
+
+              {fulfillmentMode === 'PICKUP' ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl border-2 border-emerald-600 bg-emerald-50/50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <Store className="h-5 w-5 text-emerald-700" />
+                        <div>
+                          <p className="text-sm font-bold text-emerald-950">Store Self-Pickup (College Street Desk)</p>
+                          <p className="text-xs text-emerald-800 mt-0.5">Ready per appointed time slot · Zero shipping fee</p>
+                        </div>
+                      </div>
+                      <span className="rounded-md bg-emerald-700 px-2.5 py-1 text-xs font-black text-white">FREE</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-2.5 border-t border-emerald-100 pt-2 leading-relaxed">
+                      📅 Once your order is placed, our warehouse team will prepare your books and offer <b>3 to 4 pickup time slots</b> in your Notification Center &amp; Order Details. Choose your preferred slot and collect your books!
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleProceedToPayment}
+                      className="w-full sm:w-auto rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      Continue to Payment Method →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {effectiveDeliveryOptions.map((opt: any) => {
+                      const methodId = opt.method || opt.id;
+                      const isSelected = shippingMethod === methodId;
+                      const isExpress = methodId === 'EXPRESS_LOCAL';
+                      const Icon = methodId === 'SPEED_POST' ? Zap : methodId === 'EXPRESS_LOCAL' ? Truck : Package;
+                      return (
+                        <label
+                          key={methodId}
+                          className={`relative flex cursor-pointer flex-col gap-2 rounded-xl border p-4 transition-all ${
+                            isSelected 
+                              ? isExpress 
+                                ? 'border-purple-800 bg-purple-50 ring-1 ring-purple-800' 
+                                : 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500'
+                              : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          {isExpress && <div className="absolute inset-y-0 left-0 w-1.5 rounded-l-xl bg-gradient-to-b from-purple-800 to-purple-600" />}
+                          <div className="flex items-start justify-between gap-3 ml-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="shippingMethod"
+                                checked={isSelected}
+                                onChange={() => setShippingMethod(methodId)}
+                                className="mt-0.5"
+                              />
+                              <div>
+                                <p className={`text-sm font-bold flex items-center gap-1.5 ${isSelected && isExpress ? 'text-purple-900' : 'text-slate-800'}`}>
+                                  <Icon className={`h-4 w-4 ${isSelected && isExpress ? 'text-purple-700' : isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
+                                  {opt.label}
+                                </p>
+                                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{opt.description}</p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-extrabold text-slate-900">
+                                {opt.price === 0 ? <span className="text-emerald-600">FREE</span> : formatINR(opt.price)}
+                              </p>
+                              <p className="text-[10px] font-medium text-slate-500 mt-1 whitespace-nowrap">{opt.estimatedDays}</p>
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleProceedToPayment}
+                      className="w-full sm:w-auto rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      Continue to Payment Method →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          ) : (
+            /* Step 2 Collapsed / Completed */
+            <div className="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white mt-0.5">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                      {fulfillmentMode === 'PICKUP' ? '2. FULFILLMENT METHOD' : '2. DELIVERY METHOD'}
+                    </span>
+                    <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">Confirmed</span>
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-slate-800">
+                    {fulfillmentMode === 'PICKUP' ? (
+                      <span>Store Takeaway (College Street Desk) · <b className="text-emerald-700">FREE</b></span>
+                    ) : (
+                      (() => {
+                        const chosen = effectiveDeliveryOptions.find((o: any) => (o.method || o.id) === shippingMethod) || effectiveDeliveryOptions[0];
+                        return (
+                          <span>
+                            <b>{chosen?.label}</b> · <span className="text-emerald-700 font-bold">{chosen?.price === 0 ? 'FREE' : formatINR(chosen?.price)}</span>
+                            <span className="text-xs text-slate-500 font-normal ml-1">({chosen?.estimatedDays})</span>
+                          </span>
+                        );
+                      })()
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveStep(2)}
+                className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
+              >
+                Change
+              </button>
+            </div>
+          )}
+
+          {/* STEP 3: PAYMENT METHOD */}
+          {activeStep < 3 ? (
+            /* Inactive Step 3 placeholder */
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 opacity-75 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">3</span>
+                <div>
+                  <p className="text-sm font-bold text-slate-700">3. Payment Method</p>
+                  <p className="text-xs text-slate-400">Choose delivery method above to proceed to payment</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Active Step 3 expanded */
+            <section className="rounded-xl border border-emerald-500 bg-white p-5 shadow-sm ring-1 ring-emerald-500/20">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-slate-800">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-700 text-xs text-white">3</span>
+                  <CreditCard className="h-4 w-4 text-emerald-700" /> Payment Method
+                </p>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">Active Step</span>
+              </div>
+              <div className="space-y-2">
+                {PAYMENTS.map((p) => {
+                  const isCod = p.id === 'cod';
+                  const isPickupDisabled = fulfillmentMode === 'PICKUP' && isCod;
+                  return (
+                    <label
+                      key={p.id}
+                      className={`flex items-center gap-3 rounded-lg border p-3.5 transition-all ${
+                        isPickupDisabled
+                          ? 'cursor-not-allowed opacity-50 bg-slate-50 border-slate-200'
+                          : payment === p.id
+                          ? 'cursor-pointer border-emerald-500 bg-emerald-50'
+                          : 'cursor-pointer border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        disabled={isPickupDisabled}
+                        checked={payment === p.id && !isPickupDisabled}
+                        onChange={() => !isPickupDisabled && setPayment(p.id)}
+                      />
+                      <p.icon className="h-5 w-5 text-emerald-700" />
+                      <span className="text-sm">
+                        <b className="text-slate-800">{p.name}</b>
+                        {isPickupDisabled ? (
+                          <span className="block text-xs text-rose-600 font-medium">Prepaid only for Store Pickup (COD is not available)</span>
+                        ) : (
+                          <span className="block text-xs text-slate-500">{p.desc}</span>
+                        )}
+                      </span>
+                      {p.id === 'upi' && <span className="ml-auto rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">FASTEST</span>}
+                    </label>
+                  );
+                })}
+              </div>
+              {payment === 'upi' && (
+                <input value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="yourname@upi" className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 sm:max-w-xs" />
+              )}
+              {payment === 'card' && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <input value={card.number} onChange={(e) => setCard({ ...card, number: e.target.value.replace(/[^\d]/g, '').slice(0, 16) })} placeholder="Card number" inputMode="numeric" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 sm:col-span-2" />
+                  <input value={card.name} onChange={(e) => setCard({ ...card, name: e.target.value })} placeholder="Name on card" className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                  <div className="flex gap-3">
+                    <input value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value.slice(0, 5) })} placeholder="MM/YY" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                    <input value={card.cvv} onChange={(e) => setCard({ ...card, cvv: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="CVV" type="password" inputMode="numeric" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                  </div>
+                </div>
+              )}
+              {payment === 'cod' && fulfillmentMode !== 'PICKUP' && (
+                <p className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900 font-medium">
+                  💵 ₹20 Cash on Delivery handling fee added to your order total. Please keep exact change ready upon delivery.
+                </p>
+              )}
+
+              {/* Place Order button in Step 3 */}
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <button
+                  disabled={isSubmitting || !isValid}
+                  onClick={handlePlaceOrder}
+                  className="w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Processing Order...
+                    </>
+                  ) : payment === 'cod' ? (
+                    `Place Order · ${formatINR(total)}`
+                  ) : (
+                    `Pay ${formatINR(total)} Securely`
+                  )}
+                </button>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* summary */}
@@ -1108,9 +1478,31 @@ export default function Checkout() {
             </div>
           </div>
 
-          <button disabled={isSubmitting || !isValid} onClick={handlePlaceOrder} className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 disabled:opacity-50">
-            {isSubmitting ? 'Processing...' : payment === 'cod' ? `Place Order · ${formatINR(total)}` : `Pay ${formatINR(total)} Securely`}
-          </button>
+          {activeStep === 1 ? (
+            <button
+              type="button"
+              onClick={handleProceedToDelivery}
+              className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 transition-colors"
+            >
+              Continue to Delivery Method →
+            </button>
+          ) : activeStep === 2 ? (
+            <button
+              type="button"
+              onClick={handleProceedToPayment}
+              className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 transition-colors"
+            >
+              Continue to Payment →
+            </button>
+          ) : (
+            <button
+              disabled={isSubmitting || !isValid}
+              onClick={handlePlaceOrder}
+              className="mt-4 w-full rounded-xl bg-amber-400 py-3.5 text-sm font-extrabold text-slate-900 shadow hover:bg-amber-500 disabled:opacity-50 transition-colors"
+            >
+              {isSubmitting ? 'Processing...' : payment === 'cod' ? `Place Order · ${formatINR(total)}` : `Pay ${formatINR(total)} Securely`}
+            </button>
+          )}
           <p className="mt-2 text-center text-[11px] text-slate-400">🔒 256-bit SSL encrypted · PCI-DSS compliant · Demo checkout, no real charge</p>
         </aside>
       </div>

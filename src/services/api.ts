@@ -392,6 +392,8 @@ export const profileService = {
     phone: string;
     addressLine1: string;
     addressLine2?: string | null;
+    postOffice?: string | null;
+    landmark?: string | null;
     city: string;
     state: string;
     pincode: string;

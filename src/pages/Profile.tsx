@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { useStore } from '@/store/StoreContext';
-import { profileService, authService, orderService } from '@/services/api';
+import { profileService, authService, orderService, shippingService } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 
@@ -72,6 +72,26 @@ export default function Profile() {
     isDefault: false,
   });
   const [addressSaving, setAddressSaving] = useState(false);
+
+  // Real-time India Post Pincode Lookup for Address Modal
+  useEffect(() => {
+    const cleanPin = (addressForm.pincode || '').replace(/\D/g, '').slice(0, 6);
+    if (cleanPin.length === 6) {
+      shippingService.verifyPincode(cleanPin)
+        .then((res) => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            const office = res.data[0];
+            setAddressForm((prev) => ({
+              ...prev,
+              city: prev.city || office.city_name || '',
+              postOffice: prev.postOffice || office.office_name || '',
+              state: prev.state || office.state_name || '',
+            }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [addressForm.pincode]);
 
   // Payment Methods State
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -1019,6 +1039,7 @@ export default function Profile() {
 
                       <p className="text-xs text-slate-600 leading-relaxed">
                         {addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}<br />
+                        {addr.postOffice ? <span>PO: <b className="text-slate-800">{addr.postOffice}</b> · </span> : null}
                         {addr.city}, {addr.state} — <b>{addr.pincode}</b>
                       </p>
                       <p className="text-xs text-slate-500 mt-2">
@@ -1188,6 +1209,20 @@ export default function Profile() {
                   value={addressForm.addressLine1}
                   onChange={(e) => setAddressForm({ ...addressForm, addressLine1: e.target.value })}
                   placeholder="e.g. 32/8 Beadon Street, College Para"
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-semibold outline-none focus:border-emerald-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Local Post Office Name <span className="text-rose-600">* (Required for postal delivery)</span>
+                </label>
+                <input
+                  type="text"
+                  value={addressForm.postOffice}
+                  onChange={(e) => setAddressForm({ ...addressForm, postOffice: e.target.value })}
+                  placeholder="e.g. Beadon Street Sub Post Office (S.O), Bowbazar SO"
                   className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-semibold outline-none focus:border-emerald-500"
                   required
                 />
