@@ -115,8 +115,14 @@ export default function Dashboard() {
   const [rejecting, setRejecting] = useState(false);
 
   const [expressModalOrder, setExpressModalOrder] = useState<string | null>(null);
+  const [expressBundledOrderIds, setExpressBundledOrderIds] = useState<string[]>([]);
   const [expressPartner, setExpressPartner] = useState('');
   const [expressAgentPhone, setExpressAgentPhone] = useState('');
+  const [bundlePrompt, setBundlePrompt] = useState<{
+    targetOrder: any;
+    group: any;
+    highestMethod: 'EXPRESS_LOCAL' | 'SPEED_POST' | 'NORMAL_POST' | 'SELF_PICKUP';
+  } | null>(null);
 
   const [pickupSlotsModalOrder, setPickupSlotsModalOrder] = useState<any | null>(null);
   const [pickupSlotInputs, setPickupSlotInputs] = useState<string[]>([
@@ -412,8 +418,21 @@ export default function Dashboard() {
       const dimensions = `${Math.min(24 + (totalBookCount - 1) * 2, 40)}-22-${Math.min(2 + totalBookCount, 15)}cm`;
       const isMultiOrder = grp.orders.length > 1;
 
+      // Determine highest shipping method paid across the bundle
+      let highestMethod: 'EXPRESS_LOCAL' | 'SPEED_POST' | 'NORMAL_POST' | 'SELF_PICKUP' = 'NORMAL_POST';
+      if (grp.orders.some((o: any) => o.shippingMethod === 'EXPRESS_LOCAL')) {
+        highestMethod = 'EXPRESS_LOCAL';
+      } else if (grp.orders.some((o: any) => o.shippingMethod === 'SPEED_POST')) {
+        highestMethod = 'SPEED_POST';
+      } else if (grp.orders.some((o: any) => o.shippingMethod === 'NORMAL_POST')) {
+        highestMethod = 'NORMAL_POST';
+      } else if (grp.isSelfPickup || grp.orders.every((o: any) => o.shippingMethod === 'SELF_PICKUP')) {
+        highestMethod = 'SELF_PICKUP';
+      }
+
       return {
         ...grp,
+        highestMethod,
         totalBookCount,
         isMultiOrder,
         orderCount: grp.orders.length,
@@ -741,12 +760,20 @@ admin@technoworld.com`
     }
   };
 
-  const bookIndiaPostShipment = async (orderId: string, deliveryPartner?: string, agentPhone?: string) => {
+  const bookIndiaPostShipment = async (
+    orderId: string,
+    deliveryPartner?: string,
+    agentPhone?: string,
+    bundledOrderIds?: string[],
+    serviceType?: string
+  ) => {
     setShippingLoading(orderId);
     try {
       const payload: any = {};
       if (deliveryPartner) payload.deliveryPartner = deliveryPartner;
       if (agentPhone) payload.agentPhone = agentPhone;
+      if (bundledOrderIds && bundledOrderIds.length > 0) payload.bundledOrderIds = bundledOrderIds;
+      if (serviceType) payload.serviceType = serviceType;
       
       const res = await shippingService.bookShipment(orderId, payload);
       if (res.success && res.data) {
@@ -755,13 +782,15 @@ admin@technoworld.com`
         } else {
           toast.success(`Consignment booked via ${res.data.carrier || 'India Post'}! Barcode: ${res.data.barcode || 'N/A'}`);
         }
+        const affectedIds = new Set([orderId, ...(bundledOrderIds || [])]);
         setOrders((prev) =>
           prev.map((o) =>
-            o.id === orderId || o.orderNumber === orderId
+            affectedIds.has(o.id) || affectedIds.has(o.orderNumber)
               ? {
                   ...o,
                   trackingNumber: res.data.barcode || o.trackingNumber,
                   shippingCarrier: res.data.carrier,
+                  shippingMethod: res.data.method || o.shippingMethod,
                   status: res.data.method === 'EXPRESS_LOCAL' ? 'SHIPPED' : (o.status === 'PENDING' ? 'PROCESSING' : o.status),
                 }
               : o
@@ -772,6 +801,28 @@ admin@technoworld.com`
       toast.error(err.message || 'Failed to book consignment with India Post');
     } finally {
       setShippingLoading(null);
+    }
+  };
+
+  const handleOrderRowDispatchClick = (entry: any) => {
+    const ord = entry.order;
+    if (entry.isBundled && entry.group && Array.isArray(entry.group.orders) && entry.group.orders.length > 1) {
+      setBundlePrompt({
+        targetOrder: ord,
+        group: entry.group,
+        highestMethod: entry.group.highestMethod || 'NORMAL_POST',
+      });
+    } else {
+      if (ord.shippingMethod === 'SPEED_POST') {
+        bookIndiaPostShipment(ord.id, undefined, undefined, [], 'SPEED_POST');
+      } else if (ord.shippingMethod === 'EXPRESS_LOCAL') {
+        setExpressPartner('');
+        setExpressAgentPhone('');
+        setExpressModalOrder(ord.id);
+        setExpressBundledOrderIds([]);
+      } else {
+        bookIndiaPostShipment(ord.id, undefined, undefined, [], 'NORMAL_POST');
+      }
     }
   };
 
@@ -1182,6 +1233,7 @@ admin@technoworld.com`
                 quantity: 1,
                 price: grp.order.totalAmount,
                 isBundled: grp.isMultiOrder,
+                group: grp,
               }];
             }
             return grp.items.map((it: any, idx: number) => {
@@ -1197,6 +1249,7 @@ admin@technoworld.com`
                 quantity: it.quantity || 1,
                 price: it.priceAtPurchase || (it.quantity ? itemOrder.totalAmount / it.quantity : itemOrder.totalAmount),
                 isBundled: grp.isMultiOrder,
+                group: grp,
               };
             });
           });
@@ -1721,44 +1774,53 @@ admin@technoworld.com`
                                           )}
                                         </>
                                       ) : (
-                                        ord.status === 'PROCESSING' && !ord.trackingNumber && (
-                                          ord.shippingMethod === 'SPEED_POST' ? (
-                                            <button
-                                              onClick={() => bookIndiaPostShipment(ord.id)}
-                                              className="relative h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center justify-center gap-1 overflow-hidden shadow-sm"
-                                            >
-                                              <span
-                                                className="absolute -inset-[150%] m-auto aspect-square pointer-events-none animate-spin"
-                                                style={{
-                                                  background: 'conic-gradient(from 0deg, transparent 0deg, transparent 340deg, #fb923c 360deg)',
+                                        ord.status === 'PROCESSING' && !ord.trackingNumber && (() => {
+                                          const groupEffectiveMethod = grp.highestMethod || ord.shippingMethod || 'NORMAL_POST';
+                                          const allBundleIds = Array.isArray(grp.orders) ? grp.orders.map((o: any) => o.id) : [ord.id];
+                                          if (groupEffectiveMethod === 'SPEED_POST') {
+                                            return (
+                                              <button
+                                                onClick={() => bookIndiaPostShipment(ord.id, undefined, undefined, allBundleIds, 'SPEED_POST')}
+                                                className="relative h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center justify-center gap-1 overflow-hidden shadow-sm"
+                                              >
+                                                <span
+                                                  className="absolute -inset-[150%] m-auto aspect-square pointer-events-none animate-spin"
+                                                  style={{
+                                                    background: 'conic-gradient(from 0deg, transparent 0deg, transparent 340deg, #fb923c 360deg)',
+                                                  }}
+                                                />
+                                                <span
+                                                  className="absolute inset-[1.5px] rounded-[6.5px] bg-[#ea580c]"
+                                                />
+                                                <span className="relative z-10 flex items-center gap-1"><Truck className="h-3 w-3" /> Speed Post</span>
+                                              </button>
+                                            );
+                                          }
+                                          if (groupEffectiveMethod === 'EXPRESS_LOCAL') {
+                                            return (
+                                              <button
+                                                onClick={() => {
+                                                  setExpressPartner('');
+                                                  setExpressAgentPhone('');
+                                                  setExpressModalOrder(ord.id);
+                                                  setExpressBundledOrderIds(allBundleIds);
                                                 }}
-                                              />
-                                              <span
-                                                className="absolute inset-[1.5px] rounded-[6.5px] bg-[#ea580c]"
-                                              />
-                                              <span className="relative z-10 flex items-center gap-1"><Truck className="h-3 w-3" /> Speed Post</span>
-                                            </button>
-                                          ) : ord.shippingMethod === 'EXPRESS_LOCAL' ? (
+                                                className="h-7 px-2.5 rounded-lg text-white hover:brightness-110 text-xs font-bold inline-flex items-center gap-1 shadow-sm transition-all"
+                                                style={{ background: 'linear-gradient(135deg, #3b0764, #581c87)' }}
+                                              >
+                                                <Zap className="h-3 w-3" /> Express
+                                              </button>
+                                            );
+                                          }
+                                          return (
                                             <button
-                                              onClick={() => {
-                                                setExpressPartner('');
-                                                setExpressAgentPhone('');
-                                                setExpressModalOrder(ord.id);
-                                              }}
-                                              className="h-7 px-2.5 rounded-lg text-white hover:brightness-110 text-xs font-bold inline-flex items-center gap-1 shadow-sm transition-all"
-                                              style={{ background: 'linear-gradient(135deg, #3b0764, #581c87)' }}
-                                            >
-                                              <Zap className="h-3 w-3" /> Express
-                                            </button>
-                                          ) : (
-                                            <button
-                                              onClick={() => bookIndiaPostShipment(ord.id)}
+                                              onClick={() => bookIndiaPostShipment(ord.id, undefined, undefined, allBundleIds, 'NORMAL_POST')}
                                               className="h-7 px-2.5 rounded-lg bg-red-700 text-white hover:bg-red-800 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all whitespace-nowrap"
                                             >
                                               <Package className="h-3 w-3" /> Book Post
                                             </button>
-                                          )
-                                        )
+                                          );
+                                        })()
                                       )}
                                       {ord.trackingNumber && (
                                         <>
@@ -2094,43 +2156,70 @@ admin@technoworld.com`
                                     ) : (
                                       <>
                                         {ord.status === 'PROCESSING' && !ord.trackingNumber && (
-                                          ord.shippingMethod === 'SPEED_POST' ? (
-                                            <button
-                                              onClick={() => bookIndiaPostShipment(ord.id)}
-                                              className="relative h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center gap-1 overflow-hidden"
-                                              style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
-                                            >
-                                              <span className="absolute inset-0 rounded-lg" style={{
-                                                background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,200,100,0.8) 10%, transparent 20%)',
-                                                animation: 'spin 2s linear infinite',
-                                              }} />
-                                              <span className="absolute inset-[2px] rounded-md" style={{
-                                                background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                                              }} />
-                                              <span className="relative z-10 flex items-center gap-1"><Truck className="h-3 w-3" /> Speed Post</span>
-                                            </button>
-                                          ) : ord.shippingMethod === 'EXPRESS_LOCAL' ? (
-                                            <button
-                                              onClick={() => {
-                                                setExpressPartner('');
-                                                setExpressAgentPhone('');
-                                                setExpressModalOrder(ord.id);
-                                              }}
-                                              className="h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center gap-1 shadow-sm"
-                                              style={{ background: 'linear-gradient(135deg, #581c87, #7e22ce)' }}
-                                            >
-                                              <Zap className="h-3 w-3" /> Express
-                                            </button>
-                                          ) : (
-                                            <button
-                                              onClick={() => bookIndiaPostShipment(ord.id)}
-                                              className="h-7 px-2.5 rounded-lg bg-red-700 text-white hover:bg-red-800 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all whitespace-nowrap"
-                                            >
-                                              <Package className="h-3 w-3" /> Book Post
-                                            </button>
-                                          )
-                                        )}
-                                        {ord.trackingNumber && (
+                                           entry.isBundled && entry.group?.orders?.length > 1 ? (
+                                             <button
+                                               onClick={() => handleOrderRowDispatchClick(entry)}
+                                               className="h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-sm transition-all whitespace-nowrap"
+                                               style={{
+                                                 background: entry.group.highestMethod === 'EXPRESS_LOCAL'
+                                                   ? 'linear-gradient(135deg, #581c87, #7e22ce)'
+                                                   : entry.group.highestMethod === 'SPEED_POST'
+                                                     ? 'linear-gradient(135deg, #ea580c, #f97316)'
+                                                     : 'linear-gradient(135deg, #b91c1c, #dc2626)',
+                                               }}
+                                               title={`Part of bundle with ${entry.group.orders.length} orders. Click to choose fulfillment option.`}
+                                             >
+                                               {entry.group.highestMethod === 'EXPRESS_LOCAL' ? (
+                                                 <Zap className="h-3 w-3" />
+                                               ) : entry.group.highestMethod === 'SPEED_POST' ? (
+                                                 <Truck className="h-3 w-3" />
+                                               ) : (
+                                                 <Package className="h-3 w-3" />
+                                               )}
+                                               <span>
+                                                 {entry.group.highestMethod === 'EXPRESS_LOCAL'
+                                                   ? '⚡ Express'
+                                                   : entry.group.highestMethod === 'SPEED_POST'
+                                                     ? '🚀 Speed Post'
+                                                     : '📦 Book Post'}
+                                               </span>
+                                               <span className="ml-0.5 rounded-full bg-white/20 px-1 py-0.2 text-[9px] font-black uppercase tracking-tight">
+                                                 Bundle ({entry.group.orders.length})
+                                               </span>
+                                             </button>
+                                           ) : ord.shippingMethod === 'SPEED_POST' ? (
+                                             <button
+                                               onClick={() => handleOrderRowDispatchClick(entry)}
+                                               className="relative h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center gap-1 overflow-hidden"
+                                               style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
+                                             >
+                                               <span className="absolute inset-0 rounded-lg" style={{
+                                                 background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,200,100,0.8) 10%, transparent 20%)',
+                                                 animation: 'spin 2s linear infinite',
+                                               }} />
+                                               <span className="absolute inset-[2px] rounded-md" style={{
+                                                 background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                                               }} />
+                                               <span className="relative z-10 flex items-center gap-1"><Truck className="h-3 w-3" /> Speed Post</span>
+                                             </button>
+                                           ) : ord.shippingMethod === 'EXPRESS_LOCAL' ? (
+                                             <button
+                                               onClick={() => handleOrderRowDispatchClick(entry)}
+                                               className="h-7 px-2.5 rounded-lg text-white text-xs font-bold inline-flex items-center gap-1 shadow-sm"
+                                               style={{ background: 'linear-gradient(135deg, #581c87, #7e22ce)' }}
+                                             >
+                                               <Zap className="h-3 w-3" /> Express
+                                             </button>
+                                           ) : (
+                                             <button
+                                               onClick={() => handleOrderRowDispatchClick(entry)}
+                                               className="h-7 px-2.5 rounded-lg bg-red-700 text-white hover:bg-red-800 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all whitespace-nowrap"
+                                             >
+                                               <Package className="h-3 w-3" /> Book Post
+                                             </button>
+                                            )
+                                         )}
+                                       {ord.trackingNumber && (
                                           <>
                                             <button
                                               onClick={() => openShippingLabel(ord.id)}
@@ -4437,6 +4526,221 @@ admin@technoworld.com`
         </div>
       )}
 
+      {/* Bundle Prompt Modal */}
+      {bundlePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                  <Box className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Multi-Order Consignment Dispatch</h3>
+                  <p className="text-xs text-slate-500">
+                    Customer: <span className="font-bold text-slate-800">{bundlePrompt.group.customerName}</span> (📞 {bundlePrompt.group.customerPhone})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBundlePrompt(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Destination & Consignment Context */}
+            <div className="p-6 space-y-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5">
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">📍</span>
+                  <div className="text-xs text-slate-700">
+                    <p className="font-bold text-slate-900">
+                      Destination: {bundlePrompt.group.postOffice}, {bundlePrompt.group.city} — {bundlePrompt.group.pincode}
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      This customer placed <b className="text-blue-700">{bundlePrompt.group.orders.length} separate orders</b> scheduled for the same 2 PM dispatch batch.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Highest Method Highlight Badge */}
+              <div className="rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 block">
+                      Highest Service Tier Paid By Customer
+                    </span>
+                    <p className="text-sm font-black text-purple-950 flex items-center gap-1.5 mt-0.5">
+                      {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? (
+                        <>
+                          <Zap className="h-4 w-4 text-purple-600" />
+                          <span>⚡ Express Local Courier (Priority Trip)</span>
+                        </>
+                      ) : bundlePrompt.highestMethod === 'SPEED_POST' ? (
+                        <>
+                          <Truck className="h-4 w-4 text-orange-600" />
+                          <span>🚀 India Post Speed Post (Priority Transit)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Package className="h-4 w-4 text-red-600" />
+                          <span>📦 Standard Book Post</span>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-purple-200/60 px-2.5 py-1 text-xs font-bold text-purple-900">
+                    {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? 'Full Paid Courier' : bundlePrompt.highestMethod === 'SPEED_POST' ? 'Priority Post' : 'Standard Post'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Order Breakdown in this Bundle */}
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 block">
+                  Orders in this Consignment ({bundlePrompt.group.orders.length})
+                </label>
+                <div className="max-h-48 overflow-y-auto space-y-2 divide-y divide-slate-100 rounded-xl border border-slate-200 p-2 bg-slate-50/50">
+                  {bundlePrompt.group.orders.map((ord: any) => {
+                    const isCurrentTarget = ord.id === bundlePrompt.targetOrder.id;
+                    const ordMethod = ord.shippingMethod || 'NORMAL_POST';
+                    return (
+                      <div
+                        key={ord.id}
+                        className={`pt-2 first:pt-0 flex items-center justify-between p-2 rounded-lg transition-colors ${
+                          isCurrentTarget ? 'bg-blue-50/80 border border-blue-200' : 'bg-white'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-slate-900">
+                              #{ord.orderNumber || ord.id.slice(-8)}
+                            </span>
+                            {isCurrentTarget && (
+                              <span className="rounded bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2">
+                                Clicked Order
+                              </span>
+                            )}
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                              ordMethod === 'EXPRESS_LOCAL'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : ordMethod === 'SPEED_POST'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                              {ordMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : ordMethod === 'SPEED_POST' ? '🚀 Speed Post' : '📦 Book Post'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {Array.isArray(ord.items)
+                              ? ord.items.map((i: any) => i.book?.title || 'Book').join(', ')
+                              : 'Books'}
+                          </p>
+                        </div>
+                        <div className="text-right pl-3">
+                          <span className="text-xs font-mono font-bold text-slate-900 block">
+                            ₹{ord.totalAmount}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {ord.items?.length || 1} {ord.items?.length === 1 ? 'item' : 'items'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action Choices */}
+              <div className="space-y-3 pt-2">
+                {/* Option 1: Ship Whole Bundle */}
+                <button
+                  onClick={() => {
+                    const allBundleIds = bundlePrompt.group.orders.map((o: any) => o.id);
+                    const primaryId = bundlePrompt.group.order.id;
+                    const chosenMethod = bundlePrompt.highestMethod;
+                    setBundlePrompt(null);
+
+                    if (chosenMethod === 'EXPRESS_LOCAL') {
+                      setExpressPartner('');
+                      setExpressAgentPhone('');
+                      setExpressModalOrder(primaryId);
+                      setExpressBundledOrderIds(allBundleIds);
+                    } else {
+                      bookIndiaPostShipment(primaryId, undefined, undefined, allBundleIds, chosenMethod);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-xl text-left border border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all group"
+                >
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider block text-emerald-100">
+                      Recommended Fulfillment
+                    </span>
+                    <p className="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">
+                      📦 Ship Whole Bundle (All {bundlePrompt.group.orders.length} Orders via {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : bundlePrompt.highestMethod === 'SPEED_POST' ? '🚀 Speed Post' : '📦 Book Post'})
+                    </p>
+                    <p className="text-[11px] text-emerald-100/90 mt-0.5">
+                      Fulfills all orders in one parcel with shared tracking number at the customer's highest chosen tier.
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-lg bg-emerald-800/60 px-2.5 py-1 text-xs font-bold group-hover:bg-emerald-800">
+                    Ship Bundle →
+                  </span>
+                </button>
+
+                {/* Option 2: Ship Only This Order */}
+                <button
+                  onClick={() => {
+                    const singleOrder = bundlePrompt.targetOrder;
+                    const singleMethod = singleOrder.shippingMethod || 'NORMAL_POST';
+                    setBundlePrompt(null);
+
+                    if (singleMethod === 'EXPRESS_LOCAL') {
+                      setExpressPartner('');
+                      setExpressAgentPhone('');
+                      setExpressModalOrder(singleOrder.id);
+                      setExpressBundledOrderIds([]);
+                    } else {
+                      bookIndiaPostShipment(singleOrder.id, undefined, undefined, [], singleMethod);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-xl text-left border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 transition-all group"
+                >
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Partial Fulfillment
+                    </span>
+                    <p className="text-xs font-bold text-slate-900 mt-0.5">
+                      📄 Ship Only Order #{bundlePrompt.targetOrder.orderNumber || bundlePrompt.targetOrder.id.slice(-6)}
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Dispatches only this single order via its own method ({bundlePrompt.targetOrder.shippingMethod || 'Standard'}). Other orders remain pending.
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 group-hover:bg-slate-200">
+                    Ship Only This
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-slate-200 bg-slate-50 px-6 py-3 flex justify-end">
+              <button
+                onClick={() => setBundlePrompt(null)}
+                className="rounded-lg px-4 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Express Dispatch Modal */}
       {expressModalOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
@@ -4474,8 +4778,9 @@ admin@technoworld.com`
               <button
                 onClick={() => {
                   if (!expressPartner.trim()) return toast.error('Delivery Partner is required');
-                  bookIndiaPostShipment(expressModalOrder, expressPartner, expressAgentPhone);
+                  bookIndiaPostShipment(expressModalOrder, expressPartner, expressAgentPhone, expressBundledOrderIds, 'EXPRESS_LOCAL');
                   setExpressModalOrder(null);
+                  setExpressBundledOrderIds([]);
                 }}
                 className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800"
               >

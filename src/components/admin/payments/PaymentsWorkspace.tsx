@@ -16,6 +16,7 @@ import {
   Wallet,
   FileText,
   ExternalLink,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   Info
@@ -33,6 +34,22 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const subTab = searchParams.get('sub') || 'overview';
+  const tabBarRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabBarRef.current) {
+      tabBarRef.current.scrollBy({ left: direction === 'left' ? -220 : 220, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (tabBarRef.current) {
+      const activeBtn = tabBarRef.current.querySelector(`[data-tab="${subTab}"]`) as HTMLElement;
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+      }
+    }
+  }, [subTab]);
 
   const [overview, setOverview] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -247,7 +264,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               Payments & Settlement Hub
             </h1>
             <span className="bg-emerald-50 text-emerald-700 text-xs font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200/60 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> Live Flipkart Style
+              <Sparkles className="h-3 w-3" /> Live Settlement Hub
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
@@ -276,86 +293,115 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
         </div>
       </div>
 
-      {/* Sub-Navigation Tabs matching Flipkart Seller Hub */}
-      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-px [&::-webkit-scrollbar]:hidden">
+      {/* Sub-Navigation Tabs */}
+      <div className="relative flex items-center border-b border-slate-200 bg-white/50 rounded-t-xl px-1">
         <button
-          onClick={() => setSubTab('overview')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'overview'
-              ? 'border-emerald-600 text-emerald-600 bg-emerald-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
+          type="button"
+          onClick={() => scrollTabs('left')}
+          className="flex items-center justify-center p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg shrink-0 cursor-pointer transition-colors"
+          title="Scroll tabs left"
         >
-          <Building2 className="h-4 w-4" />
-          Payments Overview
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
-        <button
-          onClick={() => setSubTab('earnings')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'earnings'
-              ? 'border-[#c2185b] text-[#c2185b] bg-rose-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
+        <div
+          ref={tabBarRef}
+          className="flex-1 flex items-center gap-1.5 overflow-x-auto scroll-smooth py-1 px-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300"
         >
-          <TrendingUp className="h-4 w-4" />
-          <span>Earnings Summary</span>
-          <span className="bg-[#c2185b] text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs">
-            New
-          </span>
-        </button>
+          <button
+            data-tab="overview"
+            onClick={() => setSubTab('overview')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'overview'
+                ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <Building2 className="h-4 w-4" />
+            Payments Overview
+          </button>
 
-        <button
-          onClick={() => setSubTab('settlements')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'settlements'
-              ? 'border-emerald-600 text-emerald-600 bg-emerald-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
-        >
-          <Search className="h-4 w-4" />
-          Search Order-wise Settlements
-        </button>
-
-        <button
-          onClick={() => setSubTab('refunds')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'refunds'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
-        >
-          <RotateCcw className="h-4 w-4" />
-          Refunds Monitoring
-          {overview?.counts?.refunded > 0 && (
-            <span className="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
-              {overview.counts.refunded}
+          <button
+            data-tab="earnings"
+            onClick={() => setSubTab('earnings')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'earnings'
+                ? 'border-[#c2185b] text-[#c2185b] bg-rose-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span>Earnings Summary</span>
+            <span className="bg-[#c2185b] text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs">
+              New
             </span>
-          )}
-        </button>
+          </button>
+
+          <button
+            data-tab="settlements"
+            onClick={() => setSubTab('settlements')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'settlements'
+                ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <Search className="h-4 w-4" />
+            Search Order-wise Settlements
+          </button>
+
+          <button
+            data-tab="refunds"
+            onClick={() => setSubTab('refunds')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'refunds'
+                ? 'border-purple-600 text-purple-700 bg-purple-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Refunds Monitoring
+            {overview?.counts?.refunded > 0 && (
+              <span className="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+                {overview.counts.refunded}
+              </span>
+            )}
+          </button>
+
+          <button
+            data-tab="transactions"
+            onClick={() => setSubTab('transactions')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'transactions'
+                ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            Services Transaction History
+          </button>
+
+          <button
+            data-tab="spf"
+            onClick={() => setSubTab('spf')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+              subTab === 'spf'
+                ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Seller Protection Fund (SPF)
+          </button>
+        </div>
 
         <button
-          onClick={() => setSubTab('transactions')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'transactions'
-              ? 'border-emerald-600 text-emerald-600 bg-emerald-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
+          type="button"
+          onClick={() => scrollTabs('right')}
+          className="flex items-center justify-center p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg shrink-0 cursor-pointer transition-colors"
+          title="Scroll tabs right"
         >
-          <FileText className="h-4 w-4" />
-          Services Transaction History
-        </button>
-
-        <button
-          onClick={() => setSubTab('spf')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-            subTab === 'spf'
-              ? 'border-emerald-600 text-emerald-600 bg-emerald-50/40 rounded-t-lg'
-              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-          }`}
-        >
-          <ShieldCheck className="h-4 w-4" />
-          Seller Protection Fund (SPF)
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
@@ -812,7 +858,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
             {/* Payout Life Cycle Diagram */}
             <div className="p-6 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
-                Flipkart Style Payout Timeline (T+2 Days)
+                Standard Payout Timeline (T+2 Days)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                 <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">

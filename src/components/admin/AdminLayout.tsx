@@ -56,6 +56,44 @@ export default function AdminLayout() {
   const notifRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
   const paymentsBtnRef = useRef<HTMLDivElement>(null);
+  const ordersTimeoutRef = useRef<any>(null);
+  const paymentsTimeoutRef = useRef<any>(null);
+
+  const handleOrdersMouseEnter = () => {
+    if (ordersTimeoutRef.current) {
+      clearTimeout(ordersTimeoutRef.current);
+      ordersTimeoutRef.current = null;
+    }
+    if (ordersBtnRef.current) {
+      const rect = ordersBtnRef.current.getBoundingClientRect();
+      setFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsOrdersFlyoutOpen(true);
+  };
+
+  const handleOrdersMouseLeave = () => {
+    ordersTimeoutRef.current = setTimeout(() => {
+      setIsOrdersFlyoutOpen(false);
+    }, 300);
+  };
+
+  const handlePaymentsMouseEnter = () => {
+    if (paymentsTimeoutRef.current) {
+      clearTimeout(paymentsTimeoutRef.current);
+      paymentsTimeoutRef.current = null;
+    }
+    if (paymentsBtnRef.current) {
+      const rect = paymentsBtnRef.current.getBoundingClientRect();
+      setPaymentsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsPaymentsFlyoutOpen(true);
+  };
+
+  const handlePaymentsMouseLeave = () => {
+    paymentsTimeoutRef.current = setTimeout(() => {
+      setIsPaymentsFlyoutOpen(false);
+    }, 300);
+  };
 
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
 
@@ -115,14 +153,8 @@ export default function AdminLayout() {
                   key={t.id}
                   ref={ordersBtnRef}
                   className="relative"
-                  onMouseEnter={() => {
-                    if (ordersBtnRef.current) {
-                      const rect = ordersBtnRef.current.getBoundingClientRect();
-                      setFlyoutPos({ top: rect.top, left: rect.right + 6 });
-                    }
-                    setIsOrdersFlyoutOpen(true);
-                  }}
-                  onMouseLeave={() => setIsOrdersFlyoutOpen(false)}
+                  onMouseEnter={handleOrdersMouseEnter}
+                  onMouseLeave={handleOrdersMouseLeave}
                 >
                   <Link
                     to={`/admin/dashboard?tab=orders&stage=to_accept`}
@@ -150,14 +182,8 @@ export default function AdminLayout() {
                   key={t.id}
                   ref={paymentsBtnRef}
                   className="relative"
-                  onMouseEnter={() => {
-                    if (paymentsBtnRef.current) {
-                      const rect = paymentsBtnRef.current.getBoundingClientRect();
-                      setPaymentsFlyoutPos({ top: rect.top, left: rect.right + 6 });
-                    }
-                    setIsPaymentsFlyoutOpen(true);
-                  }}
-                  onMouseLeave={() => setIsPaymentsFlyoutOpen(false)}
+                  onMouseEnter={handlePaymentsMouseEnter}
+                  onMouseLeave={handlePaymentsMouseLeave}
                 >
                   <Link
                     to={`/admin/dashboard?tab=payments&sub=overview`}
@@ -337,13 +363,13 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
-      {/* Floating Orders Hover Flyout using Fixed Positioning (Guarantees zero container scrollbars) */}
+      {/* Floating Orders Hover Flyout */}
       {isOrdersFlyoutOpen && (
         <div
           style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
-          onMouseEnter={() => setIsOrdersFlyoutOpen(true)}
-          onMouseLeave={() => setIsOrdersFlyoutOpen(false)}
-          className="fixed w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100"
+          onMouseEnter={handleOrdersMouseEnter}
+          onMouseLeave={handleOrdersMouseLeave}
+          className="fixed w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6"
         >
           <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
             Orders Pipeline
@@ -391,13 +417,13 @@ export default function AdminLayout() {
         </div>
       )}
 
-      {/* Floating Payments Hover Flyout (Flipkart Seller Hub style) */}
+      {/* Floating Payments Hover Flyout */}
       {isPaymentsFlyoutOpen && (
         <div
           style={{ top: `${paymentsFlyoutPos.top}px`, left: `${paymentsFlyoutPos.left}px` }}
-          onMouseEnter={() => setIsPaymentsFlyoutOpen(true)}
-          onMouseLeave={() => setIsPaymentsFlyoutOpen(false)}
-          className="fixed w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100"
+          onMouseEnter={handlePaymentsMouseEnter}
+          onMouseLeave={handlePaymentsMouseLeave}
+          className="fixed w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6"
         >
           <div className="space-y-0.5">
             <Link

@@ -155,7 +155,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                 onChange={e => setFile(e.target.files?.[0] || null)}
                 className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
               />
-              <p className="text-[10px] text-slate-400">Supported formats: JPG, PNG, WebP, PDF. Cover will display on storefront and Flipkart product view.</p>
+              <p className="text-[10px] text-slate-400">Supported formats: JPG, PNG, WebP, PDF. Cover will display on storefront and product view.</p>
             </div>
           </div>
           
@@ -240,7 +240,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                   Book Description & Syllabus Content *
                 </label>
                 <span className="text-[11px] text-slate-500">
-                  This description powers the Flipkart-style product overview, highlights, and exam syllabus details.
+                  This description powers the product overview, highlights, and exam syllabus details.
                 </span>
               </div>
 
