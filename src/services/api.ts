@@ -1,4 +1,15 @@
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://techno-world-api-qw4j.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
+const getApiUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  // If loaded in browser over HTTPS, never use insecure http://localhost (blocked by browser as Mixed Content)
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    if (!envUrl || envUrl.startsWith('http://localhost') || envUrl.startsWith('http://127.0.0.1')) {
+      return 'https://techno-world-api-qw4j.onrender.com/api/v1';
+    }
+  }
+  return envUrl || (import.meta.env.PROD ? 'https://techno-world-api-qw4j.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
+};
+
+const API_URL = getApiUrl();
 
 export const getImageUrl = (path?: string) => {
   if (!path) return '';
