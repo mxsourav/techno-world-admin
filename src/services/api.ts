@@ -1,12 +1,19 @@
 const getApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
-  // If loaded in browser over HTTPS, never use insecure http://localhost (blocked by browser as Mixed Content)
+  // If loaded in browser over HTTPS, never use insecure http:// (blocked by browser as Mixed Content)
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-    if (!envUrl || envUrl.startsWith('http://localhost') || envUrl.startsWith('http://127.0.0.1')) {
-      return 'https://techno-world-api-qw4j.onrender.com/api/v1';
+    if (envUrl && envUrl.startsWith('https://')) {
+      return envUrl;
     }
+    return 'https://techno-world-api-qw4j.onrender.com/api/v1';
   }
-  return envUrl || (import.meta.env.PROD ? 'https://techno-world-api-qw4j.onrender.com/api/v1' : 'http://localhost:5000/api/v1');
+  if (import.meta.env.PROD) {
+    if (envUrl && envUrl.startsWith('https://')) {
+      return envUrl;
+    }
+    return 'https://techno-world-api-qw4j.onrender.com/api/v1';
+  }
+  return envUrl || 'http://localhost:5000/api/v1';
 };
 
 const API_URL = getApiUrl();
@@ -88,9 +95,6 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
   const token = localStorage.getItem('tw_admin_token');
   if (token && token !== 'undefined' && token !== 'null' && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
-  }
-  if (!headers.has('Cache-Control')) {
-    headers.set('Cache-Control', 'no-cache, no-store');
   }
 
   const mergedOptions: RequestInit = {
