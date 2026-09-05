@@ -73,8 +73,8 @@ export default function ProductsWorkspace() {
       toast.success(`Deleted ${selectedIds.size} books successfully`);
       setSelectedIds(new Set());
       fetchData();
-    } catch (err) {
-      toast.error('Failed to delete books');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete books');
     }
   };
 
@@ -85,8 +85,8 @@ export default function ProductsWorkspace() {
         await adminService.deleteAllBooks();
         toast.success("All books deleted");
         fetchData();
-      } catch (err) {
-        toast.error("Failed to delete all books");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to delete all books");
       }
     }
   };
@@ -99,8 +99,8 @@ export default function ProductsWorkspace() {
       toast.success("Book deleted successfully");
       fetchData();
       if (viewingBook?.id === id) setViewingBook(null);
-    } catch (err) {
-      toast.error("Failed to delete book");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete book");
     }
   };
 
