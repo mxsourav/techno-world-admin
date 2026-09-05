@@ -78,8 +78,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
   if (token && token !== 'undefined' && token !== 'null' && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
+  if (!headers.has('Cache-Control')) {
+    headers.set('Cache-Control', 'no-cache, no-store');
+  }
 
   const mergedOptions: RequestInit = {
+    cache: 'no-store',
     ...options,
     headers,
     credentials: 'include',
@@ -436,4 +440,56 @@ export const shippingService = {
   getShippingLabel: (orderId: string) => api.get<any>(`/shipping/label/${orderId}`),
 };
 
+export const reviewService = {
+  getReviews: (params?: { bookId?: string; limit?: number; page?: number }) =>
+    api.get<any[]>('/reviews', params as any),
+  createReview: (data: {
+    bookId: string;
+    rating: number;
+    title?: string;
+    content: string;
+    userName?: string;
+    userEmail?: string;
+  }) => api.post<any>('/reviews', data),
+  getAdminReviews: (params?: { search?: string; rating?: number; status?: string }) =>
+    api.get<any[]>('/reviews/admin', params as any),
+  updateReviewStatus: (id: string, isApproved: boolean) =>
+    api.patch<any>(`/reviews/admin/${id}/status`, { isApproved }),
+  deleteReview: (id: string) =>
+    api.delete<any>(`/reviews/admin/${id}`),
+  clearOldReviews: (hours = 24) =>
+    api.post<any>('/reviews/admin/clear-old', { hours }),
+};
 
+export const questionService = {
+  getQuestions: (params?: { bookId?: string; limit?: number; page?: number }) =>
+    api.get<any[]>('/questions', params as any),
+  askQuestion: (data: {
+    bookId: string;
+    question: string;
+    userName?: string;
+    userEmail?: string;
+  }) => api.post<any>('/questions', data),
+  getAdminQuestions: (params?: { status?: string; search?: string }) =>
+    api.get<any[]>('/questions/admin', params as any),
+  answerQuestion: (id: string, data: { answer: string; answeredBy?: string }) =>
+    api.patch<any>(`/questions/admin/${id}/answer`, data),
+  deleteQuestion: (id: string) =>
+    api.delete<any>(`/questions/admin/${id}`),
+  clearOldQuestions: (hours = 24) =>
+    api.post<any>('/questions/admin/clear-old', { hours }),
+};
+
+export const paymentService = {
+  getOverview: () => api.get<any>('/payments/overview'),
+  getTransactions: (params?: { status?: string; method?: string; search?: string; page?: number; limit?: number }) =>
+    api.get<any[]>('/payments/transactions', params as any),
+  updatePaymentStatus: (orderId: string, data: {
+    paymentStatus: 'PAID' | 'PENDING' | 'FAILED' | 'REFUNDED';
+    paymentId?: string;
+    paymentMethod?: string;
+    refundAmount?: number;
+    refundReason?: string;
+    notes?: string;
+  }) => api.patch<any>(`/payments/${orderId}/status`, data),
+};

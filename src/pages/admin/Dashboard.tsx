@@ -5,15 +5,17 @@ import {
   Pause, Play, Trash2, Edit3, Truck, Printer, ShieldCheck, X, Loader2, Mail,
   CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
   Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
-  SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck
+  SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
+  MessageSquare, HelpCircle, CornerDownRight
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService } from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService } from '@/services/api';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
 import SearchAnalyticsWorkspace from '@/components/admin/analytics/SearchAnalyticsWorkspace';
+import PaymentsWorkspace from '@/components/admin/payments/PaymentsWorkspace';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -51,7 +53,6 @@ export default function Dashboard() {
   }, [urlStage]);
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
-  const [selectedChannelFilter, setSelectedChannelFilter] = useState('ALL');
   const [selectedLogisticsFilter, setSelectedLogisticsFilter] = useState('ALL');
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<Set<string>>(new Set());
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
@@ -85,6 +86,20 @@ export default function Dashboard() {
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any | null>(null);
+
+  // Reviews & Q&A Moderation State
+  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions'>('reviews');
+  const [adminReviews, setAdminReviews] = useState<any[]>([]);
+  const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
+  const [loadingReviewsData, setLoadingReviewsData] = useState(false);
+  const [reviewSearchQuery, setReviewSearchQuery] = useState('');
+  const [reviewRatingFilter, setReviewRatingFilter] = useState<string>('ALL');
+  const [questionStatusFilter, setQuestionStatusFilter] = useState<string>('ALL');
+  const [replyingQuestionId, setReplyingQuestionId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySignature, setReplySignature] = useState('Techno World Direct · Verified Seller');
+  const [showClear24hModal, setShowClear24hModal] = useState(false);
+  const [clearing24h, setClearing24h] = useState(false);
 
 
   const [emailModalOrder, setEmailModalOrder] = useState<any | null>(null);
@@ -186,7 +201,115 @@ export default function Dashboard() {
     if (tab === 'customers') {
       fetchCustomers();
     }
+    if (tab === 'reviews') {
+      fetchReviewsAndQuestions();
+    }
   }, [tab]);
+
+  const fetchReviewsAndQuestions = async () => {
+    setLoadingReviewsData(true);
+    try {
+      const [revRes, qRes] = await Promise.all([
+        reviewService.getAdminReviews(),
+        questionService.getAdminQuestions(),
+      ]);
+      if (revRes.success && Array.isArray(revRes.data)) {
+        setAdminReviews(revRes.data);
+      }
+      if (qRes.success && Array.isArray(qRes.data)) {
+        setAdminQuestions(qRes.data);
+      }
+    } catch (err) {
+      console.error('Failed to load reviews or questions', err);
+    } finally {
+      setLoadingReviewsData(false);
+    }
+  };
+
+  const handleToggleApproveReview = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await reviewService.updateReviewStatus(id, !currentStatus);
+      if (res.success) {
+        toast.success(res.message || 'Review status updated');
+        setAdminReviews(prev => prev.map(r => r.id === id ? { ...r, isApproved: !currentStatus } : r));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update review status');
+    }
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this review?')) return;
+    try {
+      const res = await reviewService.deleteReview(id);
+      if (res.success) {
+        toast.success('Review deleted successfully');
+        setAdminReviews(prev => prev.filter(r => r.id !== id));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete review');
+    }
+  };
+
+  const handlePublishAnswer = async (id: string) => {
+    if (!replyText.trim()) {
+      toast.error('Please enter an answer to publish');
+      return;
+    }
+    try {
+      const res = await questionService.answerQuestion(id, {
+        answer: replyText.trim(),
+        answeredBy: replySignature,
+      });
+      if (res.success) {
+        toast.success('Answer published live to book page');
+        setAdminQuestions(prev => prev.map(q => q.id === id ? {
+          ...q,
+          answer: replyText.trim(),
+          answeredBy: replySignature,
+          answeredAt: new Date().toISOString(),
+          status: 'ANSWERED'
+        } : q));
+        setReplyingQuestionId(null);
+        setReplyText('');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to publish answer');
+    }
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this customer question?')) return;
+    try {
+      const res = await questionService.deleteQuestion(id);
+      if (res.success) {
+        toast.success('Question deleted successfully');
+        setAdminQuestions(prev => prev.filter(q => q.id !== id));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete question');
+    }
+  };
+
+  const handleClear24hLogs = async () => {
+    setClearing24h(true);
+    try {
+      const [revClear, qClear] = await Promise.all([
+        reviewService.clearOldReviews(24),
+        questionService.clearOldQuestions(24),
+      ]);
+      const totalRemoved =
+        ((revClear as any)?.count || (revClear as any)?.data?.count || 0) +
+        ((qClear as any)?.count || (qClear as any)?.data?.count || 0);
+      toast.success(`Cleared records older than 24 hours (${totalRemoved} items cleaned)`);
+      setShowClear24hModal(false);
+      fetchReviewsAndQuestions();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to clear old logs');
+    } finally {
+      setClearing24h(false);
+    }
+  };
 
   const fetchCustomers = (search?: string) => {
     setIsLoadingCustomers(true);
@@ -1195,16 +1318,6 @@ admin@technoworld.com`
                     </div>
 
                     <select
-                      value={selectedChannelFilter}
-                      onChange={(e) => setSelectedChannelFilter(e.target.value)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none"
-                    >
-                      <option value="ALL">Channel: All / Direct</option>
-                      <option value="DIRECT">Techno World Direct</option>
-                      <option value="MARKETPLACE">Marketplace / Affiliates</option>
-                    </select>
-
-                    <select
                       value={selectedLogisticsFilter}
                       onChange={(e) => setSelectedLogisticsFilter(e.target.value)}
                       className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none"
@@ -1386,6 +1499,10 @@ admin@technoworld.com`
                                         );
                                       })}
                                     </div>
+                                    <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1 font-mono">
+                                      <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+                                      {new Date(grp.createdAt || ord.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(grp.createdAt || ord.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                    </span>
                                     {grp.isMultiOrder && (
                                       <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
                                         📦 {grp.orderCount} Orders Bundled
@@ -2355,7 +2472,10 @@ admin@technoworld.com`
           );
         })()}
 
-        
+        {tab === 'payments' && (
+          <PaymentsWorkspace onPreviewOrder={(order) => setPreviewOrder(order)} />
+        )}
+
         {tab === 'customers' && (
           <div className="space-y-6">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -2551,26 +2671,423 @@ admin@technoworld.com`
 
 
         {tab === 'reviews' && (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="mb-6 text-sm font-bold text-slate-800">Review Moderation</p>
-            <div className="space-y-4">
-              {[{ id: 1, title: 'Great read', book: 'Atomic Habits', rating: 5, body: 'Very helpful.' }, { id: 2, title: 'Too lengthy', book: 'UPSC Polity', rating: 3, body: 'Very informative but too long.' }].map((r) => (
-                <div key={r.id} className="rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-base font-bold text-slate-900">{r.title}</p>
-                      <p className="text-sm text-slate-500 mt-0.5">on <span className="font-medium text-slate-700">{r.book}</span></p>
-                    </div>
-                    <span className="text-sm font-bold text-amber-500 tracking-widest">{'★'.repeat(r.rating)}</span>
+          <div className="space-y-6">
+            {/* Review & Q&A Header */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-emerald-600" />
+                    Customer Reviews & Q&A Moderation
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Moderate customer ratings and review comments, and reply to book questions asked on the product pages.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Clear Logs Older Than 24h Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowClear24hModal(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors shadow-sm"
+                    title="Auto-delete or clear review/Q&A logs older than 24 hours"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-rose-600" />
+                    Clear Logs (Older than 24h)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={fetchReviewsAndQuestions}
+                    disabled={loadingReviewsData}
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                  >
+                    <RotateCcw className={`h-3.5 w-3.5 ${loadingReviewsData ? 'animate-spin text-emerald-600' : ''}`} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* Sub-Tab Navigation: Reviews vs Questions */}
+              <div className="mt-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+                <button
+                  type="button"
+                  onClick={() => setReviewSubTab('reviews')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    reviewSubTab === 'reviews'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                  <span>Customer Reviews</span>
+                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                    reviewSubTab === 'reviews' ? 'bg-white/20 text-white' : 'bg-white text-slate-700'
+                  }`}>
+                    {adminReviews.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReviewSubTab('questions')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    reviewSubTab === 'questions'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  <span>Questions & Answers (Q&A)</span>
+                  {adminQuestions.filter(q => q.status === 'PENDING').length > 0 && (
+                    <span className="ml-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950">
+                      {adminQuestions.filter(q => q.status === 'PENDING').length} Pending
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Filter Toolbar */}
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="relative flex-1 min-w-[240px] max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={reviewSearchQuery}
+                    onChange={(e) => setReviewSearchQuery(e.target.value)}
+                    placeholder={reviewSubTab === 'reviews' ? 'Search by book title, reviewer name, or comment...' : 'Search by question, book, or answer...'}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-xs font-medium outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                {reviewSubTab === 'reviews' ? (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={reviewRatingFilter}
+                      onChange={(e) => setReviewRatingFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none"
+                    >
+                      <option value="ALL">All Ratings (1–5 Stars)</option>
+                      <option value="5">5 Stars ★★★★★</option>
+                      <option value="4">4 Stars ★★★★☆</option>
+                      <option value="3">3 Stars ★★★☆☆</option>
+                      <option value="2">2 Stars ★★☆☆☆</option>
+                      <option value="1">1 Star ★☆☆☆☆</option>
+                    </select>
                   </div>
-                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">{r.body}</p>
-                  <div className="mt-4 flex gap-3">
-                    <button className="rounded-lg bg-emerald-50 px-4 py-1.5 text-sm font-bold text-emerald-700">Approve</button>
-                    <button className="rounded-lg bg-rose-50 px-4 py-1.5 text-sm font-bold text-rose-700">Flag</button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={questionStatusFilter}
+                      onChange={(e) => setQuestionStatusFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none"
+                    >
+                      <option value="ALL">All Questions</option>
+                      <option value="PENDING">Pending Reply</option>
+                      <option value="ANSWERED">Answered & Published</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SUB-TAB 1: CUSTOMER REVIEWS */}
+            {reviewSubTab === 'reviews' && (
+              <div className="space-y-4">
+                {adminReviews
+                  .filter((r: any) => {
+                    if (reviewRatingFilter !== 'ALL' && r.rating !== Number(reviewRatingFilter)) return false;
+                    if (reviewSearchQuery.trim()) {
+                      const q = reviewSearchQuery.toLowerCase();
+                      const matchBook = (r.bookTitle || '').toLowerCase().includes(q);
+                      const matchUser = (r.userName || '').toLowerCase().includes(q);
+                      const matchText = (r.content || r.title || '').toLowerCase().includes(q);
+                      return matchBook || matchUser || matchText;
+                    }
+                    return true;
+                  })
+                  .map((r: any) => (
+                    <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                          {/* Book Thumbnail */}
+                          <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
+                            {r.bookCover ? (
+                              <img src={r.bookCover} alt={r.bookTitle} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
+                            )}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1 rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-black text-amber-700">
+                                {r.rating} ★
+                              </span>
+                              {r.title && <h4 className="text-sm font-extrabold text-slate-900">{r.title}</h4>}
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                r.isApproved ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {r.isApproved ? 'Published on Store' : 'Hidden'}
+                              </span>
+                            </div>
+
+                            {/* Book Title */}
+                            <p className="text-xs text-slate-500 font-medium">
+                              on book: <span className="font-bold text-slate-800">{r.bookTitle}</span>
+                            </p>
+
+                            {/* Review Body */}
+                            <p className="text-xs text-slate-700 leading-relaxed pt-1 bg-slate-50/80 rounded-xl p-3 border border-slate-100 font-normal">
+                              "{r.content}"
+                            </p>
+
+                            {/* Reviewer Info */}
+                            <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-400">
+                              <span className="font-bold text-slate-700 flex items-center gap-1">
+                                👤 {r.userName}
+                              </span>
+                              {r.userEmail && <span>✉️ {r.userEmail}</span>}
+                              <span>•</span>
+                              <span>🕒 {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 shrink-0 self-end md:self-start">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleApproveReview(r.id, r.isApproved)}
+                            className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors shadow-sm ${
+                              r.isApproved
+                                ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            }`}
+                          >
+                            {r.isApproved ? 'Hide Review' : 'Approve Review'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(r.id)}
+                            className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Delete review"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                {adminReviews.length === 0 && !loadingReviewsData && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-400">
+                    <Star className="mx-auto h-10 w-10 text-slate-300 mb-2" />
+                    <p className="font-bold text-slate-700">No customer reviews found</p>
+                    <p className="text-xs text-slate-400 mt-1">Customer reviews submitted on book pages will show up here for moderation.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-TAB 2: QUESTIONS & ANSWERS (Q&A) */}
+            {reviewSubTab === 'questions' && (
+              <div className="space-y-4">
+                {adminQuestions
+                  .filter((q: any) => {
+                    if (questionStatusFilter !== 'ALL' && q.status !== questionStatusFilter) return false;
+                    if (reviewSearchQuery.trim()) {
+                      const query = reviewSearchQuery.toLowerCase();
+                      const matchBook = (q.bookTitle || '').toLowerCase().includes(query);
+                      const matchUser = (q.userName || '').toLowerCase().includes(query);
+                      const matchQ = (q.question || '').toLowerCase().includes(query);
+                      const matchA = (q.answer || '').toLowerCase().includes(query);
+                      return matchBook || matchUser || matchQ || matchA;
+                    }
+                    return true;
+                  })
+                  .map((q: any) => (
+                    <div key={q.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                          {/* Book Thumbnail */}
+                          <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
+                            {q.bookCover ? (
+                              <img src={q.bookCover} alt={q.bookTitle} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-extrabold ${
+                                q.status === 'ANSWERED'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+                              }`}>
+                                {q.status === 'ANSWERED' ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                                {q.status === 'ANSWERED' ? 'Answered & Published' : 'Pending Response'}
+                              </span>
+                              <span className="text-xs text-slate-400">•</span>
+                              <p className="text-xs text-slate-500 font-medium line-clamp-1">
+                                Book: <span className="font-bold text-slate-800">{q.bookTitle}</span>
+                              </p>
+                            </div>
+
+                            {/* Customer Question */}
+                            <div className="rounded-xl bg-purple-50/50 p-3 border border-purple-100">
+                              <p className="text-xs font-bold text-purple-950">
+                                Q: {q.question}
+                              </p>
+                              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-purple-700 font-medium">
+                                <span>Asked by: <b>{q.userName}</b> ({q.userEmail || 'Guest'})</span>
+                                <span>•</span>
+                                <span>{new Date(q.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            </div>
+
+                            {/* Existing Answer if present */}
+                            {q.answer && (
+                              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80">
+                                <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 mb-1">
+                                  <CornerDownRight className="h-3.5 w-3.5" /> Published Answer:
+                                </div>
+                                <p className="text-xs text-slate-700 leading-relaxed font-normal">
+                                  {q.answer}
+                                </p>
+                                <span className="text-[10px] text-slate-400 mt-1 block font-medium">
+                                  Signed as: <b>{q.answeredBy}</b> {q.answeredAt && `(${new Date(q.answeredAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })})`}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Inline Reply Form */}
+                            {replyingQuestionId === q.id && (
+                              <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-md space-y-3 mt-2">
+                                <h4 className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                                  <Send className="h-3.5 w-3.5 text-purple-600" /> Write Answer for Product Page
+                                </h4>
+                                <textarea
+                                  rows={3}
+                                  value={replyText}
+                                  onChange={(e) => setReplyText(e.target.value)}
+                                  placeholder="Type verified answer here (e.g. Yes, this is the official 2026 revised syllabus edition with 2025 solved papers)..."
+                                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs outline-none focus:border-purple-600 font-medium"
+                                />
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <label className="text-[11px] font-bold text-slate-600">Answer Signature:</label>
+                                    <select
+                                      value={replySignature}
+                                      onChange={(e) => setReplySignature(e.target.value)}
+                                      className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 outline-none"
+                                    >
+                                      <option value="Techno World Direct · Verified Seller">Techno World Direct · Verified Seller</option>
+                                      <option value="Staff Academic Reviewer">Staff Academic Reviewer</option>
+                                      <option value="Senior Subject Editor">Senior Subject Editor</option>
+                                    </select>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setReplyingQuestionId(null);
+                                        setReplyText('');
+                                      }}
+                                      className="rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handlePublishAnswer(q.id)}
+                                      className="rounded-lg bg-purple-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-purple-700 shadow-sm"
+                                    >
+                                      Publish Answer
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Question Actions */}
+                        <div className="flex items-center gap-2 shrink-0 self-end md:self-start">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyingQuestionId(q.id);
+                              setReplyText(q.answer || '');
+                            }}
+                            className="rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors shadow-sm"
+                          >
+                            {q.status === 'ANSWERED' ? 'Edit Answer' : 'Reply & Publish'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Delete question"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                {adminQuestions.length === 0 && !loadingReviewsData && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-400">
+                    <HelpCircle className="mx-auto h-10 w-10 text-slate-300 mb-2" />
+                    <p className="font-bold text-slate-700">No customer questions submitted</p>
+                    <p className="text-xs text-slate-400 mt-1">Questions asked by visitors on any book page will appear here for you to reply.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Clear Logs Older Than 24h Modal */}
+            {showClear24hModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                  <div className="flex items-center gap-3 text-rose-600 mb-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50">
+                      <Trash2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900">Clear Logs Older Than 24h</h3>
+                      <p className="text-xs text-slate-500">Auto-clean review and question records</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/80 mb-4">
+                    This will clean up and purge question & review entries created more than <b>24 hours ago</b> from the system log.
+                  </p>
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={clearing24h}
+                      onClick={() => setShowClear24hModal(false)}
+                      className="rounded-lg px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={clearing24h}
+                      onClick={handleClear24hLogs}
+                      className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50"
+                    >
+                      {clearing24h ? 'Clearing Records...' : 'Confirm Clear (Older than 24h)'}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
         {tab === 'media' && (

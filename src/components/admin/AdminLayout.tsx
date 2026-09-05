@@ -18,6 +18,7 @@ import {
   Settings,
   AlertTriangle,
   ArrowRight,
+  CreditCard,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService } from '@/services/api';
@@ -27,6 +28,7 @@ const TABS = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', name: 'Products', icon: Package },
   { id: 'orders', name: 'Orders', icon: ShoppingCart },
+  { id: 'payments', name: 'Payments', icon: CreditCard },
   { id: 'customers', name: 'Customers', icon: Users },
   { id: 'coupons', name: 'Coupons', icon: Tag },
   { id: 'banners', name: 'Banners', icon: Image },
@@ -49,8 +51,11 @@ export default function AdminLayout() {
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isOrdersFlyoutOpen, setIsOrdersFlyoutOpen] = useState<boolean>(false);
   const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  const [isPaymentsFlyoutOpen, setIsPaymentsFlyoutOpen] = useState<boolean>(false);
+  const [paymentsFlyoutPos, setPaymentsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const notifRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
+  const paymentsBtnRef = useRef<HTMLDivElement>(null);
 
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
 
@@ -102,6 +107,7 @@ export default function AdminLayout() {
           {TABS.map((t) => {
             const isActive = currentTab === t.id || (t.id === 'analytics' && currentTab === 'reports');
             const isOrdersTab = t.id === 'orders';
+            const isPaymentsTab = t.id === 'payments';
 
             if (isOrdersTab) {
               return (
@@ -133,6 +139,36 @@ export default function AdminLayout() {
                         {pendingCount}
                       </span>
                     )}
+                  </Link>
+                </div>
+              );
+            }
+
+            if (isPaymentsTab) {
+              return (
+                <div
+                  key={t.id}
+                  ref={paymentsBtnRef}
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (paymentsBtnRef.current) {
+                      const rect = paymentsBtnRef.current.getBoundingClientRect();
+                      setPaymentsFlyoutPos({ top: rect.top, left: rect.right + 6 });
+                    }
+                    setIsPaymentsFlyoutOpen(true);
+                  }}
+                  onMouseLeave={() => setIsPaymentsFlyoutOpen(false)}
+                >
+                  <Link
+                    to={`/admin/dashboard?tab=payments&sub=overview`}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      isActive 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                    <span>{t.name}</span>
                   </Link>
                 </div>
               );
@@ -352,6 +388,61 @@ export default function AdminLayout() {
             </span>
             <span className="text-[10px] text-slate-400 font-semibold">0</span>
           </Link>
+        </div>
+      )}
+
+      {/* Floating Payments Hover Flyout (Flipkart Seller Hub style) */}
+      {isPaymentsFlyoutOpen && (
+        <div
+          style={{ top: `${paymentsFlyoutPos.top}px`, left: `${paymentsFlyoutPos.left}px` }}
+          onMouseEnter={() => setIsPaymentsFlyoutOpen(true)}
+          onMouseLeave={() => setIsPaymentsFlyoutOpen(false)}
+          className="fixed w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100"
+        >
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=payments&sub=overview"
+              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span>Payments Overview</span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=payments&sub=earnings"
+              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span>Earnings Summary</span>
+              <span className="bg-[#c2185b] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs tracking-wide">
+                New
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=payments&sub=settlements"
+              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span>Search Order-wise Settlements</span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=payments&sub=transactions"
+              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span>Services Transaction History</span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=payments&sub=spf"
+              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span>Seller Protection Fund (SPF)</span>
+            </Link>
+          </div>
         </div>
       )}
     </div>
