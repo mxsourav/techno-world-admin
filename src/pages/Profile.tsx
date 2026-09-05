@@ -557,11 +557,12 @@ export default function Profile() {
                               <span className={`rounded-full px-3 py-0.5 text-xs font-black border ${statusColor}`}>
                                 {statusLabel}
                               </span>
-                              {(ord.shippingMethod === 'SELF_PICKUP' || ord.shippingCarrier === 'STORE_TAKEAWAY') && (
+                              {/* STORE TAKEAWAY BADGE COMMENTED OUT PER CLIENT REQUEST */}
+                              {/* {(ord.shippingMethod === 'SELF_PICKUP' || ord.shippingCarrier === 'STORE_TAKEAWAY') && (
                                 <span className="rounded-full px-2.5 py-0.5 text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1">
                                   <Store className="h-3 w-3 text-emerald-600" /> Store Takeaway
                                 </span>
-                              )}
+                              )} */}
                             </div>
                             <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
                               <span>Placed on: <b>{new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</b></span>
@@ -600,8 +601,8 @@ export default function Profile() {
                           ))}
                         </div>
 
-                        {/* Store Self-Pickup Appointment & Official Invoice Card */}
-                        {(ord.shippingMethod === 'SELF_PICKUP' || ord.shippingCarrier === 'STORE_TAKEAWAY') && (
+                        {/* STORE PICKUP APPOINTMENT CARD DISABLED PER CLIENT REQUEST - RETAINED FOR FUTURE RE-ENABLING */}
+                        {false && (ord.shippingMethod === 'SELF_PICKUP' || ord.shippingCarrier === 'STORE_TAKEAWAY') && (
                           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">

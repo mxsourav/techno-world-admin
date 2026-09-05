@@ -1550,7 +1550,8 @@ admin@technoworld.com`
                                           <Package className="h-3 w-3" /> Pack Parcel
                                         </button>
                                       )}
-                                      {ord.shippingMethod === 'SELF_PICKUP' ? (
+                                      {/* STORE PICKUP ACTIONS DISABLED PER CLIENT REQUEST - RETAINED FOR FUTURE RE-ENABLING */}
+                                      {false && ord.shippingMethod === 'SELF_PICKUP' ? (
                                         <>
                                           {ord.pickupStatus === 'PENDING_SLOTS' || !ord.pickupSlots || ord.pickupStatus === 'NONE' ? (
                                             <button
@@ -1921,7 +1922,7 @@ admin@technoworld.com`
                                         <Package className="h-3 w-3" /> Pack Order
                                       </button>
                                     )}
-                                    {ord.shippingMethod === 'SELF_PICKUP' ? (
+                                    {false && ord.shippingMethod === 'SELF_PICKUP' ? (
                                       <>
                                         {ord.pickupStatus === 'PENDING_SLOTS' || !ord.pickupSlots || ord.pickupStatus === 'NONE' ? (
                                           <button

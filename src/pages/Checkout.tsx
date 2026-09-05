@@ -21,6 +21,7 @@ const INDIAN_STATES = ['West Bengal', 'Maharashtra', 'Delhi', 'Karnataka', 'Tami
 export default function Checkout() {
   const { user, addresses: storeAddresses, addAddress, clearCart, applyCoupon, clearCoupon } = useStore();
   const [fulfillmentMode, setFulfillmentMode] = useState<'DELIVERY' | 'PICKUP'>('DELIVERY');
+  void setFulfillmentMode; // Retained for future re-enabling of store pickup
   const [dbAddresses, setDbAddresses] = useState<any[]>([]);
   const [selectedAddr, setSelectedAddr] = useState<string>('new');
   const [shippingMethod, setShippingMethod] = useState<string>('NORMAL_POST');
@@ -713,7 +714,8 @@ export default function Checkout() {
       <h1 className="mb-5 text-2xl font-extrabold text-slate-900">Checkout</h1>
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
-          {/* Fulfillment Mode Selector */}
+          {/* STORE PICKUP OPTION COMMENTED OUT PER CLIENT REQUEST - RETAINED FOR FUTURE RE-ENABLING */}
+          {/*
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
               Select How You Want to Receive Your Order
@@ -772,6 +774,7 @@ export default function Checkout() {
               </button>
             </div>
           </div>
+          */}
 
           {/* STEP 1: ADDRESS / PICKUP DETAILS */}
           {activeStep === 1 ? (
