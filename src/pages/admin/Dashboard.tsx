@@ -157,32 +157,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleDownloadBatchInvoices = async (orderIdsToDownload?: string[]) => {
-    try {
-      setIsDownloadingInvoices(true);
-      let targetIds = orderIdsToDownload;
-      if (!targetIds || targetIds.length === 0) {
-        if (selectedOrderIds.size > 0) {
-          targetIds = Array.from(selectedOrderIds);
-        } else {
-          targetIds = activeStageOrders.map(o => o.id);
-        }
-      }
-
-      if (!targetIds || targetIds.length === 0) {
-        toast.error('No orders available to download invoices');
-        return;
-      }
-
-      toast.info(`Generating merged PDF for ${targetIds.length} invoice(s)...`);
-      await invoiceService.adminBatchDownload(targetIds);
-      toast.success(`Batch invoices downloaded (${targetIds.length} orders)`);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to download batch invoices');
-    } finally {
-      setIsDownloadingInvoices(false);
-    }
-  };
 
   const handleBatchGenerateInvoices = async () => {
     try {
@@ -616,6 +590,61 @@ export default function Dashboard() {
       toast.error(err.message || 'Failed to batch accept orders');
     } finally {
       setIsBatchAccepting(false);
+    }
+  };
+
+  const handleDownloadBatchInvoices = async (orderIdsToDownload?: string[]) => {
+    try {
+      setIsDownloadingInvoices(true);
+      let targetIds = orderIdsToDownload;
+      if (!targetIds || targetIds.length === 0) {
+        if (selectedOrderIds.size > 0) {
+          targetIds = Array.from(selectedOrderIds);
+        } else if (selectedGroupKeys.size > 0) {
+          const stageOrders = orders.filter((o: any) => {
+            if (forwardStage === 'to_accept') return o.status === 'PENDING';
+            if (forwardStage === 'to_pack') return o.status === 'CONFIRMED';
+            if (forwardStage === 'to_dispatch') return o.status === 'PROCESSING';
+            if (forwardStage === 'in_transit') return o.status === 'SHIPPED';
+            if (forwardStage === 'completed') return o.status === 'DELIVERED';
+            return true;
+          });
+          const activeGroups = getSmartGroups(stageOrders);
+          const collectedIds: string[] = [];
+          selectedGroupKeys.forEach((k: string) => {
+            const found = activeGroups.find((g: any) => g.key === k);
+            if (found && Array.isArray(found.orders)) {
+              collectedIds.push(...found.orders.map((ordItem: any) => ordItem.id));
+            } else if (found && (found as any).order) {
+              collectedIds.push((found as any).order.id);
+            }
+          });
+          targetIds = Array.from(new Set(collectedIds));
+        } else {
+          const stageOrders = orders.filter((o: any) => {
+            if (forwardStage === 'to_accept') return o.status === 'PENDING';
+            if (forwardStage === 'to_pack') return o.status === 'CONFIRMED';
+            if (forwardStage === 'to_dispatch') return o.status === 'PROCESSING';
+            if (forwardStage === 'in_transit') return o.status === 'SHIPPED';
+            if (forwardStage === 'completed') return o.status === 'DELIVERED';
+            return true;
+          });
+          targetIds = stageOrders.map((o: any) => o.id);
+        }
+      }
+
+      if (!targetIds || targetIds.length === 0) {
+        toast.error('No orders available to download invoices');
+        return;
+      }
+
+      toast.info(`Generating merged PDF for ${targetIds.length} invoice(s)...`);
+      await invoiceService.adminBatchDownload(targetIds);
+      toast.success(`Batch invoices downloaded (${targetIds.length} orders)`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to download batch invoices');
+    } finally {
+      setIsDownloadingInvoices(false);
     }
   };
 
@@ -1615,13 +1644,19 @@ admin@technoworld.com`
                             <FileText className="h-3.5 w-3.5 text-emerald-700" /> Download Invoices (Merged PDF)
                           </button>
                           <button
+                            disabled={isBatchGeneratingInvoices}
                             onClick={() => {
                               setIsOtherActionsOpen(false);
                               handleBatchGenerateInvoices();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-blue-700 font-bold"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-blue-700 font-bold disabled:opacity-50"
                           >
-                            <Zap className="h-3.5 w-3.5 text-blue-600" /> Generate Batch Invoices (Now)
+                            {isBatchGeneratingInvoices ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                            ) : (
+                              <Zap className="h-3.5 w-3.5 text-blue-600" />
+                            )}
+                            <span>{isBatchGeneratingInvoices ? 'Generating Invoices...' : 'Generate Batch Invoices (Now)'}</span>
                           </button>
                           <button
                             onClick={() => {
