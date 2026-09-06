@@ -6,7 +6,7 @@ import {
   CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
   Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
   SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
-  MessageSquare, HelpCircle, CornerDownRight
+  MessageSquare, HelpCircle, CornerDownRight, Check
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
@@ -100,6 +100,18 @@ export default function Dashboard() {
   const [replySignature, setReplySignature] = useState('Techno World Direct · Verified Seller');
   const [showClear24hModal, setShowClear24hModal] = useState(false);
   const [clearing24h, setClearing24h] = useState(false);
+  const [showAddReviewModal, setShowAddReviewModal] = useState(false);
+  const [submittingCuratedReview, setSubmittingCuratedReview] = useState(false);
+  const [availableBooks, setAvailableBooks] = useState<any[]>([]);
+  const [curatedReviewForm, setCuratedReviewForm] = useState({
+    bookId: '',
+    userName: '',
+    rating: 5,
+    title: '',
+    content: '',
+    isVerified: true,
+    date: new Date().toISOString().split('T')[0],
+  });
 
 
   const [emailModalOrder, setEmailModalOrder] = useState<any | null>(null);
@@ -207,10 +219,20 @@ export default function Dashboard() {
     if (tab === 'customers') {
       fetchCustomers();
     }
-    if (tab === 'reviews') {
+    if (tab === 'reviews' || tab === 'dashboard') {
       fetchReviewsAndQuestions();
     }
   }, [tab]);
+
+  const loadAvailableBooks = () => {
+    if (availableBooks.length === 0) {
+      bookService.getBooks({ limit: 200 }).then((res: any) => {
+        if (res.success && Array.isArray(res.data)) {
+          setAvailableBooks(res.data);
+        }
+      }).catch(console.error);
+    }
+  };
 
   const fetchReviewsAndQuestions = async () => {
     setLoadingReviewsData(true);
@@ -241,6 +263,57 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update review status');
+    }
+  };
+
+  const handleToggleVerifiedReview = async (id: string, currentVerified: boolean) => {
+    try {
+      const res = await reviewService.toggleReviewVerified(id, !currentVerified);
+      if (res.success) {
+        toast.success(res.message || 'Review badge updated');
+        setAdminReviews(prev => prev.map(r => r.id === id ? { ...r, isVerified: !currentVerified } : r));
+      } else {
+        toast.error(res.message || 'Failed to update verification status');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Error updating verification status');
+    }
+  };
+
+  const handleCreateCuratedReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!curatedReviewForm.bookId) {
+      toast.error('Please select a book for this review');
+      return;
+    }
+    if (!curatedReviewForm.content.trim()) {
+      toast.error('Review comment is required');
+      return;
+    }
+
+    setSubmittingCuratedReview(true);
+    try {
+      const res = await reviewService.adminCreateReview({
+        bookId: curatedReviewForm.bookId,
+        userName: curatedReviewForm.userName.trim() || undefined,
+        rating: curatedReviewForm.rating,
+        title: curatedReviewForm.title.trim() || undefined,
+        content: curatedReviewForm.content.trim(),
+        isVerified: Boolean(curatedReviewForm.isVerified),
+        createdAt: curatedReviewForm.date ? new Date(curatedReviewForm.date).toISOString() : undefined,
+      });
+
+      if (res.success) {
+        toast.success('Curated review published successfully!');
+        setShowAddReviewModal(false);
+        fetchReviewsAndQuestions();
+      } else {
+        toast.error(res.message || 'Failed to add review');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Error adding review');
+    } finally {
+      setSubmittingCuratedReview(false);
     }
   };
 
@@ -1127,22 +1200,40 @@ admin@technoworld.com`
                 </div>
                 
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <p className="mb-4 text-sm font-bold text-slate-800">Latest Reviews</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-slate-800">Latest Reviews</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/admin/dashboard?tab=reviews')}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
                   <div className="space-y-4">
-                    <div className="border-b border-slate-100 pb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-slate-800">Great Quality</span>
-                        <span className="text-amber-500 text-xs tracking-wider">★★★★★</span>
-                      </div>
-                      <p className="text-xs text-slate-500 line-clamp-2">"The book arrived in perfect condition and the content is exactly what I needed for my exams."</p>
-                    </div>
-                    <div className="border-b border-slate-100 pb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-slate-800">Fast Delivery</span>
-                        <span className="text-amber-500 text-xs tracking-wider">★★★★☆</span>
-                      </div>
-                      <p className="text-xs text-slate-500 line-clamp-2">"Delivered within 2 days. The packaging could be slightly better but overall good."</p>
-                    </div>
+                    {adminReviews.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-4 text-center">No customer reviews yet.</p>
+                    ) : (
+                      adminReviews.slice(0, 3).map((r: any) => (
+                        <div key={r.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-sm text-slate-800 truncate max-w-[170px]" title={r.title || r.bookTitle}>
+                              {r.title || r.bookTitle || 'Review'}
+                            </span>
+                            <span className="text-amber-500 text-xs tracking-wider">
+                              {'★'.repeat(Math.max(1, Math.min(5, r.rating)))}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 line-clamp-2">"{r.content}"</p>
+                          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400">
+                            <span className="font-semibold text-slate-600">{r.userName || 'Reader'}</span>
+                            {r.isVerified && (
+                              <span className="text-emerald-700 font-bold">✓ Verified</span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -2781,6 +2872,28 @@ admin@technoworld.com`
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Add Curated Review Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      loadAvailableBooks();
+                      setCuratedReviewForm({
+                        bookId: '',
+                        userName: '',
+                        rating: 5,
+                        title: '',
+                        content: '',
+                        isVerified: true,
+                        date: new Date().toISOString().split('T')[0],
+                      });
+                      setShowAddReviewModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Curated Review
+                  </button>
+
                   {/* Clear Logs Older Than 24h Button */}
                   <button
                     type="button"
@@ -2916,7 +3029,7 @@ admin@technoworld.com`
                           </div>
 
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center gap-1 rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-black text-amber-700">
                                 {r.rating} ★
                               </span>
@@ -2926,6 +3039,15 @@ admin@technoworld.com`
                               }`}>
                                 {r.isApproved ? 'Published on Store' : 'Hidden'}
                               </span>
+                              {r.isVerified ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <Check className="h-3 w-3 stroke-[3]" /> Verified Buyer
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  Standard Reviewer
+                                </span>
+                              )}
                             </div>
 
                             {/* Book Title */}
@@ -2951,11 +3073,24 @@ admin@technoworld.com`
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2 shrink-0 self-end md:self-start">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 self-end md:self-start">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleVerifiedReview(r.id, r.isVerified)}
+                            className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition-colors shadow-sm flex items-center gap-1 ${
+                              r.isVerified
+                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                                : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
+                            }`}
+                            title={r.isVerified ? 'Click to remove Verified Buyer badge' : 'Click to grant Verified Buyer badge'}
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                            {r.isVerified ? 'Verified' : 'Make Verified'}
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleToggleApproveReview(r.id, r.isApproved)}
-                            className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-colors shadow-sm ${
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors shadow-sm ${
                               r.isApproved
                                 ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
                                 : 'bg-emerald-600 text-white hover:bg-emerald-700'
@@ -3180,6 +3315,182 @@ admin@technoworld.com`
                       {clearing24h ? 'Clearing Records...' : 'Confirm Clear (Older than 24h)'}
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Add Curated Review Modal */}
+            {showAddReviewModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <Star className="h-5 w-5 text-amber-500 fill-amber-500" /> Add Curated Review
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Publish a promotional or editorial review for any book in your catalog.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddReviewModal(false)}
+                      className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCreateCuratedReview} className="space-y-4">
+                    {/* Select Book */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Select Book <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={curatedReviewForm.bookId}
+                        onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, bookId: e.target.value }))}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        required
+                      >
+                        <option value="">-- Choose a book from catalog --</option>
+                        {availableBooks.map((b: any) => (
+                          <option key={b.id} value={b.id}>
+                            {b.title} {b.isbn13 ? `(ISBN: ${b.isbn13})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Reviewer Name & Star Rating */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Reviewer Name
+                        </label>
+                        <input
+                          type="text"
+                          value={curatedReviewForm.userName}
+                          onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, userName: e.target.value }))}
+                          placeholder="e.g. Suman Sengupta / Verified Reader"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Rating (Stars)
+                        </label>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setCuratedReviewForm(prev => ({ ...prev, rating: star }))}
+                              className="p-1 hover:scale-110 transition-transform"
+                            >
+                              <Star
+                                className={`h-5 w-5 ${
+                                  star <= curatedReviewForm.rating
+                                    ? 'text-amber-500 fill-amber-500'
+                                    : 'text-slate-300'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                          <span className="ml-2 text-xs font-bold text-slate-600">
+                            {curatedReviewForm.rating} of 5
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Review Headline / Title */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Review Headline (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={curatedReviewForm.title}
+                        onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="e.g. Must-have book for final semester exams"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    {/* Review Content */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Review Content / Feedback <span className="text-rose-500">*</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={curatedReviewForm.content}
+                        onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                        placeholder="Write the review text here. Detailed answers and feedback look genuine to readers..."
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                        required
+                      />
+                    </div>
+
+                    {/* Verified Buyer Badge Toggle */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                          <span className="text-xs font-extrabold text-slate-800">
+                            Display "Verified Buyer" Badge
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          When enabled, renders the green <b>✓ Verified Buyer</b> badge on the book page.
+                        </p>
+                      </div>
+
+                      <label className="relative inline-flex cursor-pointer items-center">
+                        <input
+                          type="checkbox"
+                          checked={curatedReviewForm.isVerified}
+                          onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, isVerified: e.target.checked }))}
+                          className="peer sr-only"
+                        />
+                        <div className="h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-full peer-focus:outline-none" />
+                      </label>
+                    </div>
+
+                    {/* Date */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Review Date
+                      </label>
+                      <input
+                        type="date"
+                        value={curatedReviewForm.date}
+                        onChange={(e) => setCuratedReviewForm(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    {/* Submit Buttons */}
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddReviewModal(false)}
+                        className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submittingCuratedReview}
+                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                      >
+                        {submittingCuratedReview ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        Publish Review
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}

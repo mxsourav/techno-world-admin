@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router';
 import { adminService } from '@/services/api';
 import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
@@ -7,7 +8,12 @@ import { ActivityLogsModal } from './ActivityLogsModal';
 import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check } from 'lucide-react';
 
 export default function ProductsWorkspace() {
-  const [activeTab, setActiveTab] = useState('all');
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const statusParam = searchParams.get('status');
+  const actionParam = searchParams.get('action');
+
+  const [activeTab, setActiveTab] = useState(statusParam || 'all');
   const [search, setSearch] = useState('');
   const [data, setData] = useState<any[]>([]);
   const [kpis, setKpis] = useState<any>({});
@@ -16,6 +22,18 @@ export default function ProductsWorkspace() {
   const [viewingBook, setViewingBook] = useState<any>(null);
   const [editingBook, setEditingBook] = useState<any>(null);
   const [viewingLogs, setViewingLogs] = useState<any>(null);
+
+  useEffect(() => {
+    if (statusParam) {
+      setActiveTab(statusParam);
+    }
+  }, [statusParam]);
+
+  useEffect(() => {
+    if (actionParam === 'add') {
+      setEditingBook({});
+    }
+  }, [actionParam]);
   
   // Quick Description Editor state
   const [editingDescId, setEditingDescId] = useState<string | null>(null);

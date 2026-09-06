@@ -468,8 +468,20 @@ export const reviewService = {
   }) => api.post<any>('/reviews', data),
   getAdminReviews: (params?: { search?: string; rating?: number; status?: string }) =>
     api.get<any[]>('/reviews/admin', params as any),
+  adminCreateReview: (data: {
+    bookId: string;
+    rating: number;
+    title?: string;
+    content: string;
+    userName?: string;
+    userEmail?: string;
+    isVerified?: boolean;
+    createdAt?: string;
+  }) => api.post<any>('/reviews/admin', data),
   updateReviewStatus: (id: string, isApproved: boolean) =>
     api.patch<any>(`/reviews/admin/${id}/status`, { isApproved }),
+  toggleReviewVerified: (id: string, isVerified?: boolean) =>
+    api.patch<any>(`/reviews/admin/${id}/verify`, { isVerified }),
   deleteReview: (id: string) =>
     api.delete<any>(`/reviews/admin/${id}`),
   clearOldReviews: (hours = 24) =>

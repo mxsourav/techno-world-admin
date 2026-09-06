@@ -19,6 +19,9 @@ import {
   AlertTriangle,
   ArrowRight,
   CreditCard,
+  Plus,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService } from '@/services/api';
@@ -49,15 +52,37 @@ export default function AdminLayout() {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
+  const [isProductsFlyoutOpen, setIsProductsFlyoutOpen] = useState<boolean>(false);
+  const [productsFlyoutPos, setProductsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const [isOrdersFlyoutOpen, setIsOrdersFlyoutOpen] = useState<boolean>(false);
   const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const [isPaymentsFlyoutOpen, setIsPaymentsFlyoutOpen] = useState<boolean>(false);
   const [paymentsFlyoutPos, setPaymentsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const notifRef = useRef<HTMLDivElement>(null);
+  const productsBtnRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
   const paymentsBtnRef = useRef<HTMLDivElement>(null);
+  const productsTimeoutRef = useRef<any>(null);
   const ordersTimeoutRef = useRef<any>(null);
   const paymentsTimeoutRef = useRef<any>(null);
+
+  const handleProductsMouseEnter = () => {
+    if (productsTimeoutRef.current) {
+      clearTimeout(productsTimeoutRef.current);
+      productsTimeoutRef.current = null;
+    }
+    if (productsBtnRef.current) {
+      const rect = productsBtnRef.current.getBoundingClientRect();
+      setProductsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsProductsFlyoutOpen(true);
+  };
+
+  const handleProductsMouseLeave = () => {
+    productsTimeoutRef.current = setTimeout(() => {
+      setIsProductsFlyoutOpen(false);
+    }, 300);
+  };
 
   const handleOrdersMouseEnter = () => {
     if (ordersTimeoutRef.current) {
@@ -144,8 +169,33 @@ export default function AdminLayout() {
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-2">Menu</div>
           {TABS.map((t) => {
             const isActive = currentTab === t.id || (t.id === 'analytics' && currentTab === 'reports');
+            const isProductsTab = t.id === 'products';
             const isOrdersTab = t.id === 'orders';
             const isPaymentsTab = t.id === 'payments';
+
+            if (isProductsTab) {
+              return (
+                <div
+                  key={t.id}
+                  ref={productsBtnRef}
+                  className="relative"
+                  onMouseEnter={handleProductsMouseEnter}
+                  onMouseLeave={handleProductsMouseLeave}
+                >
+                  <Link
+                    to={`/admin/dashboard?tab=products`}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      isActive 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                    <span>{t.name}</span>
+                  </Link>
+                </div>
+              );
+            }
 
             if (isOrdersTab) {
               return (
@@ -414,6 +464,91 @@ export default function AdminLayout() {
             </span>
             <span className="text-[10px] text-slate-400 font-semibold">0</span>
           </Link>
+        </div>
+      )}
+
+      {/* Floating Products Hover Flyout */}
+      {isProductsFlyoutOpen && (
+        <div
+          style={{ top: `${productsFlyoutPos.top}px`, left: `${productsFlyoutPos.left}px` }}
+          onMouseEnter={handleProductsMouseEnter}
+          onMouseLeave={handleProductsMouseLeave}
+          className="fixed w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6"
+        >
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+            Catalog & Inventory
+          </div>
+
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=products&status=all"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Package className="h-3.5 w-3.5 text-emerald-600" />
+                All Products (Catalog)
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=products&action=add"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                Add New Product
+              </span>
+              <span className="bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                + Add
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=products&status=published"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                Published Books
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=products&status=low_stock"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-800 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                Low Stock Alerts
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=products&status=out_of_stock"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-800 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                Out of Stock
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=products&status=draft"
+              onClick={() => setIsProductsFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <FileEdit className="h-3.5 w-3.5 text-purple-600" />
+                Draft Listings
+              </span>
+            </Link>
+          </div>
         </div>
       )}
 
