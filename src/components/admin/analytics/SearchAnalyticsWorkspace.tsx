@@ -516,7 +516,7 @@ export default function SearchAnalyticsWorkspace() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {post.thumbnailUrl ? (
-                              <img src={post.thumbnailUrl} alt={post.title} className="h-9 w-14 object-cover rounded-md border border-slate-200 shrink-0" />
+                              <img src={getImageUrl(post.thumbnailUrl)} alt={post.title} className="h-9 w-14 object-cover rounded-md border border-slate-200 shrink-0" loading="lazy" decoding="async" />
                             ) : (
                               <div className="h-9 w-14 rounded-md bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center shrink-0">
                                 <BookOpen className="h-4 w-4" />

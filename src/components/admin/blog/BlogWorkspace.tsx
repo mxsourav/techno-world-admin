@@ -1336,7 +1336,7 @@ export default function BlogWorkspace() {
                             >
                               <div className="h-12 w-9 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                                 {cover ? (
-                                  <img src={cover} alt={bk.title} className="h-full w-full object-cover" />
+                                  <img src={getImageUrl(cover)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                                 ) : (
                                   <Book className="h-4 w-4 text-slate-400" />
                                 )}
@@ -1422,7 +1422,7 @@ export default function BlogWorkspace() {
                           >
                             <div className="h-12 w-9 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                               {cover ? (
-                                <img src={cover} alt={bk.title} className="h-full w-full object-cover" />
+                                <img src={getImageUrl(cover)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                               ) : (
                                 <Book className="h-4 w-4 text-slate-400" />
                               )}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Package, Truck, CheckCircle2, XCircle, Clock, ExternalLink, Store, CalendarCheck, Download, Loader2 } from 'lucide-react';
-import { orderService } from '@/services/api';
+import { orderService, getImageUrl } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
@@ -120,7 +120,7 @@ export default function MyOrders() {
                   <div key={item.id} className="flex gap-4 items-center">
                     <div className="w-12 h-16 bg-slate-100 rounded overflow-hidden flex-shrink-0 border border-slate-200">
                       {item.book?.coverUrl && (
-                        <img src={item.book.coverUrl} alt={item.book.title} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(item.book?.coverUrl)} alt={item.book?.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { useStore } from '@/store/StoreContext';
-import { profileService, authService, orderService, shippingService } from '@/services/api';
+import { profileService, getImageUrl, authService, orderService, shippingService } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 
@@ -583,7 +583,7 @@ export default function Profile() {
                             <div key={item.id} className="py-3 flex items-center gap-4">
                               <div className="h-16 w-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                                 {item.book?.coverUrl ? (
-                                  <img src={item.book.coverUrl} alt={item.book.title} className="h-full w-full object-cover" />
+                                  <img src={getImageUrl(item.book?.coverUrl)} alt={item.book?.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                                 ) : (
                                   <span className="text-xs font-bold text-slate-400">📖</span>
                                 )}

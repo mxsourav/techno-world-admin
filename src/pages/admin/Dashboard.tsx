@@ -3827,7 +3827,7 @@ admin@technoworld.com`
                           {/* Book Thumbnail */}
                           <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
                             {r.bookCover ? (
-                              <img src={r.bookCover} alt={r.bookTitle} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(r.bookCover)} alt={r.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
                             )}
@@ -3949,7 +3949,7 @@ admin@technoworld.com`
                           {/* Book Thumbnail */}
                           <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
                             {q.bookCover ? (
-                              <img src={q.bookCover} alt={q.bookTitle} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(q.bookCover)} alt={q.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
                             )}
@@ -4334,7 +4334,7 @@ admin@technoworld.com`
                 {mediaItems.map(m => (
                   <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                     {m.type === 'image' ? (
-                      <img src={m.url} alt={m.altText || m.filename} className="h-full w-full object-cover" />
+                      <img src={getImageUrl(m.url)} alt={m.altText || m.filename} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 p-2 text-center">
                         <BookOpen className="h-8 w-8 mb-2" />
