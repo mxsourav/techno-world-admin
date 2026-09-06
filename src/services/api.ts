@@ -347,6 +347,10 @@ export const orderService = {
     api.post<any>(`/orders/${orderId}/confirm-pickup-slot`, { selectedSlot }),
   markOrderCollected: (orderId: string) =>
     api.post<any>(`/orders/admin/${orderId}/mark-collected`),
+  getMergeCandidates: (orderId: string) =>
+    api.get<any>(`/orders/admin/${orderId}/merge-candidates`),
+  mergeChildOrder: (data: { childOrderId: string; parentOrderId: string }) =>
+    api.post<any>('/orders/admin/merge-child-order', data),
 };
 
 export const mediaService = {

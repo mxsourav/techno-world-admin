@@ -6,7 +6,7 @@ import {
   CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
   Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
   SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
-  MessageSquare, HelpCircle, CornerDownRight, Check, FileText
+  MessageSquare, HelpCircle, CornerDownRight, Check, FileText, Link2
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
@@ -148,6 +148,50 @@ export default function Dashboard() {
   const [isCollectingOrder, setIsCollectingOrder] = useState<string | null>(null);
   const [isDownloadingInvoices, setIsDownloadingInvoices] = useState(false);
   const [isBatchGeneratingInvoices, setIsBatchGeneratingInvoices] = useState(false);
+
+  // Manual Child Order Merge State
+  const [mergeModalOrder, setMergeModalOrder] = useState<any | null>(null);
+  const [mergeCandidates, setMergeCandidates] = useState<any[]>([]);
+  const [selectedParentOrderId, setSelectedParentOrderId] = useState<string>('');
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
+  const [isMergingOrder, setIsMergingOrder] = useState(false);
+
+  const handleOpenMergeModal = async (order: any) => {
+    setMergeModalOrder(order);
+    setSelectedParentOrderId('');
+    setIsLoadingCandidates(true);
+    try {
+      const res = await orderService.getMergeCandidates(order.id);
+      const candidates = res.data || [];
+      setMergeCandidates(candidates);
+      if (candidates.length > 0) {
+        setSelectedParentOrderId(candidates[0].id);
+      }
+    } catch (err: any) {
+      console.error('Failed to load merge candidates:', err);
+      toast.error('Failed to find merge candidates');
+    } finally {
+      setIsLoadingCandidates(false);
+    }
+  };
+
+  const handleConfirmMerge = async () => {
+    if (!mergeModalOrder || !selectedParentOrderId) return;
+    setIsMergingOrder(true);
+    try {
+      const res = await orderService.mergeChildOrder({
+        childOrderId: mergeModalOrder.id,
+        parentOrderId: selectedParentOrderId,
+      });
+      toast.success(res.message || 'Order merged successfully!');
+      setMergeModalOrder(null);
+      fetchOrders();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to merge order');
+    } finally {
+      setIsMergingOrder(false);
+    }
+  };
 
   const handleDownloadSingleInvoice = async (orderId: string, orderNumber: string, fullOrder?: any) => {
     try {
@@ -482,7 +526,15 @@ export default function Dashboard() {
       const phone = (ord.pickupPhone || ord.address?.phone || ord.user?.phone || ord.userId || 'guest').trim();
       const pin = (ord.address?.pincode || '700001').trim();
       const line1 = (ord.address?.addressLine1 || ord.address?.line1 || '').trim().toLowerCase();
-      const batchKey = getOrderBatchKey(ord.createdAt);
+      let batchKey = getOrderBatchKey(ord.createdAt);
+
+      // If order was manually merged into a parent order, associate with parent consignment's batchKey
+      if (ord.parentOrderId) {
+        const parent = filteredOrdersList.find((o: any) => o.id === ord.parentOrderId || o.orderNumber === ord.parentOrderId);
+        if (parent) {
+          batchKey = getOrderBatchKey(parent.createdAt);
+        }
+      }
 
       // Store Pickup orders get distinct keys so they don't combine with courier dispatch
       const groupKey = isSelfPickup ? `pickup_${ord.id}` : `${phone}_${pin}_${line1}_${batchKey}`;
@@ -2076,8 +2128,17 @@ admin@technoworld.com`
                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoice
                                         </button>
                                       )}
-                                      <button
+                                       {(!ord.trackingNumber && ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(ord.status) && !ord.parentOrderId) && (
+                                         <button
+                                           title="Manually merge this child order into an existing un-dispatched parent parcel"
+                                           onClick={() => handleOpenMergeModal(ord)}
+                                           className="h-7 px-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
+                                         >
+                                           <Link2 className="h-3 w-3" /> Merge
+                                         </button>
+                                       )}
                                         onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
+                                      <button
                                         className="h-7 px-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
                                       >
                                         <Mail className="h-3 w-3" /> Delay
@@ -2496,6 +2557,15 @@ admin@technoworld.com`
                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoice
                                          </button>
                                        )}
+                                       {(!ord.trackingNumber && ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(ord.status) && !ord.parentOrderId) && (
+                                         <button
+                                           title="Manually merge this child order into an existing un-dispatched parent parcel"
+                                           onClick={() => handleOpenMergeModal(ord)}
+                                           className="h-7 px-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
+                                         >
+                                           <Link2 className="h-3 w-3" /> Merge
+                                         </button>
+                                       )}
                                        <button
                                          onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
                                          className="h-7 px-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
@@ -2830,6 +2900,146 @@ admin@technoworld.com`
                   </div>
                 </div>
               )}
+
+              {/* Manual Child Order Merge Modal */}
+              {mergeModalOrder && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
+                  <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-900 to-indigo-900 p-5 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-white/10">
+                          <Link2 className="h-5 w-5 text-blue-300" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-extrabold">Consolidate Order Consignment</h3>
+                          <p className="text-xs text-blue-200">Merge child order #{mergeModalOrder.orderNumber} into active parcel</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setMergeModalOrder(null)}
+                        className="text-white/70 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-white/10 transition-colors"
+                      >
+                        &times;
+                      </button>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                      {/* Child Order Details */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
+                        <div className="flex justify-between font-bold text-slate-800">
+                          <span>Child Order: #{mergeModalOrder.orderNumber}</span>
+                          <span>{formatINR(mergeModalOrder.totalAmount)}</span>
+                        </div>
+                        <div className="text-slate-600 flex justify-between">
+                          <span>Customer: {mergeModalOrder.pickupName || mergeModalOrder.address?.fullName || mergeModalOrder.user?.name || 'Customer'}</span>
+                          <span>{mergeModalOrder.items?.length || 0} Book(s)</span>
+                        </div>
+                        <div className="text-slate-600 flex justify-between">
+                          <span>Delivery Method: {mergeModalOrder.shippingMethod === 'SPEED_POST' ? '🚀 Speed Post' : mergeModalOrder.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express Local' : '📦 Standard Delivery'}</span>
+                          <span className="font-bold text-blue-700">Shipping Paid: {formatINR(mergeModalOrder.shippingCharge || 0)}</span>
+                        </div>
+                      </div>
+
+                      {/* Wallet Refund Notice */}
+                      {mergeModalOrder.shippingCharge > 0 ? (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900">
+                          <div className="font-extrabold flex items-center gap-1.5 text-emerald-800 mb-1">
+                            <span>💰</span> TechnoWallet Refund: {formatINR(mergeModalOrder.shippingCharge)}
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-emerald-700">
+                            The {formatINR(mergeModalOrder.shippingCharge)} delivery fee will be refunded directly to the customer's <b>TechnoWallet</b> balance upon merging.
+                            Wallet credits have <b>no expiry date</b>, <b>no maximum usage limits</b>, and can be used on any future book purchase.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
+                          ℹ️ This child order had ₹0 delivery fee. Items will be bundled into the parent parcel at no additional charge.
+                        </div>
+                      )}
+
+                      {/* Candidate Parent Orders */}
+                      <div>
+                        <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wide">
+                          Select Active Consignment Package to Merge Into:
+                        </label>
+                        {isLoadingCandidates ? (
+                          <div className="p-6 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" /> Searching un-dispatched orders for this customer...
+                          </div>
+                        ) : mergeCandidates.length === 0 ? (
+                          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                            ⚠️ No eligible active parent orders found for this customer awaiting dispatch.
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {mergeCandidates.map((cand: any) => (
+                              <label
+                                key={cand.id}
+                                className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                  selectedParentOrderId === cand.id
+                                    ? 'border-blue-600 bg-blue-50/50 shadow-sm'
+                                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="parentOrderChoice"
+                                  checked={selectedParentOrderId === cand.id}
+                                  onChange={() => setSelectedParentOrderId(cand.id)}
+                                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                                />
+                                <div className="flex-1 min-w-0 text-xs">
+                                  <div className="flex justify-between items-center font-bold text-slate-900">
+                                    <span>Order #{cand.orderNumber}</span>
+                                    <span className="text-emerald-700 font-extrabold">{formatINR(cand.totalAmount)}</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 mt-0.5">
+                                    Placed: {new Date(cand.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}, {new Date(cand.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                    {' · '}{cand.shippingMethod === 'SPEED_POST' ? '🚀 Speed Post' : cand.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : '📦 Standard'}
+                                  </div>
+                                  <div className="text-[11px] text-slate-600 mt-1 truncate">
+                                    {cand.items?.map((it: any) => it.book?.title || 'Book').join(', ')}
+                                  </div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notification Promise */}
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>Customer will receive an automated consolidation email explaining the merged package and wallet refund.</span>
+                      </div>
+
+                      {/* Footer Actions */}
+                      <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setMergeModalOrder(null)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!selectedParentOrderId || isMergingOrder}
+                          onClick={handleConfirmMerge}
+                          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-extrabold shadow-md inline-flex items-center gap-1.5 transition-all"
+                        >
+                          {isMergingOrder ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Merging Consignment...</>
+                          ) : (
+                            <><Link2 className="h-3.5 w-3.5" /> Confirm & Merge Orders</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -2897,6 +3107,7 @@ admin@technoworld.com`
                         <th className="px-4 py-3">Total Orders</th>
                         <th className="px-4 py-3">Lifetime Spend</th>
                         <th className="px-4 py-3">TechnoPoints</th>
+                        <th className="px-4 py-3">TechnoWallet</th>
                         <th className="px-4 py-3">Primary Address</th>
                         <th className="px-4 py-3 text-right">Actions</th>
                       </tr>
@@ -2935,6 +3146,12 @@ admin@technoworld.com`
                             <td className="px-4 py-3.5">
                               <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800 text-xs">
                                 ⭐ {c.technoPoints || 0} pts
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3.5">
+                              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 font-extrabold text-emerald-800 text-xs">
+                                💳 {formatINR(c.technoWallet || 0)}
                               </span>
                             </td>
 

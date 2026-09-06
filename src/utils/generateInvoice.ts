@@ -1,5 +1,6 @@
-import { formatINR } from './helpers';
+import { formatINR, formatClientSku } from './helpers';
 import { invoiceService } from '@/services/api';
+import { TECHNO_WORLD_BLACK_LOGO_B64 } from './logoBase64';
 
 /**
  * Downloads the official server-rendered PDF invoice for an order.
@@ -26,27 +27,31 @@ export function generateAndPrintInvoice(order: any) {
     return;
   }
 
-  const orderNum = order.orderNumber || order.id || 'N/A';
+  const orderNum = order.orderNumber || order.id?.slice(0, 8) || 'N/A';
   const invoiceNum = order.invoiceNumber || `TW-INV-${orderNum}`;
   const orderDate = new Date(order.createdAt || order.placedAt || Date.now()).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
   });
+
+  const isPickup = order.shippingMethod === 'SELF_PICKUP' || order.shippingCarrier === 'STORE_TAKEAWAY';
+  const pickupSlot = order.selectedPickupSlot || 'Appointment Slot Pending';
   const customerName = order.pickupName || order.address?.fullName || order.address?.name || order.user?.name || 'Valued Customer';
   const customerPhone = order.pickupPhone || order.address?.phone || order.user?.phone || 'N/A';
   const customerEmail = order.pickupEmail || order.customerEmail || order.address?.email || order.user?.email || 'N/A';
-  const isPickup = order.shippingMethod === 'SELF_PICKUP' || order.shippingCarrier === 'STORE_TAKEAWAY';
-  const pickupSlot = order.selectedPickupSlot || 'Appointment Slot Pending';
   const paymentMethod = (order.paymentMethod || 'PREPAID').toUpperCase();
 
-  const itemsHtml = (order.items || []).map((it: any, idx: number) => {
-    const title = it.book?.title || it.title || 'Academic Book';
-    const author = it.book?.author || (it.book?.authors && it.book.authors[0]?.name) || it.author || '';
-    const sku = it.book?.sku || it.book?.isbn13 || it.sku || '—';
+  const items = Array.isArray(order.items) ? order.items : [];
+  const itemsHtml = items.map((it: any, idx: number) => {
+    const bk = it.book || {};
+    const title = bk.title || it.title || 'Academic Title';
+    const author = bk.authors?.[0]?.name || it.author || '';
+    const sku = formatClientSku(bk.sku || bk.isbn13 || bk.isbn10 || it.sku);
     const qty = it.quantity || it.qty || 1;
     const price = it.priceAtPurchase || it.unitPrice || it.price || 0;
     const total = qty * price;
+
     return `
       <tr style="border-bottom: 1px solid #e2e8f0;">
         <td style="padding: 10px 8px; text-align: center; color: #64748b; font-size: 12px;">${idx + 1}</td>
@@ -70,32 +75,39 @@ export function generateAndPrintInvoice(order: any) {
         <meta charset="utf-8">
         <title>Invoice #${invoiceNum} - Techno World Books</title>
         <style>
+          @page {
+            size: A4 portrait;
+            margin: 12mm;
+          }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: #0f172a;
             margin: 0;
-            padding: 32px;
+            padding: 24px;
             background: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           @media print {
-            body { padding: 12px; }
+            body { padding: 0; margin: 0; }
             .no-print { display: none !important; }
+            .invoice-box { border: none !important; padding: 0 !important; }
           }
         </style>
       </head>
       <body>
         <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
           <button onclick="window.print()" style="background: #047857; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px;">
-            🖨️ Print / Save as PDF
+            🖨️ Print / Save as PDF (A4)
           </button>
         </div>
 
-        <div style="max-width: 760px; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 12px; padding: 28px;">
+        <div class="invoice-box" style="max-width: 760px; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 12px; padding: 28px;">
           <!-- Header -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px;">
             <div>
-              <div style="font-size: 20px; font-weight: 900; color: #065f46; letter-spacing: -0.5px;">TECHNO WORLD BOOKS</div>
-              <div style="font-size: 11px; color: #64748b; margin-top: 3px;">Online Academic & Medical Bookstore Division</div>
+              <img src="${TECHNO_WORLD_BLACK_LOGO_B64}" alt="Techno World Logo" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 4px; display: block;" />
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Online Academic & Medical Bookstore Division</div>
               <div style="font-size: 11px; color: #475569; margin-top: 6px; max-width: 320px; line-height: 1.4;">
                 90/6A, Mahatma Gandhi Rd, opp. Grace Cinema, Calcutta University, College Street, Kolkata, WB 700007
               </div>
