@@ -17,13 +17,16 @@ import {
   FileEdit,
   Bell,
   Settings,
-  AlertTriangle, Loader2,
+  AlertTriangle,
+  Loader2,
   ArrowRight,
   CreditCard,
   Plus,
   CheckCircle2,
   XCircle,
   BookOpen,
+  Search,
+  Clock
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
@@ -367,20 +370,21 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-slate-50 h-full">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-slate-200 flex-shrink-0 z-20 relative">
+        <header className="h-16 flex items-center justify-between px-6 sm:px-8 bg-white border-b border-slate-200 flex-shrink-0 z-20 relative">
           {/* Breadcrumbs */}
-          <div className="flex items-center text-sm font-medium">
-            <span className="text-slate-400">Admin</span>
-            <ChevronRight className="h-4 w-4 mx-1.5 text-slate-300" />
-            <span className="text-slate-900">{tabName}</span>
+          <div className="flex items-center text-sm font-medium min-w-0 pr-4">
+            <span className="text-slate-400 shrink-0">Admin</span>
+            <ChevronRight className="h-4 w-4 mx-1.5 text-slate-300 shrink-0" />
+            <span className="text-slate-900 font-bold truncate max-w-[180px] lg:max-w-[260px]">{tabName}</span>
           </div>
 
-          {/* Global Order Lookup Bar */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="relative">
+          {/* Global Order Lookup Bar - Mathematically Locked in Absolute Center */}
+          <div className="hidden md:flex items-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
+            <div className="relative w-64 lg:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="🔍 Lookup Order (e.g. #TW-1002)..."
+                placeholder="Lookup Order (e.g. #TW-1002)..."
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const val = (e.target as HTMLInputElement).value.trim();
@@ -390,12 +394,12 @@ export default function AdminLayout() {
                     }
                   }
                 }}
-                className="w-56 lg:w-72 rounded-xl border border-slate-300 bg-slate-50/70 px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/80 pl-9 pr-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {/* Interactive Notification Bell */}
             <div className="relative" ref={notifRef}>
               <button
@@ -465,7 +469,7 @@ export default function AdminLayout() {
                                 Customer: <b>{ord.address?.fullName || ord.user?.name || 'Customer'}</b>
                               </p>
                               <span className="text-[10px] font-semibold text-slate-400 shrink-0" title={timeStr}>
-                                🕒 {relTime}
+                                <Clock className="h-3 w-3 inline text-slate-400 mr-1" />{relTime}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -515,7 +519,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-slate-50 p-6">
+        <main className="flex-1 overflow-auto bg-slate-50 p-3 sm:p-5 lg:p-6">
           <Outlet />
         </main>
       </div>
