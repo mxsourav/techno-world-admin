@@ -1325,7 +1325,7 @@ export default function BlogWorkspace() {
                             ? (Array.isArray(bk.authors) ? bk.authors.map((a: any) => a.name).join(', ') : bk.authors)
                             : (bk.author || 'Author not specified');
                           const sku = bk.sku || bk.bookCode || bk.isbn13 || bk.isbn10;
-                          const cover = bk.thumbnailUrl || bk.coverUrl || bk.images?.[0];
+                          const cover = getImageUrl(bk.thumbnailUrl || bk.coverUrl || bk.images?.[0]);
 
                           return (
                             <div
@@ -1413,7 +1413,7 @@ export default function BlogWorkspace() {
                           ? (Array.isArray(bk.authors) ? bk.authors.map((a: any) => a.name).join(', ') : bk.authors)
                           : (bk.author || 'Author not specified');
                         const sku = bk.sku || bk.bookCode || bk.isbn13 || bk.isbn10;
-                        const cover = bk.thumbnailUrl || bk.coverUrl || bk.images?.[0];
+                        const cover = getImageUrl(bk.thumbnailUrl || bk.coverUrl || bk.images?.[0]);
 
                         return (
                           <div

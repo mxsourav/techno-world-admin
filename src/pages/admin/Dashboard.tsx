@@ -52,7 +52,7 @@ import {
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService } from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService , getImageUrl} from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
@@ -2045,7 +2045,7 @@ admin@technoworld.com`
                                               </span>
                                               <div className="h-8 w-6 rounded bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                                                 {bk.coverUrl ? (
-                                                  <img src={bk.coverUrl} alt={bk.title} className="h-full w-full object-cover" />
+                                                  <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                 ) : (
                                                   <span className="text-[10px]">📖</span>
                                                 )}
@@ -2347,7 +2347,7 @@ admin@technoworld.com`
                                                     <div className="flex items-center gap-2.5">
                                                       <div className="h-10 w-8 rounded border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
                                                         {bk.coverUrl ? (
-                                                          <img src={bk.coverUrl} alt={bk.title} className="h-full w-full object-cover" />
+                                                          <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                         ) : (
                                                           <span className="text-xs">📖</span>
                                                         )}
@@ -2475,7 +2475,7 @@ admin@technoworld.com`
                                   <div className="flex items-start gap-3">
                                     <div className="h-12 w-9 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                                       {book.coverUrl ? (
-                                        <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover" />
+                                        <img src={getImageUrl(book.coverUrl)} alt={book.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                       ) : (
                                         <span className="text-xs">📖</span>
                                       )}
@@ -2854,7 +2854,7 @@ admin@technoworld.com`
                       <div className="flex flex-col sm:flex-row gap-5 items-start">
                         <div className="h-44 w-32 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center shadow-md">
                           {previewBook.coverUrl ? (
-                            <img src={previewBook.coverUrl} alt={previewBook.title} className="h-full w-full object-cover" />
+                            <img src={getImageUrl(previewBook.coverUrl)} alt={previewBook.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                           ) : (
                             <span className="text-3xl">📖</span>
                           )}
@@ -3067,7 +3067,7 @@ admin@technoworld.com`
                                 <div className="flex items-center gap-3 min-w-0">
                                   <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                                     {b.coverUrl ? (
-                                      <img src={b.coverUrl} alt={b.title} className="h-full w-full object-cover" />
+                                      <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                     ) : (
                                       <BookOpen className="h-4 w-4 text-slate-400" />
                                     )}
@@ -3237,7 +3237,7 @@ admin@technoworld.com`
                               <div key={idx} className="p-3 flex items-center justify-between gap-3 bg-white">
                                 <div className="flex items-center gap-3">
                                   <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                    {b.coverUrl ? <img src={b.coverUrl} alt={b.title} className="h-full w-full object-cover" /> : <span>📖</span>}
+                                    {b.coverUrl ? <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} /> : <span>📖</span>}
                                   </div>
                                   <div>
                                     <h5 className="font-bold text-slate-900 line-clamp-1">{b.title || 'Book Title'}</h5>

@@ -4,7 +4,7 @@ import {
   BookOpen, RefreshCw, BarChart3, Users, Clock,
   MousePointerClick, Monitor, Smartphone, ExternalLink
 } from 'lucide-react';
-import { adminService, analyticsService } from '@/services/api';
+import { adminService, analyticsService , getImageUrl} from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
 
@@ -822,7 +822,7 @@ export default function SearchAnalyticsWorkspace() {
                         <div key={b.id || idx} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                           <span className="text-[11px] font-mono font-bold text-slate-400 w-4">{idx + 1}.</span>
                           {b.coverUrl ? (
-                            <img src={b.coverUrl} alt={b.title} className="h-12 w-9 rounded-md object-cover border border-slate-100 shrink-0 shadow-2xs" />
+                            <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-12 w-9 rounded-md object-cover border border-slate-100 shrink-0 shadow-2xs" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                           ) : (
                             <div className="flex h-12 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-400 border border-slate-200 shrink-0">
                               <BookOpen className="h-4 w-4" />
@@ -857,7 +857,7 @@ export default function SearchAnalyticsWorkspace() {
                         <div key={b.id || idx} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                           <span className="text-[11px] font-mono font-bold text-slate-400 w-4">{idx + 1}.</span>
                           {b.coverUrl ? (
-                            <img src={b.coverUrl} alt={b.title} className="h-12 w-9 rounded-md object-cover border border-slate-100 shrink-0 shadow-2xs" />
+                            <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-12 w-9 rounded-md object-cover border border-slate-100 shrink-0 shadow-2xs" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                           ) : (
                             <div className="flex h-12 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-400 border border-slate-200 shrink-0">
                               <BookOpen className="h-4 w-4" />

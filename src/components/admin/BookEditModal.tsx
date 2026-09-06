@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { toast } from 'sonner';
-import { adminService, categoryService } from '@/services/api';
+import { adminService, categoryService , getImageUrl} from '@/services/api';
 import { CATEGORIES as WEBSITE_CATEGORIES } from '@/data/books';
 
 
@@ -305,7 +305,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
               </div>
             ) : book?.coverUrl ? (
               <div className="w-24 shrink-0">
-                <img src={book.coverUrl} className="w-24 h-32 object-cover rounded-lg border border-slate-200 shadow-xs" alt="Cover" />
+                <img src={getImageUrl(book.coverUrl)} className="w-24 h-32 object-cover rounded-lg border border-slate-200 shadow-xs bg-slate-50" alt="Cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
               </div>
             ) : (
               <div className="w-24 h-32 shrink-0 rounded-lg bg-slate-200 border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs text-center p-2">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
-import { adminService } from '@/services/api';
+import { adminService, getImageUrl } from '@/services/api';
 import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
@@ -230,7 +230,7 @@ export default function ProductsWorkspace() {
                     <td className="px-6 py-4">
                       <div className="flex gap-4">
                         {book.coverUrl ? (
-                          <img src={book.coverUrl} className="h-16 w-12 rounded object-cover shadow-sm" alt={book.title} />
+                          <img src={getImageUrl(book.coverUrl)} className="h-16 w-12 rounded object-cover shadow-sm bg-slate-50 shrink-0" alt={book.title} loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                         ) : (
                           <div className="h-16 w-12 rounded bg-slate-100 flex items-center justify-center border border-slate-200 text-xs text-slate-400">No Img</div>
                         )}
@@ -342,7 +342,7 @@ export default function ProductsWorkspace() {
               {/* Header Info */}
               <div className="flex gap-6">
                 {viewingBook.coverUrl ? (
-                  <img src={viewingBook.coverUrl} className="h-32 w-24 rounded-lg object-cover shadow border border-slate-200" alt={viewingBook.title} />
+                  <img src={getImageUrl(viewingBook.coverUrl)} className="h-32 w-24 rounded-lg object-cover shadow border border-slate-200 bg-slate-50 shrink-0" alt={viewingBook.title} onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                 ) : (
                   <div className="h-32 w-24 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-2">No Cover Available</div>
                 )}
