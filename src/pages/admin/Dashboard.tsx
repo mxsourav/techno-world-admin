@@ -1501,7 +1501,7 @@ admin@technoworld.com`
                                 className="rounded border-slate-300"
                               />
                             </th>
-                            <th className="px-4 py-3 min-w-[140px]">Customer & Order</th>
+                            <th className="px-4 py-3 min-w-[160px]">Customer & Order / SKU ID</th>
                             <th className="px-4 py-3 min-w-[360px]">All Books in this User's Consignment</th>
                             <th className="px-4 py-3 min-w-[200px]">Postal Destination & SLA</th>
                             <th className="px-4 py-3 text-right min-w-[160px]">Actions</th>
@@ -1957,7 +1957,7 @@ admin@technoworld.com`
                                 className="rounded border-slate-300"
                               />
                             </th>
-                            <th className="px-4 py-3 min-w-[130px]">Order ID</th>
+                            <th className="px-4 py-3 min-w-[150px]">Order ID / SKU ID</th>
                             <th className="px-4 py-3 min-w-[320px]">Individual Book Details</th>
                             <th className="px-4 py-3 min-w-[120px] text-center">Quantity & Price</th>
                             <th className="px-4 py-3 min-w-[200px]">Recipient & Post Office</th>
@@ -1986,7 +1986,7 @@ admin@technoworld.com`
                                   />
                                 </td>
 
-                                <td className="px-4 py-4 align-top space-y-0.5">
+                                <td className="px-4 py-4 align-top space-y-1">
                                   <button
                                     onClick={() => setPreviewOrder(ord)}
                                     className="font-extrabold text-blue-600 block hover:underline hover:text-blue-800 cursor-pointer text-left font-mono"
@@ -1994,10 +1994,16 @@ admin@technoworld.com`
                                   >
                                     {ord.orderNumber}
                                   </button>
+                                  <div className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-800">
+                                    <span className="text-slate-400 font-medium">SKU:</span>
+                                    <span className="text-blue-700">{getDisplaySku(book)}</span>
+                                  </div>
                                   {entry.isBundled && (
-                                    <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
-                                      📦 Bundled Package
-                                    </span>
+                                    <div>
+                                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
+                                        📦 Bundled Package
+                                      </span>
+                                    </div>
                                   )}
                                   <span className="text-[10px] text-slate-400 block font-mono">
                                     {new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -4599,29 +4605,29 @@ admin@technoworld.com`
                 </div>
               </div>
 
-              {/* Order Breakdown in this Bundle */}
+              {/* Order Breakdown in this Bundle with SKU ID display */}
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 block">
-                  Orders in this Consignment ({bundlePrompt.group.orders.length})
+                  Orders & Book SKU IDs in this Consignment ({bundlePrompt.group.orders.length})
                 </label>
-                <div className="max-h-48 overflow-y-auto space-y-2 divide-y divide-slate-100 rounded-xl border border-slate-200 p-2 bg-slate-50/50">
+                <div className="max-h-56 overflow-y-auto space-y-2 rounded-xl border border-slate-200 p-2 bg-slate-50/50">
                   {bundlePrompt.group.orders.map((ord: any) => {
                     const isCurrentTarget = ord.id === bundlePrompt.targetOrder.id;
                     const ordMethod = ord.shippingMethod || 'NORMAL_POST';
                     return (
                       <div
                         key={ord.id}
-                        className={`pt-2 first:pt-0 flex items-center justify-between p-2 rounded-lg transition-colors ${
-                          isCurrentTarget ? 'bg-blue-50/80 border border-blue-200' : 'bg-white'
+                        className={`p-2.5 rounded-xl transition-colors ${
+                          isCurrentTarget ? 'bg-blue-50/90 border-2 border-blue-400 shadow-sm' : 'bg-white border border-slate-200/80 shadow-xs'
                         }`}
                       >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-slate-900">
+                        <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-black text-slate-900">
                               #{ord.orderNumber || ord.id.slice(-8)}
                             </span>
                             {isCurrentTarget && (
-                              <span className="rounded bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2">
+                              <span className="rounded bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.2 uppercase tracking-wide">
                                 Clicked Order
                               </span>
                             )}
@@ -4635,19 +4641,49 @@ admin@technoworld.com`
                               {ordMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : ordMethod === 'SPEED_POST' ? '🚀 Speed Post' : '📦 Book Post'}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                            {Array.isArray(ord.items)
-                              ? ord.items.map((i: any) => i.book?.title || 'Book').join(', ')
-                              : 'Books'}
-                          </p>
+                          <div className="text-right">
+                            <span className="text-xs font-mono font-black text-slate-900">
+                              ₹{ord.totalAmount}
+                            </span>
+                            <span className="text-[10px] text-slate-400 ml-1">
+                              ({ord.items?.length || 1} {ord.items?.length === 1 ? 'item' : 'items'})
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right pl-3">
-                          <span className="text-xs font-mono font-bold text-slate-900 block">
-                            ₹{ord.totalAmount}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {ord.items?.length || 1} {ord.items?.length === 1 ? 'item' : 'items'}
-                          </span>
+
+                        {/* Detailed Items & SKU IDs */}
+                        <div className="mt-2 space-y-1.5">
+                          {Array.isArray(ord.items) && ord.items.length > 0 ? (
+                            ord.items.map((it: any, iIdx: number) => {
+                              const bk = it.book || {};
+                              const sku = formatClientSku(bk) || bk.sku || 'N/A';
+                              return (
+                                <div key={it.id || iIdx} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 border border-slate-200/60 px-2 py-1 text-xs">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-slate-800 line-clamp-1">
+                                      {bk.title || 'Book Title'}
+                                      {it.quantity > 1 && <span className="text-slate-500 font-normal ml-1">× {it.quantity}</span>}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="inline-flex items-center gap-1 font-mono text-[10px] font-extrabold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/60">
+                                        SKU ID: {sku}
+                                      </span>
+                                      {bk.isbn13 && (
+                                        <span className="text-[10px] font-mono text-slate-400">
+                                          ISBN: {bk.isbn13}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span className="font-mono text-xs font-bold text-slate-700 shrink-0">
+                                    {formatINR(it.priceAtPurchase || bk.price || 0)}
+                                  </span>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-xs text-slate-500">Books</p>
+                          )}
                         </div>
                       </div>
                     );
@@ -4693,38 +4729,53 @@ admin@technoworld.com`
                 </button>
 
                 {/* Option 2: Ship Only This Order */}
-                <button
-                  onClick={() => {
-                    const singleOrder = bundlePrompt.targetOrder;
-                    const singleMethod = singleOrder.shippingMethod || 'NORMAL_POST';
-                    setBundlePrompt(null);
+                {(() => {
+                  const targetItems = bundlePrompt.targetOrder?.items || [];
+                  const targetSkus = targetItems
+                    .map((i: any) => formatClientSku(i.book || {}) || i.book?.sku)
+                    .filter(Boolean)
+                    .join(', ');
 
-                    if (singleMethod === 'EXPRESS_LOCAL') {
-                      setExpressPartner('');
-                      setExpressAgentPhone('');
-                      setExpressModalOrder(singleOrder.id);
-                      setExpressBundledOrderIds([]);
-                    } else {
-                      bookIndiaPostShipment(singleOrder.id, undefined, undefined, [], singleMethod);
-                    }
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 rounded-xl text-left border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 transition-all group"
-                >
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                      Partial Fulfillment
-                    </span>
-                    <p className="text-xs font-bold text-slate-900 mt-0.5">
-                      📄 Ship Only Order #{bundlePrompt.targetOrder.orderNumber || bundlePrompt.targetOrder.id.slice(-6)}
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Dispatches only this single order via its own method ({bundlePrompt.targetOrder.shippingMethod || 'Standard'}). Other orders remain pending.
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 group-hover:bg-slate-200">
-                    Ship Only This
-                  </span>
-                </button>
+                  return (
+                    <button
+                      onClick={() => {
+                        const singleOrder = bundlePrompt.targetOrder;
+                        const singleMethod = singleOrder.shippingMethod || 'NORMAL_POST';
+                        setBundlePrompt(null);
+
+                        if (singleMethod === 'EXPRESS_LOCAL') {
+                          setExpressPartner('');
+                          setExpressAgentPhone('');
+                          setExpressModalOrder(singleOrder.id);
+                          setExpressBundledOrderIds([]);
+                        } else {
+                          bookIndiaPostShipment(singleOrder.id, undefined, undefined, [], singleMethod);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl text-left border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 transition-all group"
+                    >
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                          Partial Fulfillment
+                        </span>
+                        <p className="text-xs font-bold text-slate-900 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <span>📄 Ship Only Order #{bundlePrompt.targetOrder.orderNumber || bundlePrompt.targetOrder.id.slice(-6)}</span>
+                          {targetSkus && (
+                            <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                              SKU: {targetSkus}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Dispatches only this single order via its own method ({bundlePrompt.targetOrder.shippingMethod || 'Standard'}). Other orders remain pending.
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 group-hover:bg-slate-200">
+                        Ship Only This
+                      </span>
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 
