@@ -6,11 +6,11 @@ import {
   CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
   Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
   SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
-  MessageSquare, HelpCircle, CornerDownRight, Check
+  MessageSquare, HelpCircle, CornerDownRight, Check, FileText
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService } from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService } from '@/services/api';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
@@ -145,6 +145,61 @@ export default function Dashboard() {
   ]);
   const [isSavingPickupSlots, setIsSavingPickupSlots] = useState(false);
   const [isCollectingOrder, setIsCollectingOrder] = useState<string | null>(null);
+  const [isDownloadingInvoices, setIsDownloadingInvoices] = useState(false);
+  const [isBatchGeneratingInvoices, setIsBatchGeneratingInvoices] = useState(false);
+
+  const handleDownloadSingleInvoice = async (orderId: string, orderNumber: string) => {
+    try {
+      await invoiceService.adminDownloadInvoice(orderId, `Invoice-${orderNumber}.pdf`);
+      toast.success(`Invoice for #${orderNumber} downloaded`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to download invoice');
+    }
+  };
+
+  const handleDownloadBatchInvoices = async (orderIdsToDownload?: string[]) => {
+    try {
+      setIsDownloadingInvoices(true);
+      let targetIds = orderIdsToDownload;
+      if (!targetIds || targetIds.length === 0) {
+        if (selectedOrderIds.size > 0) {
+          targetIds = Array.from(selectedOrderIds);
+        } else {
+          targetIds = activeStageOrders.map(o => o.id);
+        }
+      }
+
+      if (!targetIds || targetIds.length === 0) {
+        toast.error('No orders available to download invoices');
+        return;
+      }
+
+      toast.info(`Generating merged PDF for ${targetIds.length} invoice(s)...`);
+      await invoiceService.adminBatchDownload(targetIds);
+      toast.success(`Batch invoices downloaded (${targetIds.length} orders)`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to download batch invoices');
+    } finally {
+      setIsDownloadingInvoices(false);
+    }
+  };
+
+  const handleBatchGenerateInvoices = async () => {
+    try {
+      setIsBatchGeneratingInvoices(true);
+      const res = await invoiceService.adminBatchGenerate();
+      if (res.data?.generated) {
+        toast.success(`Generated ${res.data.generated} invoice(s) successfully!`);
+        fetchOrders();
+      } else {
+        toast.info('All orders already have invoices generated.');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to batch generate invoices');
+    } finally {
+      setIsBatchGeneratingInvoices(false);
+    }
+  };
 
   const handleSetPickupSlotsSubmit = async () => {
     if (!pickupSlotsModalOrder) return;
@@ -1505,6 +1560,21 @@ admin@technoworld.com`
                       </button>
                     </div>
 
+                    {/* Quick Invoices Download Action */}
+                    <button
+                      onClick={() => handleDownloadBatchInvoices()}
+                      disabled={isDownloadingInvoices || activeStageOrders.length === 0}
+                      className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-sm transition-all disabled:opacity-50"
+                      title={selectedOrderIds.size > 0 ? `Download merged PDF for ${selectedOrderIds.size} selected order(s)` : `Download merged PDF for all ${activeStageOrders.length} order(s) in this stage`}
+                    >
+                      {isDownloadingInvoices ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-700" />
+                      ) : (
+                        <FileText className="h-3.5 w-3.5 text-emerald-700" />
+                      )}
+                      <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
+                    </button>
+
                     {/* Other Actions Dropdown */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
@@ -1516,7 +1586,7 @@ admin@technoworld.com`
                       </button>
 
                       {isOtherActionsOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl z-30 py-1 text-xs font-semibold text-slate-700">
+                        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl z-30 py-1 text-xs font-semibold text-slate-700">
                           <button
                             onClick={() => {
                               const csvRows = ['OrderNumber,Customer,Phone,TotalAmount,Status,Date'];
@@ -1538,9 +1608,27 @@ admin@technoworld.com`
                           <button
                             onClick={() => {
                               setIsOtherActionsOpen(false);
+                              handleDownloadBatchInvoices();
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-800 font-bold"
+                          >
+                            <FileText className="h-3.5 w-3.5 text-emerald-700" /> Download Invoices (Merged PDF)
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsOtherActionsOpen(false);
+                              handleBatchGenerateInvoices();
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-blue-700 font-bold"
+                          >
+                            <Zap className="h-3.5 w-3.5 text-blue-600" /> Generate Batch Invoices (Now)
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsOtherActionsOpen(false);
                               handleBatchAcceptSelected();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-bold"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-bold border-t border-slate-100 mt-1 pt-1"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" /> Accept All Selected
                           </button>
@@ -1928,6 +2016,23 @@ admin@technoworld.com`
                                             <Truck className="h-3 w-3" /> Track
                                           </button>
                                         </>
+                                      )}
+                                      {grp.orders && grp.orders.length > 1 ? (
+                                        <button
+                                          title="Download Invoices for all orders in this consignment group (PDF)"
+                                          onClick={() => handleDownloadBatchInvoices(grp.orders.map((o: any) => o.id))}
+                                          className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                        >
+                                          <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                        </button>
+                                      ) : (
+                                        <button
+                                          title="Download Official Tax Invoice (PDF)"
+                                          onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber)}
+                                          className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                        >
+                                          <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                        </button>
                                       )}
                                       <button
                                         onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
@@ -2317,21 +2422,50 @@ admin@technoworld.com`
                                             )
                                          )}
                                        {ord.trackingNumber && (
-                                          <>
-                                            <button
-                                              onClick={() => openShippingLabel(ord.id)}
-                                              className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                            >
-                                              <Printer className="h-3 w-3" /> Label
-                                            </button>
-                                            <button
-                                              onClick={() => openTrackingModal(ord.trackingNumber || ord.orderNumber)}
-                                              className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                            >
-                                              <Truck className="h-3 w-3" /> Track
-                                            </button>
-                                          </>
-                                        )}
+                                         <>
+                                           <button
+                                             onClick={() => openShippingLabel(ord.id)}
+                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <Printer className="h-3 w-3" /> Label
+                                           </button>
+                                           <button
+                                             onClick={() => openTrackingModal(ord.trackingNumber || ord.orderNumber)}
+                                             className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <Truck className="h-3 w-3" /> Track
+                                           </button>
+                                         </>
+                                       )}
+                                       {entry.isBundled && entry.group?.orders && entry.group.orders.length > 1 ? (
+                                         <button
+                                           title="Download Invoices for all orders in this bundle (PDF)"
+                                           onClick={() => handleDownloadBatchInvoices(entry.group.orders.map((o: any) => o.id))}
+                                           className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                         >
+                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                         </button>
+                                       ) : (
+                                         <button
+                                           title="Download Official Tax Invoice (PDF)"
+                                           onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber)}
+                                           className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                         >
+                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                         </button>
+                                       )}
+                                       <button
+                                         onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
+                                         className="h-7 px-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
+                                       >
+                                         <Mail className="h-3 w-3" /> Delay
+                                       </button>
+                                       <button
+                                         onClick={() => setRejectModalOrder(ord)}
+                                         className="h-7 px-2.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
+                                       >
+                                         <XCircle className="h-3 w-3" /> Reject
+                                       </button>
                                       </>
                                     )}
                                   </div>

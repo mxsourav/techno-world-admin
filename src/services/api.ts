@@ -520,3 +520,73 @@ export const paymentService = {
     notes?: string;
   }) => api.patch<any>(`/payments/${orderId}/status`, data),
 };
+
+export const invoiceService = {
+  // Customer download invoice PDF
+  downloadInvoice: async (orderId: string, filename?: string): Promise<void> => {
+    const res = await fetchWithAuth(`${API_URL}/invoices/${orderId}/download`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to download invoice');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `Invoice-${orderId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
+  // Admin download single order invoice PDF
+  adminDownloadInvoice: async (orderId: string, filename?: string): Promise<void> => {
+    const res = await fetchWithAuth(`${API_URL}/invoices/admin/${orderId}/download`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to download invoice');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `Invoice-${orderId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
+  // Admin manually generate invoice for an order
+  adminGenerateInvoice: (orderId: string) =>
+    api.post<any>(`/invoices/admin/${orderId}/generate`),
+
+  // Admin batch generate invoices
+  adminBatchGenerate: () =>
+    api.post<{ generated: number; errors: string[] }>('/invoices/admin/batch-generate'),
+
+  // Admin batch download merged PDF
+  adminBatchDownload: async (orderIds: string[], filename?: string): Promise<void> => {
+    const res = await fetchWithAuth(`${API_URL}/invoices/admin/batch-download`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderIds }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to download batch invoices');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = filename || `Invoices-Batch-${dateStr}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+};
+
