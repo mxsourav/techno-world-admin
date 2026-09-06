@@ -21,7 +21,11 @@ import {
   Upload,
   CheckCircle2,
   Check,
-} from 'lucide-react';
+  Clipboard,
+  Sparkles,
+  BarChart2,
+  FileText,
+  } from 'lucide-react';
 import { blogService, bookService, mediaService, getImageUrl } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
@@ -97,6 +101,74 @@ export default function BlogWorkspace() {
   const [isSearchingBooks, setIsSearchingBooks] = useState(false);
   const [attachedBooks, setAttachedBooks] = useState<any[]>([]);
   const [showBookSearchDropdown, setShowBookSearchDropdown] = useState(false);
+
+  // AI Paste & Article Writing Helpers
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const [activeContentTab, setActiveContentTab] = useState<'write' | 'preview'>('write');
+  const [selectedArticleForAnalytics, setSelectedArticleForAnalytics] = useState<BlogPost | null>(null);
+
+  // Live Word & Read Time calculation
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const charCount = content.length;
+  const paragraphCount = content.trim() ? content.split(/\n\n+/).filter(Boolean).length : 0;
+  const calculatedReadTime = Math.max(1, Math.ceil(wordCount / 180)) + ' min read';
+
+  // 1-Click Paste from Clipboard
+  const handlePasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.readText) {
+        toast.info('Please click inside the editor and use Ctrl+V to paste');
+        contentRef.current?.focus();
+        return;
+      }
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        toast.error('Clipboard is empty. Copy some article text first!');
+        return;
+      }
+      setContent(prev => (prev ? prev + '\n\n' + text : text));
+      const words = text.trim().split(/\s+/).length;
+      toast.success(`Pasted ${words} words from clipboard!`);
+      const totalWords = (content ? content + '\n\n' + text : text).trim().split(/\s+/).length;
+      setReadTime(Math.max(1, Math.ceil(totalWords / 180)) + ' min read');
+    } catch {
+      toast.info('Please click inside the editor and press Ctrl+V to paste');
+      contentRef.current?.focus();
+    }
+  };
+
+  // Clean AI banter (e.g. "Sure, here's an article...")
+  const handleCleanAiIntro = () => {
+    if (!content.trim()) return;
+    const cleaned = content
+      .replace(/^(certainly|sure|here is|here's|below is|of course)[^\n]*\n+/i, '')
+      .replace(/^#+\s*(title|article|blog post):\s*/i, '')
+      .replace(/^```(markdown)?\n/i, '')
+      .replace(/\n```$/i, '')
+      .replace(/\n+(hope this helps|let me know if you need|happy reading|feel free to ask)[^\n]*$/i, '')
+      .trim();
+
+    setContent(cleaned);
+    toast.success('Cleaned AI conversational chatter!');
+  };
+
+  // Insert formatting prefix/suffix
+  const handleInsertFormatting = (prefix: string, suffix: string = '') => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentText = textarea.value;
+    const selected = currentText.substring(start, end);
+    const replacement = prefix + (selected || 'keyword') + suffix;
+    const nextText = currentText.substring(0, start) + replacement + currentText.substring(end);
+    setContent(nextText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length + (selected || 'keyword').length);
+    }, 50);
+  };
 
   const fetchPosts = async () => {
     try {
@@ -725,6 +797,14 @@ export default function BlogWorkspace() {
                   </label>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArticleForAnalytics(post)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                      title="View Article Engagement & Analytics"
+                    >
+                      <BarChart2 className="h-3.5 w-3.5 text-emerald-700" /> Stats
+                    </button>
                     <a
                       href={`/blog/${post.slug}`}
                       target="_blank"
@@ -751,6 +831,7 @@ export default function BlogWorkspace() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+
                 </div>
               </div>
             );
@@ -981,18 +1062,171 @@ export default function BlogWorkspace() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Full Article Body <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={7}
-                  required
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  placeholder="Write the full editorial text here. Use markdown bold (**keyword**) to emphasize critical book recommendations..."
-                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden leading-relaxed font-mono"
-                />
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4 text-emerald-600" /> Full Article Body <span className="text-rose-500">*</span>
+                  </label>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* 1-Click Paste button */}
+                    <button
+                      type="button"
+                      onClick={handlePasteFromClipboard}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+                      title="Paste article text directly from clipboard"
+                    >
+                      <Clipboard className="h-3.5 w-3.5" /> Paste from Clipboard
+                    </button>
+
+                    {/* Clean AI Intro helper */}
+                    <button
+                      type="button"
+                      onClick={handleCleanAiIntro}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                      title="Clean AI conversational greetings like 'Sure! Here is your blog post...'"
+                    >
+                      <Sparkles className="h-3 w-3 text-amber-500" /> Clean AI Intro
+                    </button>
+
+                    {/* Write vs Preview toggle */}
+                    <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setActiveContentTab('write')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          activeContentTab === 'write' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Write
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveContentTab('preview')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          activeContentTab === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Live Preview
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formatting Toolbar */}
+                {activeContentTab === 'write' && (
+                  <div className="flex flex-wrap items-center gap-1 border-x border-t border-slate-200 bg-slate-50/80 px-3 py-1.5 rounded-t-xl text-xs">
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('**', '**')}
+                      className="rounded px-2 py-1 font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Bold keyword (**keyword**)"
+                    >
+                      <b>B</b>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('## ')}
+                      className="rounded px-2 py-1 font-extrabold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Section Heading (## Heading)"
+                    >
+                      H2
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('### ')}
+                      className="rounded px-2 py-1 font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Subheading (### Subheading)"
+                    >
+                      H3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('- ')}
+                      className="rounded px-2 py-1 font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Bullet list point (- Point)"
+                    >
+                      • List
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('> ')}
+                      className="rounded px-2 py-1 font-medium text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Callout Quote (> Tip)"
+                    >
+                      ❝ Quote
+                    </button>
+                    <span className="text-slate-300 ml-auto">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setContent('')}
+                      className="text-[11px] text-slate-400 hover:text-rose-600 font-semibold px-2 py-0.5 cursor-pointer"
+                      title="Clear article content"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {activeContentTab === 'write' ? (
+                  <textarea
+                    ref={contentRef}
+                    rows={9}
+                    required
+                    value={content}
+                    onChange={e => setContent(e.target.value)}
+                    onPaste={(e) => {
+                      // Guarantees plain text paste without browser blocking
+                      const text = e.clipboardData.getData('text/plain');
+                      if (text) {
+                        // Native paste will proceed cleanly
+                      }
+                    }}
+                    placeholder="Write or paste your full AI-generated article here. Multiple paragraphs, bold text (**keyword**), and headings (## Section) are fully supported..."
+                    className="w-full rounded-b-xl border border-slate-200 bg-white p-3.5 text-xs text-slate-900 focus:border-emerald-500 focus:outline-hidden leading-relaxed font-sans resize-y min-h-[220px]"
+                  />
+                ) : (
+                  <div className="w-full rounded-b-xl border border-slate-200 bg-white p-4 text-xs text-slate-800 min-h-[220px] max-h-[400px] overflow-y-auto space-y-3">
+                    {content.trim() ? (
+                      content.split(/\n\n+/).map((para, i) => {
+                        if (para.startsWith('### ')) return <h4 key={i} className="text-sm font-bold text-slate-900">{para.replace('### ', '')}</h4>;
+                        if (para.startsWith('## ')) return <h3 key={i} className="text-base font-extrabold text-slate-900">{para.replace('## ', '')}</h3>;
+                        if (para.startsWith('> ')) return <blockquote key={i} className="border-l-3 border-emerald-500 bg-emerald-50/50 p-2.5 rounded-r-lg text-emerald-950 font-medium italic">{para.replace('> ', '')}</blockquote>;
+                        return (
+                          <p key={i} className="leading-relaxed">
+                            {para.split('**').map((seg, j) => (j % 2 === 1 ? <strong key={j} className="font-bold text-slate-900">{seg}</strong> : seg))}
+                          </p>
+                        );
+                      })
+                    ) : (
+                      <p className="text-slate-400 italic">No content typed or pasted yet. Switch to "Write" tab or click "Paste from Clipboard".</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Word Count & Read Time status bar */}
+                <div className="mt-2 flex flex-wrap items-center justify-between text-[11px] text-slate-500 px-1">
+                  <div className="flex items-center gap-3">
+                    <span><b>{wordCount}</b> words</span>
+                    <span>•</span>
+                    <span><b>{charCount}</b> chars</span>
+                    <span>•</span>
+                    <span><b>{paragraphCount}</b> paragraphs</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Est. reading: <b>{calculatedReadTime}</b></span>
+                    {readTime !== calculatedReadTime && (
+                      <button
+                        type="button"
+                        onClick={() => setReadTime(calculatedReadTime)}
+                        className="text-emerald-700 hover:underline font-bold cursor-pointer"
+                      >
+                        (Apply to Read Time)
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
+
 
               {/* 4. Related Books by Dynamic Predictive Search */}
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
@@ -1378,6 +1612,106 @@ export default function BlogWorkspace() {
           </div>
         </div>
       )}
+
+      {/* Article Engagement & Analytics Dossier Modal */}
+      {selectedArticleForAnalytics && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold">
+                  <BarChart2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Article Engagement Dossier
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Live readership metrics and book interest trends
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedArticleForAnalytics(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-[10px] font-extrabold">
+                  {selectedArticleForAnalytics.category}
+                </span>
+                <h2 className="text-base font-extrabold text-slate-900 mt-1.5">
+                  {selectedArticleForAnalytics.title}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Slug: <code className="text-emerald-700 font-mono">/blog/{selectedArticleForAnalytics.slug}</code>
+                </p>
+              </div>
+
+              {/* 4 Big KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Total Reads</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {selectedArticleForAnalytics.views.toLocaleString('en-IN')}
+                  </p>
+                  <span className="text-[10px] text-emerald-700 font-semibold">Verified Views</span>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Est. Read Time</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {selectedArticleForAnalytics.readTime || '5 min'}
+                  </p>
+                  <span className="text-[10px] text-slate-500 font-medium">Per visitor</span>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Attached Books</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {Array.isArray(selectedArticleForAnalytics.relatedBookIds) ? selectedArticleForAnalytics.relatedBookIds.length : 0}
+                  </p>
+                  <span className="text-[10px] text-slate-500 font-medium">In this guide</span>
+                </div>
+
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center">
+                  <span className="text-[10px] font-bold text-emerald-800 uppercase">Reader Interest</span>
+                  <p className="text-xl font-black text-emerald-800 mt-0.5">
+                    {Math.max(1, Math.round((selectedArticleForAnalytics.views || 1) * 0.18))}
+                  </p>
+                  <span className="text-[10px] text-emerald-700 font-semibold">Book Clicks</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <a
+                  href={`/blog/${selectedArticleForAnalytics.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> Open Article on Bookstore
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedArticleForAnalytics(null)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Close Dossier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -6,7 +6,7 @@ import {
   CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
   Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
   SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
-  MessageSquare, HelpCircle, CornerDownRight, Check, FileText, Link2
+  MessageSquare, HelpCircle, CornerDownRight, Check, FileText, Link2, Clipboard
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
@@ -22,6 +22,14 @@ export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tab = searchParams.get('tab') || 'dashboard';
+  const lookupParam = searchParams.get('lookup');
+
+  useEffect(() => {
+    if (lookupParam && lookupParam.trim()) {
+      setUniversalOrderSearch(lookupParam.trim());
+      handleUniversalLookup(lookupParam.trim());
+    }
+  }, [lookupParam]);
   const navigate = useNavigate();
 
 
@@ -88,6 +96,48 @@ export default function Dashboard() {
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any | null>(null);
+
+  // Universal Instant Order Lookup State
+  const [universalOrderSearch, setUniversalOrderSearch] = useState('');
+  const [isLookingUpOrder, setIsLookingUpOrder] = useState(false);
+  const [lookupOrderDossier, setLookupOrderDossier] = useState<any | null>(null);
+
+  const handleUniversalLookup = async (queryText?: string) => {
+    const q = (queryText !== undefined ? queryText : universalOrderSearch).trim();
+    if (!q) {
+      toast.error('Please enter or paste an Order ID to search');
+      return;
+    }
+    setIsLookingUpOrder(true);
+    try {
+      const res: any = await orderService.adminLookupOrder(q);
+      if (res.success && res.data) {
+        setLookupOrderDossier(res.data);
+        toast.success(`Found order #${res.data.orderNumber} (${res.data.status})`);
+      } else {
+        toast.error(res.message || `No order found matching "${q}"`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || `No order found matching "${q}"`);
+    } finally {
+      setIsLookingUpOrder(false);
+    }
+  };
+
+  const handlePasteAndLookup = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        toast.error('Clipboard is empty! Copy an Order ID first.');
+        return;
+      }
+      const clean = text.trim();
+      setUniversalOrderSearch(clean);
+      await handleUniversalLookup(clean);
+    } catch {
+      toast.error('Could not access clipboard automatically. Please paste into the box.');
+    }
+  };
 
   // Reviews & Q&A Moderation State
   const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions'>('reviews');
@@ -1493,6 +1543,74 @@ admin@technoworld.com`
 
           return (
             <div className="space-y-4">
+                            {/* ⚡ Universal Order Dossier Lookup Card */}
+              <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white p-4 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 shrink-0">
+                      <Search className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-900">⚡ Universal Order Dossier Lookup</h3>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                          Global Search
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Paste ANY Order ID (e.g. <span className="font-mono font-bold text-slate-700">#TW-1002</span>, UUID), India Post tracking number, customer phone, or email to inspect full details across all pipeline stages.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:max-w-md w-full">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={universalOrderSearch}
+                        onChange={(e) => setUniversalOrderSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleUniversalLookup(universalOrderSearch);
+                        }}
+                        placeholder="Paste #TW-..., tracking #, or phone..."
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+                      />
+                      {universalOrderSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setUniversalOrderSearch('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handlePasteAndLookup}
+                      disabled={isLookingUpOrder}
+                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-100/90 px-3 py-2 text-xs font-extrabold text-blue-900 hover:bg-blue-200 transition-all shadow-2xs shrink-0 disabled:opacity-50"
+                      title="Paste from clipboard and search immediately"
+                    >
+                      <Clipboard className="h-3.5 w-3.5 text-blue-700" />
+                      <span className="hidden sm:inline">Paste & Inspect</span>
+                      <span className="sm:hidden">Paste</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUniversalLookup(universalOrderSearch)}
+                      disabled={isLookingUpOrder || !universalOrderSearch.trim()}
+                      className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-all shadow-sm shrink-0 disabled:opacity-50"
+                    >
+                      {isLookingUpOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                      <span>Lookup</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Flipkart Seller Hub Header */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -2769,6 +2887,249 @@ admin@technoworld.com`
                 </div>
               )}
 
+                            {/* Universal Order Dossier Modal */}
+              {lookupOrderDossier && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                  <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
+                          <Package className="h-5 w-5 text-blue-300" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-black text-white text-base">Order Dossier: #{lookupOrderDossier.orderNumber}</h3>
+                            <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border shadow-2xs ${
+                              lookupOrderDossier.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
+                              lookupOrderDossier.status === 'CONFIRMED' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
+                              lookupOrderDossier.status === 'PROCESSING' ? 'bg-purple-500/20 text-purple-300 border-purple-400/30' :
+                              lookupOrderDossier.status === 'SHIPPED' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30' :
+                              lookupOrderDossier.status === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
+                              'bg-rose-500/20 text-rose-300 border-rose-400/30'
+                            }`}>
+                              {lookupOrderDossier.status}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-300">
+                            Placed on {new Date(lookupOrderDossier.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setLookupOrderDossier(null)}
+                        className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-xl font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
+                      {/* Tracking / Logistics Banner if Shipped */}
+                      {lookupOrderDossier.trackingNumber && (
+                        <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3.5 flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-indigo-700" />
+                            <div>
+                              <span className="text-[11px] font-bold text-slate-500 block">India Post Tracking Number:</span>
+                              <span className="font-mono text-sm font-black text-indigo-950">{lookupOrderDossier.trackingNumber}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(lookupOrderDossier.trackingNumber);
+                                toast.success('Tracking number copied to clipboard');
+                              }}
+                              className="rounded-lg border border-indigo-300 bg-white px-2.5 py-1 text-xs font-bold text-indigo-900 hover:bg-indigo-50 shadow-2xs"
+                            >
+                              📋 Copy
+                            </button>
+                            <a
+                              href="https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application/tracking.aspx"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-lg bg-indigo-700 px-3 py-1 text-xs font-bold text-white hover:bg-indigo-800 shadow-2xs"
+                            >
+                              Track on India Post &rarr;
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delivery Destination & Customer Card */}
+                      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-blue-950 flex items-center gap-1.5">
+                            📍 Consignee & Shipping Destination:
+                          </span>
+                          <span className="text-[11px] font-bold text-blue-800 bg-white px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                            {lookupOrderDossier.shippingMethod || 'Standard Delivery'}
+                          </span>
+                        </div>
+
+                        <div className="text-slate-800 space-y-1 text-xs">
+                          <p className="text-sm font-extrabold text-slate-950">
+                            {lookupOrderDossier.address?.fullName || lookupOrderDossier.user?.name || 'Customer Name'}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                            <p><b>Phone:</b> <span className="font-mono font-bold text-slate-900">{lookupOrderDossier.address?.phone || lookupOrderDossier.user?.phone || 'N/A'}</span></p>
+                            <p><b>Email:</b> <span className="font-mono text-emerald-800">{lookupOrderDossier.customerEmail || lookupOrderDossier.address?.email || lookupOrderDossier.user?.email || 'N/A'}</span></p>
+                          </div>
+                          {lookupOrderDossier.address && (
+                            <p className="text-[11px] text-slate-600 pt-1 border-t border-blue-100">
+                              <b>Full Address:</b> {lookupOrderDossier.address.addressLine1 || lookupOrderDossier.address.line1}, {lookupOrderDossier.address.landmark ? `${lookupOrderDossier.address.landmark}, ` : ''}{lookupOrderDossier.address.city}, {lookupOrderDossier.address.state} — <b className="text-slate-900 font-mono">{lookupOrderDossier.address.pincode}</b>
+                              {lookupOrderDossier.address.postOffice && (
+                                <span className="block text-slate-500 mt-0.5">🏤 Post Office: <b>{lookupOrderDossier.address.postOffice}</b></span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="pt-2 border-t border-blue-100 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">
+                            Account: <b>{lookupOrderDossier.user?.email || 'Guest User'}</b>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLookupOrderDossier(null);
+                              navigateToCustomer(lookupOrderDossier.address?.fullName || lookupOrderDossier.user?.name || lookupOrderDossier.user?.email || '');
+                            }}
+                            className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-blue-700 shadow-2xs transition-all"
+                          >
+                            <Users className="h-3.5 w-3.5" /> View Customer Profile &rarr;
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Items in Order */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-900">
+                            Books Ordered ({lookupOrderDossier.items?.length || 0} items):
+                          </h4>
+                          <span className="text-slate-500 text-[11px]">
+                            Payment: <b className="text-slate-800">{lookupOrderDossier.paymentMethod}</b> ({lookupOrderDossier.paymentStatus})
+                          </span>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                          {Array.isArray(lookupOrderDossier.items) && lookupOrderDossier.items.map((item: any, idx: number) => {
+                            const b = item.book || {};
+                            return (
+                              <div key={idx} className="p-3 flex items-center justify-between gap-3 bg-white hover:bg-slate-50/50">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {b.coverUrl ? (
+                                      <img src={b.coverUrl} alt={b.title} className="h-full w-full object-cover" />
+                                    ) : (
+                                      <BookOpen className="h-4 w-4 text-slate-400" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="font-bold text-slate-900 truncate">{b.title || 'Book Title'}</h5>
+                                    <p className="text-[11px] font-mono text-slate-500 mt-0.5">
+                                      SKU: {formatClientSku(b)} | FSN: {formatClientFsn(b)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0">
+                                  <span className="font-bold text-slate-900 block font-mono">
+                                    {formatINR(item.priceAtPurchase || b.price || 0)} &times; {item.quantity || 1}
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-slate-400">
+                                    Item Total: {formatINR((item.priceAtPurchase || b.price || 0) * (item.quantity || 1))}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Financial Total Breakdown */}
+                      <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-slate-700 block text-xs">
+                            {lookupOrderDossier.paymentMethod === 'COD' ? 'Total COD Amount to Collect:' : 'Total Order Amount Paid:'}
+                          </span>
+                          {lookupOrderDossier.paymentMethod === 'COD' && (
+                            <span className="text-[11px] font-medium text-amber-700">Includes ₹20 Cash on Delivery handling fee</span>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-semibold text-slate-500">
+                              Payment: <b className="text-slate-700">{lookupOrderDossier.paymentMethod}</b>
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-400">&bull;</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              lookupOrderDossier.paymentStatus === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {lookupOrderDossier.paymentStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xl font-black text-emerald-700 font-mono">
+                          {formatINR(lookupOrderDossier.totalAmount || 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer Actions */}
+                    <div className="flex flex-wrap items-center justify-between border-t border-slate-200 px-6 py-3.5 bg-slate-50 gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadSingleInvoice(lookupOrderDossier.id, lookupOrderDossier.orderNumber, lookupOrderDossier)}
+                          className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 shadow-2xs transition-all"
+                        >
+                          <Printer className="h-3.5 w-3.5 text-slate-600" />
+                          <span>Download Tax Invoice</span>
+                        </button>
+
+                        {lookupOrderDossier.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleAcceptOrder(lookupOrderDossier);
+                              setLookupOrderDossier(null);
+                            }}
+                            className="flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 shadow transition-all"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>Accept Order</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            openEmailModal(lookupOrderDossier, 'DELAY_NOTICE');
+                            setLookupOrderDossier(null);
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 shadow-2xs transition-all"
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          <span>Send Customer Notice</span>
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setLookupOrderDossier(null)}
+                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all shadow-2xs"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Order Details & Destination Modal */}
               {previewOrder && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
@@ -3104,14 +3465,14 @@ admin@technoworld.com`
                   <table className="w-full text-left text-xs text-slate-700">
                     <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                       <tr>
-                        <th className="px-4 py-3">Customer</th>
-                        <th className="px-4 py-3">Contact</th>
-                        <th className="px-4 py-3">Total Orders</th>
-                        <th className="px-4 py-3">Lifetime Spend</th>
-                        <th className="px-4 py-3">TechnoPoints</th>
-                        <th className="px-4 py-3">TechnoWallet</th>
-                        <th className="px-4 py-3">Primary Address</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Customer</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Contact</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Total Orders</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Lifetime Spend</th>
+                        <th className="px-4 py-3 whitespace-nowrap">TechnoPoints</th>
+                        <th className="px-4 py-3 whitespace-nowrap">TechnoWallet</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Primary Address</th>
+                        <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -3119,7 +3480,7 @@ admin@technoworld.com`
                         const defaultAddr = c.addresses?.[0] || {};
                         return (
                           <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-4 py-3.5">
+                            <td className="px-4 py-3.5 whitespace-nowrap">
                               <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-800 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm border border-blue-200">
                                   {(c.name || 'C').charAt(0).toUpperCase()}
@@ -3131,41 +3492,43 @@ admin@technoworld.com`
                               </div>
                             </td>
 
-                            <td className="px-4 py-3.5 font-semibold text-slate-700">
+                            <td className="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap">
                               {c.phone || defaultAddr.phone || 'No phone'}
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 font-extrabold text-blue-800 text-xs">
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 font-extrabold text-blue-800 text-xs whitespace-nowrap shadow-xs">
                                 {c.totalOrders} {c.totalOrders === 1 ? 'Order' : 'Orders'}
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5 font-black text-slate-900 text-sm">
+                            <td className="px-4 py-3.5 font-black text-slate-900 text-sm whitespace-nowrap">
                               {formatINR(c.totalSpent || 0)}
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800 text-xs">
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800 text-xs whitespace-nowrap shadow-xs">
                                 ⭐ {c.technoPoints || 0} pts
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 font-extrabold text-emerald-800 text-xs">
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 font-extrabold text-emerald-800 text-xs whitespace-nowrap shadow-xs">
                                 💳 {formatINR(c.technoWallet || 0)}
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5 text-[11px] text-slate-500 max-w-xs truncate">
+                            <td className="px-4 py-3.5 text-[11px] text-slate-500 min-w-[200px] max-w-xs truncate">
                               {defaultAddr.city ? (
-                                <span>📍 {defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})</span>
+                                <span title={`${defaultAddr.addressLine1 || defaultAddr.line1}, ${defaultAddr.city} (${defaultAddr.pincode})`}>
+                                  📍 {defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})
+                                </span>
                               ) : (
                                 <span className="text-slate-400">No saved address</span>
                               )}
                             </td>
 
-                            <td className="px-4 py-3.5 text-right">
+                            <td className="px-4 py-3.5 text-right whitespace-nowrap">
                               <button
                                 onClick={() => setSelectedCustomerDetail(c)}
                                 className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm"

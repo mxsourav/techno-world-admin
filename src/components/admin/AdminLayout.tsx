@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import {
@@ -16,7 +17,7 @@ import {
   FileEdit,
   Bell,
   Settings,
-  AlertTriangle,
+  AlertTriangle, Loader2,
   ArrowRight,
   CreditCard,
   Plus,
@@ -25,7 +26,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
-import { orderService } from '@/services/api';
+import { orderService, authService } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 
 const TABS = [
@@ -46,6 +47,42 @@ const TABS = [
 
 export default function AdminLayout() {
   const { logout } = useAuthStore();
+  // In-Place Session Unlock Dialog State (Prevents form data loss)
+  const [isReAuthOpen, setIsReAuthOpen] = useState(false);
+  const [reAuthPassword, setReAuthPassword] = useState('');
+  const [isReAuthing, setIsReAuthing] = useState(false);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setIsReAuthOpen(true);
+    };
+    window.addEventListener('tw:admin-auth-expired', handleAuthExpired);
+    return () => window.removeEventListener('tw:admin-auth-expired', handleAuthExpired);
+  }, []);
+
+  const handleReAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reAuthPassword) return;
+    setIsReAuthing(true);
+    try {
+      const res = await authService.login({ email: 'admin', password: reAuthPassword });
+      if (res.success) {
+        const token = res.data?.accessToken || res.data?.token || '';
+        const refreshToken = res.data?.refreshToken || '';
+        if (token) localStorage.setItem('tw_admin_token', token);
+        if (refreshToken) localStorage.setItem('tw_admin_refresh_token', refreshToken);
+        setIsReAuthOpen(false);
+        setReAuthPassword('');
+        toast.success('Session verified! You can now save your form without losing any work.');
+      } else {
+        toast.error(res.message || 'Invalid admin password');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Re-authentication failed');
+    } finally {
+      setIsReAuthing(false);
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
@@ -336,6 +373,26 @@ export default function AdminLayout() {
             <span className="text-slate-400">Admin</span>
             <ChevronRight className="h-4 w-4 mx-1.5 text-slate-300" />
             <span className="text-slate-900">{tabName}</span>
+          </div>
+
+          {/* Global Order Lookup Bar */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="🔍 Lookup Order (e.g. #TW-1002)..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val) {
+                      navigate(`/admin/dashboard?tab=orders&lookup=${encodeURIComponent(val)}`);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+                className="w-56 lg:w-72 rounded-xl border border-slate-300 bg-slate-50/70 px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -738,6 +795,61 @@ export default function AdminLayout() {
                 Hidden / Drafts
               </span>
             </Link>
+          </div>
+        </div>
+      )}
+          {/* Non-Disruptive In-Place Admin Re-Authentication Dialog */}
+      {isReAuthOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-5 text-white">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white">Session Re-Verification</h3>
+                  <p className="text-xs text-amber-100">Your work is safe! Enter your password to continue.</p>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleReAuthSubmit} className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your session timed out. Enter your admin password below to re-verify your session. Any open forms (including your book description, catalog changes, and order updates) will remain open with zero lost progress.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Admin Password</label>
+                <input
+                  type="password"
+                  autoFocus
+                  required
+                  value={reAuthPassword}
+                  onChange={(e) => setReAuthPassword(e.target.value)}
+                  placeholder="Enter admin password..."
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsReAuthOpen(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Dismiss
+                </button>
+                <button
+                  type="submit"
+                  disabled={isReAuthing || !reAuthPassword}
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-700 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-800 shadow transition-all disabled:opacity-50"
+                >
+                  {isReAuthing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  <span>Unlock & Resume Work</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

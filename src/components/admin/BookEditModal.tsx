@@ -4,6 +4,124 @@ import { toast } from 'sonner';
 import { adminService, categoryService } from '@/services/api';
 import { CATEGORIES as WEBSITE_CATEGORIES } from '@/data/books';
 
+
+function renderBookDescriptionPreview(text: string) {
+  if (!text || !text.trim()) {
+    return (
+      <div className="py-8 text-center text-slate-400 italic text-xs">
+        No description entered yet. Switch to "Write / Edit" to add details.
+      </div>
+    );
+  }
+
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let listItems: React.ReactNode[] = [];
+
+  const flushList = (key: string) => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul key={key} className="my-2 space-y-1.5 pl-1">
+          {listItems}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  const parseInline = (str: string): React.ReactNode => {
+    const parts = str.split(/(\**[^*]+\**)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-extrabold text-slate-950">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  lines.forEach((rawLine, idx) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushList(`list-${idx}`);
+      elements.push(<div key={`blank-${idx}`} className="h-2" />);
+      return;
+    }
+
+    if (line.startsWith('# ')) {
+      flushList(`list-${idx}`);
+      elements.push(
+        <h1 key={`h1-${idx}`} className="text-base font-black text-slate-950 mt-3 mb-1 border-b border-slate-200 pb-1">
+          {line.replace(/^#\s+/, '')}
+        </h1>
+      );
+      return;
+    }
+
+    if (line.startsWith('## ')) {
+      flushList(`list-${idx}`);
+      elements.push(
+        <h2 key={`h2-${idx}`} className="text-sm font-black text-slate-900 mt-3 mb-1">
+          {line.replace(/^##\s+/, '')}
+        </h2>
+      );
+      return;
+    }
+
+    if (line.startsWith('### ')) {
+      flushList(`list-${idx}`);
+      const title = line.replace(/^###\s+/, '');
+      elements.push(
+        <div key={`h3-${idx}`} className="mt-3.5 mb-1.5 flex items-center gap-2 border-b border-emerald-100 pb-1">
+          <span className="h-2 w-2 rounded-full bg-emerald-600"></span>
+          <h3 className="text-xs font-black uppercase tracking-wider text-emerald-900">
+            {title}
+          </h3>
+        </div>
+      );
+      return;
+    }
+
+    // Bullets: • or - or *
+    if (line.startsWith('•') || line.startsWith('- ') || line.startsWith('* ')) {
+      const clean = line.replace(/^[•\-*]\s*/, '');
+      listItems.push(
+        <li key={`li-${idx}`} className="flex items-start gap-2 text-xs text-slate-700">
+          <span className="text-emerald-600 font-bold text-sm leading-none mt-0.5">•</span>
+          <span className="flex-1 leading-relaxed">{parseInline(clean)}</span>
+        </li>
+      );
+      return;
+    }
+
+    // Numbered lists: 1. 2.
+    const numMatch = line.match(/^(\d+)\.\s+(.*)$/);
+    if (numMatch) {
+      listItems.push(
+        <li key={`li-${idx}`} className="flex items-start gap-2 text-xs text-slate-700">
+          <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold shrink-0 mt-0.5">
+            {numMatch[1]}
+          </span>
+          <span className="flex-1 leading-relaxed">{parseInline(numMatch[2])}</span>
+        </li>
+      );
+      return;
+    }
+
+    // Normal paragraph
+    flushList(`list-${idx}`);
+    elements.push(
+      <p key={`p-${idx}`} className="text-xs text-slate-700 leading-relaxed">
+        {parseInline(line)}
+      </p>
+    );
+  });
+
+  flushList('list-end');
+
+  return <div className="space-y-1">{elements}</div>;
+}
+
 export default function BookEditModal({ book, onClose, onSaved }: { book: any | null, onClose: () => void, onSaved: () => void }) {
   const initialCategory = (() => {
     const catVal = (book?.categoryName || book?.category || '').trim();
@@ -50,6 +168,38 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
   });
   
   const [descTab, setDescTab] = useState<'edit' | 'preview'>('edit');
+  const [hasRestoredDraft, setHasRestoredDraft] = useState(false);
+
+  // Auto-restore draft if adding new book
+  React.useEffect(() => {
+    if (!book) {
+      try {
+        const saved = localStorage.getItem('tw_book_draft_new');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object' && (parsed.title || parsed.description || parsed.isbn13)) {
+            setFormData((prev: any) => ({ ...prev, ...parsed }));
+            setHasRestoredDraft(true);
+          }
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Auto-save draft on form change
+  React.useEffect(() => {
+    if (!book && (formData.title || formData.description || formData.isbn13 || formData.mrp)) {
+      try {
+        localStorage.setItem('tw_book_draft_new', JSON.stringify(formData));
+      } catch {}
+    }
+  }, [formData]);
+
+  const clearDraft = () => {
+    localStorage.removeItem('tw_book_draft_new');
+    setHasRestoredDraft(false);
+    toast.success('Saved draft cleared');
+  };
   const [categories, setCategories] = useState<any[]>(
     WEBSITE_CATEGORIES.map(c => ({ id: c.slug, name: c.name, slug: c.slug }))
   );
@@ -126,7 +276,22 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none">&times;</button>
         </div>
         
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          {hasRestoredDraft && (
+            <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/90 px-4 py-2.5 text-xs text-blue-900 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-blue-800">💾 Unsaved Draft Restored:</span>
+                <span className="text-slate-600">Your previously entered book details & description have been restored.</span>
+              </div>
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="text-xs font-extrabold text-rose-600 hover:text-rose-700 underline shrink-0 ml-3"
+              >
+                Discard Draft
+              </button>
+            </div>
+          )}
           
           {/* Cover & Media */}
           <div className="flex gap-6 items-start p-4 rounded-xl bg-slate-50 border border-slate-200/70">
@@ -307,12 +472,8 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                 </div>
               </div>
             ) : (
-              <div className="min-h-36 rounded-lg border border-slate-200 bg-white p-4 text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
-                {formData.description ? (
-                  formData.description
-                ) : (
-                  <span className="italic text-slate-400">No description entered yet. Switch to "Write / Edit" to add details.</span>
-                )}
+              <div className="min-h-36 rounded-lg border border-slate-200 bg-slate-50/40 p-4 text-xs text-slate-800 leading-relaxed shadow-inner">
+                {renderBookDescriptionPreview(formData.description)}
               </div>
             )}
           </div>

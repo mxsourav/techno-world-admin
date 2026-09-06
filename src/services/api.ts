@@ -73,16 +73,25 @@ function onRefreshed(token: string) {
 
 async function refreshAccessToken(): Promise<string | null> {
   try {
+    const refreshToken = localStorage.getItem('tw_admin_refresh_token');
     const res = await fetch(`${API_URL}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(refreshToken ? { 'x-refresh-token': refreshToken } : {}),
+      },
+      body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
       credentials: 'include',
     });
     if (!res.ok) return null;
     const data = await res.json();
     const newToken = data.data?.accessToken || data.accessToken || '';
+    const newRefreshToken = data.data?.refreshToken || data.refreshToken || '';
     if (newToken) {
       localStorage.setItem('tw_admin_token', newToken);
+    }
+    if (newRefreshToken) {
+      localStorage.setItem('tw_admin_refresh_token', newRefreshToken);
     }
     return newToken;
   } catch (err) {
@@ -117,7 +126,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
         headers.set('Authorization', `Bearer ${newToken}`);
         return fetch(url, { ...options, headers, credentials: 'include' });
       } else {
-        localStorage.removeItem('tw_admin_token');
+        // Do NOT drop token abruptly; trigger in-place session unlock so user never loses form state
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('tw:admin-auth-expired', {
+            detail: { message: 'Admin session timed out' }
+          }));
+        }
       }
     } else {
       return new Promise<Response>((resolve) => {
@@ -322,6 +336,7 @@ export const orderService = {
   }) => api.post<any>('/orders', data),
   getUserOrders: () => api.get<any>('/orders/my-orders'),
   getAllOrders: (params?: { status?: string; page?: number; limit?: number }) => api.get<any>('/orders/admin/all', params),
+  adminLookupOrder: (query: string) => api.get<any>('/orders/admin/lookup', { query }),
   getNotifications: () => api.get<any>('/orders/admin/notifications'),
   updateStatus: (id: string, status: string, notes?: string, reason?: string) =>
     api.patch<any>(`/orders/admin/${id}/status`, { status, notes, reason }),
@@ -607,4 +622,15 @@ export const blogService = {
   toggleBlogPostStatus: (id: string) => api.patch<any>(`/blog/admin/${id}/toggle-status`, {}),
   deleteBlogPost: (id: string) => api.delete<any>(`/blog/admin/${id}`),
 };
+
+export const analyticsService = {
+  pulse: (data: { sessionId?: string; path: string; pageTitle?: string; referrer?: string }) =>
+    api.post<any>('/analytics/pulse', data),
+  trackBlogEvent: (data: { blogSlug: string; eventType: string; bookId?: string; bookTitle?: string; durationSeconds?: number }) =>
+    api.post<any>('/analytics/blog-event', data),
+  getLivePulse: () => api.get<any>('/analytics/live'),
+  getBlogPerformance: () => api.get<any>('/analytics/blog-performance'),
+  getOverview: () => api.get<any>('/analytics/overview'),
+};
+
 
