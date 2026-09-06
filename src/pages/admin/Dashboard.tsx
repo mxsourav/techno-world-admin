@@ -17,6 +17,7 @@ import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
 import SearchAnalyticsWorkspace from '@/components/admin/analytics/SearchAnalyticsWorkspace';
 import PaymentsWorkspace from '@/components/admin/payments/PaymentsWorkspace';
+import BlogWorkspace from '@/components/admin/blog/BlogWorkspace';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -1385,6 +1386,7 @@ admin@technoworld.com`
         )}
 
         {tab === 'products' && <ProductsWorkspace />}
+        {tab === 'blog' && <BlogWorkspace />}
         {tab === 'orders' && (() => {
           // Filter orders according to Flipkart fulfillment stages
           const getStageOrders = (stg: string) => {

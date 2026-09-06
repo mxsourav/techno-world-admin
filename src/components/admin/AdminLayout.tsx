@@ -22,6 +22,7 @@ import {
   Plus,
   CheckCircle2,
   XCircle,
+  BookOpen,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService } from '@/services/api';
@@ -38,6 +39,7 @@ const TABS = [
   { id: 'reviews', name: 'Reviews', icon: Star },
   { id: 'media', name: 'Media Library', icon: FolderOpen },
   { id: 'cms', name: 'Homepage CMS', icon: FileEdit },
+  { id: 'blog', name: 'Blog & Social Posts', icon: BookOpen },
   { id: 'analytics', name: 'Analytics & Trends', icon: BarChart3 },
   { id: 'settings', name: 'Settings & Email', icon: Settings },
 ];
@@ -58,13 +60,17 @@ export default function AdminLayout() {
   const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const [isPaymentsFlyoutOpen, setIsPaymentsFlyoutOpen] = useState<boolean>(false);
   const [paymentsFlyoutPos, setPaymentsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  const [isBlogFlyoutOpen, setIsBlogFlyoutOpen] = useState<boolean>(false);
+  const [blogFlyoutPos, setBlogFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const notifRef = useRef<HTMLDivElement>(null);
   const productsBtnRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
   const paymentsBtnRef = useRef<HTMLDivElement>(null);
+  const blogBtnRef = useRef<HTMLDivElement>(null);
   const productsTimeoutRef = useRef<any>(null);
   const ordersTimeoutRef = useRef<any>(null);
   const paymentsTimeoutRef = useRef<any>(null);
+  const blogTimeoutRef = useRef<any>(null);
 
   const handleProductsMouseEnter = () => {
     if (productsTimeoutRef.current) {
@@ -120,6 +126,24 @@ export default function AdminLayout() {
     }, 300);
   };
 
+  const handleBlogMouseEnter = () => {
+    if (blogTimeoutRef.current) {
+      clearTimeout(blogTimeoutRef.current);
+      blogTimeoutRef.current = null;
+    }
+    if (blogBtnRef.current) {
+      const rect = blogBtnRef.current.getBoundingClientRect();
+      setBlogFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsBlogFlyoutOpen(true);
+  };
+
+  const handleBlogMouseLeave = () => {
+    blogTimeoutRef.current = setTimeout(() => {
+      setIsBlogFlyoutOpen(false);
+    }, 300);
+  };
+
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
 
   const fetchNotifications = () => {
@@ -172,6 +196,7 @@ export default function AdminLayout() {
             const isProductsTab = t.id === 'products';
             const isOrdersTab = t.id === 'orders';
             const isPaymentsTab = t.id === 'payments';
+            const isBlogTab = t.id === 'blog';
 
             if (isProductsTab) {
               return (
@@ -237,6 +262,30 @@ export default function AdminLayout() {
                 >
                   <Link
                     to={`/admin/dashboard?tab=payments&sub=overview`}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      isActive 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                    <span>{t.name}</span>
+                  </Link>
+                </div>
+              );
+            }
+
+            if (isBlogTab) {
+              return (
+                <div
+                  key={t.id}
+                  ref={blogBtnRef}
+                  className="relative"
+                  onMouseEnter={handleBlogMouseEnter}
+                  onMouseLeave={handleBlogMouseLeave}
+                >
+                  <Link
+                    to={`/admin/dashboard?tab=blog`}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                       isActive 
                         ? 'bg-emerald-500/10 text-emerald-400' 
@@ -602,6 +651,92 @@ export default function AdminLayout() {
               className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
             >
               <span>Seller Protection Fund (SPF)</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Blog Hover Flyout */}
+      {isBlogFlyoutOpen && (
+        <div
+          style={{ top: `${blogFlyoutPos.top}px`, left: `${blogFlyoutPos.left}px` }}
+          onMouseEnter={handleBlogMouseEnter}
+          onMouseLeave={handleBlogMouseLeave}
+          className="fixed w-64 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-2xl z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6"
+        >
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1 flex items-center justify-between">
+            <span>Blog & Social Feed</span>
+            <span className="text-emerald-700 font-bold">Feed Manager</span>
+          </div>
+
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=blog&filter=all"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+                All Posts & Social Feed
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=blog&action=new"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5 text-emerald-700" />
+                Create New Post
+              </span>
+              <span className="text-[10px] uppercase font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded">
+                + New
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=blog&filter=active"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Active / Published
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=blog&filter=scheduled"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                Scheduled Posts
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=blog&filter=expired"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Expired & Archived
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=blog&filter=hidden"
+              onClick={() => setIsBlogFlyoutOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-slate-400" />
+                Hidden / Drafts
+              </span>
             </Link>
           </div>
         </div>

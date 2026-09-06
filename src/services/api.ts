@@ -594,3 +594,17 @@ export const invoiceService = {
   },
 };
 
+export const blogService = {
+  getBlogPosts: (params?: { category?: string; search?: string; limit?: number; page?: number }) =>
+    api.get<any>('/blog', params as Record<string, string | number | boolean>),
+  getBlogPostBySlug: (slug: string) => api.get<any>(`/blog/${slug}`),
+  getAdminBlogPosts: (params?: { status?: string; category?: string; search?: string }) =>
+    api.get<any>('/blog/admin/all', params as Record<string, string | number | boolean>),
+  createPost: (data: any) => api.post<any>('/blog/admin', data),
+  createBlogPost: (data: any) => api.post<any>('/blog/admin', data),
+  updatePost: (id: string, data: any) => api.put<any>(`/blog/admin/${id}`, data),
+  updateBlogPost: (id: string, data: any) => api.put<any>(`/blog/admin/${id}`, data),
+  toggleBlogPostStatus: (id: string) => api.patch<any>(`/blog/admin/${id}/toggle-status`, {}),
+  deleteBlogPost: (id: string) => api.delete<any>(`/blog/admin/${id}`),
+};
+
