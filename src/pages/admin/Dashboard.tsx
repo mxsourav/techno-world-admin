@@ -11,6 +11,7 @@ import {
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
 import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService } from '@/services/api';
+import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
@@ -148,12 +149,18 @@ export default function Dashboard() {
   const [isDownloadingInvoices, setIsDownloadingInvoices] = useState(false);
   const [isBatchGeneratingInvoices, setIsBatchGeneratingInvoices] = useState(false);
 
-  const handleDownloadSingleInvoice = async (orderId: string, orderNumber: string) => {
+  const handleDownloadSingleInvoice = async (orderId: string, orderNumber: string, fullOrder?: any) => {
     try {
       await invoiceService.adminDownloadInvoice(orderId, `Invoice-${orderNumber}.pdf`);
       toast.success(`Invoice for #${orderNumber} downloaded`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to download invoice');
+      console.warn('[INVOICE] Server download failed, attempting browser print preview:', err);
+      if (fullOrder) {
+        toast.info('Opening invoice in print view...');
+        generateAndPrintInvoice(fullOrder);
+      } else {
+        toast.error(err.message || 'Failed to download invoice');
+      }
     }
   };
 
@@ -2063,7 +2070,7 @@ admin@technoworld.com`
                                       ) : (
                                         <button
                                           title="Download Official Tax Invoice (PDF)"
-                                          onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber)}
+                                          onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
                                           className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                         >
                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoice
@@ -2483,7 +2490,7 @@ admin@technoworld.com`
                                        ) : (
                                          <button
                                            title="Download Official Tax Invoice (PDF)"
-                                           onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber)}
+                                           onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                          >
                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoice
