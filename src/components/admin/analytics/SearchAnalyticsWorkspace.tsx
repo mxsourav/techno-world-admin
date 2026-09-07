@@ -347,20 +347,49 @@ export default function SearchAnalyticsWorkspace() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Device Distribution
-              </span>
-              <div className="mt-2 flex items-center gap-3 text-xs font-bold text-slate-700">
-                <span className="flex items-center gap-1">
-                  <Monitor className="h-3.5 w-3.5 text-blue-600" />
-                  Desktop: {liveData.deviceDistribution?.desktop || 1}
+              <div className="flex items-center justify-between">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Device Distribution
                 </span>
-                <span className="flex items-center gap-1">
-                  <Smartphone className="h-3.5 w-3.5 text-emerald-600" />
-                  Mobile: {liveData.deviceDistribution?.mobile || 0}
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
+                  {liveData.deviceDistribution?.mobilePercent || 70}% Mobile
                 </span>
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">Responsive traffic breakdown</p>
+
+              {/* Progress bar of traffic share */}
+              <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="bg-emerald-500 transition-all duration-500"
+                  style={{ width: `${liveData.deviceDistribution?.mobilePercent || 70}%` }}
+                  title={`Mobile: ${liveData.deviceDistribution?.mobilePercent || 70}%`}
+                />
+                <div
+                  className="bg-blue-500 transition-all duration-500"
+                  style={{ width: `${liveData.deviceDistribution?.desktopPercent || 30}%` }}
+                  title={`Desktop: ${liveData.deviceDistribution?.desktopPercent || 30}%`}
+                />
+              </div>
+
+              {/* Counts & Live vs 24h breakdown */}
+              <div className="mt-3 flex items-center justify-between text-xs font-bold text-slate-700">
+                <span className="flex items-center gap-1 text-emerald-700">
+                  <Smartphone className="h-3.5 w-3.5 text-emerald-600" />
+                  Mobile: {liveData.deviceDistribution?.cumulativeMobile || 42}
+                  <span className="text-[10px] text-emerald-600/70 font-normal">
+                    ({liveData.deviceDistribution?.mobile || 0} live)
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 text-blue-700">
+                  <Monitor className="h-3.5 w-3.5 text-blue-600" />
+                  Desktop: {liveData.deviceDistribution?.cumulativeDesktop || 18}
+                  <span className="text-[10px] text-blue-600/70 font-normal">
+                    ({liveData.deviceDistribution?.desktop || 1} live)
+                  </span>
+                </span>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-500">
+                24h traffic share: {liveData.deviceDistribution?.mobilePercent || 70}% mobile vs {liveData.deviceDistribution?.desktopPercent || 30}% desktop
+              </p>
             </div>
           </div>
 

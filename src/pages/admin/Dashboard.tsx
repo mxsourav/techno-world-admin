@@ -60,6 +60,7 @@ import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
 import SearchAnalyticsWorkspace from '@/components/admin/analytics/SearchAnalyticsWorkspace';
 import PaymentsWorkspace from '@/components/admin/payments/PaymentsWorkspace';
 import BlogWorkspace from '@/components/admin/blog/BlogWorkspace';
+import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -4642,8 +4643,16 @@ admin@technoworld.com`
           </div>
         )}
 
+        {tab === 'banners' && (
+          <div className="space-y-5">
+            <HeroBookCoverManager />
+          </div>
+        )}
+
         {tab === 'cms' && (
           <div className="space-y-5">
+            <HeroBookCoverManager />
+
             <p className="text-sm text-slate-500">Edit homepage sections without touching code. Toggle sections on/off, update text, and save.</p>
             {cmsSections.length === 0 ? (
               <div className="py-12 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">No CMS sections found. Run the seed script first.</div>
