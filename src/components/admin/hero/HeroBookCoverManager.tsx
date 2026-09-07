@@ -369,9 +369,39 @@ export default function HeroBookCoverManager() {
                       className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
                     />
 
+                    {/* Dynamic Spine Wrap: Blurred & Darkened Primary Tone Blend */}
+                    {activePreset.previewSpine && (
+                      <div
+                        className="absolute overflow-hidden pointer-events-none select-none"
+                        style={{
+                          left: activePreset.previewSpine.left,
+                          top: activePreset.previewSpine.top,
+                          width: activePreset.previewSpine.width,
+                          height: activePreset.previewSpine.height,
+                          transformOrigin: '0% 0%',
+                          transform: activePreset.previewSpine.matrix,
+                          transformStyle: 'preserve-3d',
+                        }}
+                      >
+                        <img
+                          src={currentCoverUrl}
+                          alt=""
+                          aria-hidden="true"
+                          className="h-full w-full object-cover scale-125 filter blur-[2px] brightness-65 contrast-125"
+                        />
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: 'linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(255,255,255,0.10) 40%, rgba(0,0,0,0.65) 100%)',
+                            mixBlendMode: 'multiply',
+                          }}
+                        />
+                      </div>
+                    )}
+
                     {/* Mapped cover overlay with ZERO cropping */}
                     <div
-                      className="absolute overflow-hidden"
+                      className="absolute overflow-hidden pointer-events-none select-none"
                       style={{
                         left: activePreset.previewOverlay.left,
                         top: activePreset.previewOverlay.top,
@@ -382,10 +412,19 @@ export default function HeroBookCoverManager() {
                         transformStyle: 'preserve-3d',
                       }}
                     >
+                      {/* Darkened & Blurred Underlayer for edge bleed */}
+                      <img
+                        src={currentCoverUrl}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover scale-110 filter blur-md brightness-60 contrast-125 pointer-events-none select-none"
+                      />
+
+                      {/* Crisp Main Cover Artwork */}
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
-                        className="h-full w-full object-fill select-none block"
+                        className="relative z-10 h-full w-full object-fill select-none block"
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -396,9 +435,9 @@ export default function HeroBookCoverManager() {
 
                       {/* Spine crease shadow */}
                       <div
-                        className="absolute inset-0 pointer-events-none"
+                        className="absolute inset-0 z-20 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.18) 2%, transparent 4%)',
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.18) 2%, transparent 4%)',
                           mixBlendMode: 'multiply',
                         }}
                       />

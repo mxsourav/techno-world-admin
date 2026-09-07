@@ -11,6 +11,20 @@ export interface BookPresetConfig {
     width: string;
     height: string;
   };
+  spine: {
+    left: string;
+    top: string;
+    width: string;
+    height: string;
+    matrix: (bookScale: number) => string;
+  };
+  previewSpine: {
+    left: string;
+    top: string;
+    width: string;
+    height: string;
+    matrix: string;
+  };
   overlay: {
     left: string;
     top: string;
@@ -55,20 +69,34 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
       width: '26.93%',
       height: '69.39%',
     },
+    spine: {
+      left: '13.26%',
+      top: '12.91%',
+      width: '3.75%',
+      height: '74.98%',
+      matrix: () => 'none',
+    },
+    previewSpine: {
+      left: '13.26%',
+      top: '12.91%',
+      width: '3.75%',
+      height: '74.98%',
+      matrix: 'none',
+    },
     overlay: {
       left: '17.00%',
-      top: '9.66%',
-      width: '61.19%',
-      height: '82.66%',
+      top: '9.53%',
+      width: '61.38%',
+      height: '82.86%',
       matrix: (s: number) =>
-        `matrix3d(0.907126, -0.076923, 0, ${-0.0003371 / s}, 0, 0.907126, 0, 0, 0, 0, 1, 0, 0, ${21.19 * s}, 0, 1)`,
+        `matrix3d(0.907348, -0.075117, 0, ${-0.0003352 / s}, 0, 0.907348, 0, 0, 0, 0, 1, 0, 0, ${20.76 * s}, 0, 1)`,
     },
     previewOverlay: {
       left: '17.00%',
-      top: '9.66%',
-      width: '61.19%',
-      height: '82.66%',
-      matrix: 'matrix3d(0.907126, -0.076923, 0, -0.000984, 0, 0.907126, 0, 0, 0, 0, 1, 0, 0, 7.26, 0, 1)',
+      top: '9.53%',
+      width: '61.38%',
+      height: '82.86%',
+      matrix: 'matrix3d(0.907348, -0.075117, 0, -0.000978, 0, 0.907348, 0, 0, 0, 0, 1, 0, 0, 7.12, 0, 1)',
     },
     shadow: {
       contact: {
@@ -98,20 +126,34 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
       width: '27.05%',
       height: '69.93%',
     },
+    spine: {
+      left: '11.54%',
+      top: '12.23%',
+      width: '3.75%',
+      height: '74.09%',
+      matrix: () => 'none',
+    },
+    previewSpine: {
+      left: '11.54%',
+      top: '12.23%',
+      width: '3.75%',
+      height: '74.09%',
+      matrix: 'none',
+    },
     overlay: {
       left: '15.29%',
-      top: '8.79%',
-      width: '67.88%',
-      height: '82.09%',
+      top: '8.66%',
+      width: '68.08%',
+      height: '82.29%',
       matrix: (s: number) =>
-        `matrix3d(0.902576, -0.073654, 0, ${-0.0003173 / s}, 0, 0.902576, 0, 0, 0, 0, 1, 0, 0, ${22.61 * s}, 0, 1)`,
+        `matrix3d(0.902811, -0.072034, 0, ${-0.0003157 / s}, 0, 0.902811, 0, 0, 0, 0, 1, 0, 0, ${22.18 * s}, 0, 1)`,
     },
     previewOverlay: {
       left: '15.29%',
-      top: '8.79%',
-      width: '67.88%',
-      height: '82.09%',
-      matrix: 'matrix3d(0.902576, -0.073654, 0, -0.000932, 0, 0.902576, 0, 0, 0, 0, 1, 0, 0, 7.70, 0, 1)',
+      top: '8.66%',
+      width: '68.08%',
+      height: '82.29%',
+      matrix: 'matrix3d(0.902811, -0.072034, 0, -0.000927, 0, 0.902811, 0, 0, 0, 0, 1, 0, 0, 7.55, 0, 1)',
     },
     shadow: {
       contact: {
@@ -141,20 +183,35 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
       width: '24.24%',
       height: '68.76%',
     },
+    spine: {
+      left: '15.32%',
+      top: '11.35%',
+      width: '3.83%',
+      height: '75.85%',
+      matrix: (s: number) =>
+        `matrix3d(1, -0.105263, 0, ${-0.0002142 / s}, 0, 1, 0, 0, 0, 0, 1, 0, 0, ${1.63 * s}, 0, 1)`,
+    },
+    previewSpine: {
+      left: '15.32%',
+      top: '11.35%',
+      width: '3.83%',
+      height: '75.85%',
+      matrix: 'matrix3d(1, -0.105263, 0, -0.000620, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0.56, 0, 1)',
+    },
     overlay: {
       left: '19.15%',
-      top: '7.94%',
-      width: '57.96%',
-      height: '83.42%',
+      top: '7.82%',
+      width: '58.17%',
+      height: '83.61%',
       matrix: (s: number) =>
-        `matrix3d(0.906274, -0.100870, 0, ${-0.0003990 / s}, 0, 0.906274, 0, 0, 0, 0, 1, 0, 0, ${23.70 * s}, 0, 1)`,
+        `matrix3d(0.907240, -0.097054, 0, ${-0.0003935 / s}, 0, 0.907240, 0, 0, 0, 0, 1, 0, 0, ${22.88 * s}, 0, 1)`,
     },
     previewOverlay: {
       left: '19.15%',
-      top: '7.94%',
-      width: '57.96%',
-      height: '83.42%',
-      matrix: 'matrix3d(0.906274, -0.100870, 0, -0.001154, 0, 0.906274, 0, 0, 0, 0, 1, 0, 0, 8.19, 0, 1)',
+      top: '7.82%',
+      width: '58.17%',
+      height: '83.61%',
+      matrix: 'matrix3d(0.907240, -0.097054, 0, -0.001138, 0, 0.907240, 0, 0, 0, 0, 1, 0, 0, 7.91, 0, 1)',
     },
     shadow: {
       contact: {
