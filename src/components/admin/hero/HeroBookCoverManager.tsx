@@ -84,6 +84,21 @@ export default function HeroBookCoverManager() {
     setPreviewUrl(objectUrl);
   };
 
+  const handleModelChange = async (newModel: 'auto' | BookPresetId) => {
+    setSelectedModel(newModel);
+    if (heroConfig?.hero_book_cover_url && !selectedFile && newModel !== 'auto') {
+      try {
+        const res = await heroService.updateModel(newModel);
+        if (res.success) {
+          toast.success(`Updated 3D model to ${BOOK_PRESETS[newModel].name}`);
+          await fetchConfig();
+        }
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to update 3D book model');
+      }
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -263,7 +278,7 @@ export default function HeroBookCoverManager() {
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setSelectedModel(m.id as any)}
+                    onClick={() => handleModelChange(m.id as any)}
                     className={`text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
                       selectedModel === m.id
                         ? 'border-emerald-600 bg-emerald-50/70 text-emerald-900 shadow-xs'
@@ -337,13 +352,13 @@ export default function HeroBookCoverManager() {
                     <div
                       className="absolute pointer-events-none"
                       style={{
-                        left: '12%',
+                        left: '10%',
                         bottom: '2px',
-                        width: '76%',
+                        width: '82%',
                         height: '10px',
                         transform: 'rotate(5deg)',
-                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(10,5,2,0.4) 50%, transparent 75%)',
-                        filter: 'blur(4px)',
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.95) 0%, rgba(10,5,2,0.5) 60%, transparent 80%)',
+                        filter: 'blur(3px)',
                       }}
                     />
 
@@ -354,7 +369,7 @@ export default function HeroBookCoverManager() {
                       className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
                     />
 
-                    {/* Mapped cover overlay */}
+                    {/* Mapped cover overlay with ZERO cropping */}
                     <div
                       className="absolute overflow-hidden"
                       style={{
@@ -370,7 +385,7 @@ export default function HeroBookCoverManager() {
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
-                        className="h-full w-full object-cover select-none"
+                        className="h-full w-full object-fill select-none block"
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -383,8 +398,17 @@ export default function HeroBookCoverManager() {
                       <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 3%, transparent 8%)',
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 2.5%, transparent 6%)',
                           mixBlendMode: 'multiply',
+                        }}
+                      />
+
+                      {/* Specular ridge */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'linear-gradient(90deg, transparent 2.5%, rgba(255,255,255,0.25) 3.5%, transparent 5%)',
+                          mixBlendMode: 'screen',
                         }}
                       />
 
@@ -394,6 +418,15 @@ export default function HeroBookCoverManager() {
                         style={{
                           background: 'linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.18) 42%, transparent 65%)',
                           mixBlendMode: 'soft-light',
+                        }}
+                      />
+
+                      {/* Warm ambient lamp light */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'radial-gradient(circle at 90% 10%, rgba(255,215,140,0.18) 0%, transparent 60%)',
+                          mixBlendMode: 'screen',
                         }}
                       />
                     </div>

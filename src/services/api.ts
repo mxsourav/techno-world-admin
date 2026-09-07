@@ -664,6 +664,8 @@ export const bookRequestService = {
 export const heroService = {
   getHeroConfig: () =>
     api.get<{ id: string; hero_book_cover_url: string | null; hero_book_cover_updated_at: string | null; hero_book_model?: string | null }>('/hero'),
+  updateModel: (heroBookModel: string) =>
+    api.put<{ id: string; hero_book_model: string }>('/hero/admin/model', { hero_book_model: heroBookModel }),
   uploadCover: (file: File, heroBookModel?: string) => {
     const formData = new FormData();
     formData.append('cover_image', file);
