@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Truck, Zap, Package, Store } from 'lucide-react';
+import { Truck, Zap, Package } from 'lucide-react';
 
 export default function ShippingPolicy() {
   return (
@@ -15,14 +15,14 @@ export default function ShippingPolicy() {
         </p>
       </div>
 
-      {/* 4 Fulfillment Options */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+      {/* 3 Delivery Options */}
+      <div className="grid gap-4 sm:grid-cols-3 mb-10">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-xs">
           <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
             <Package className="h-4 w-4 text-emerald-600" />
             <span>Standard Delivery</span>
           </div>
-          <p className="text-base font-extrabold text-emerald-700">₹69 <span className="text-[11px] font-normal text-slate-500">(FREE ₹799+)</span></p>
+          <p className="text-base font-extrabold text-emerald-700">₹69 <span className="text-[11px] font-normal text-slate-500">(FREE ₹999+)</span></p>
           <p className="text-[11px] text-slate-600 leading-relaxed">
             Reliable delivery across all Indian states. Estimated transit: 5–7 business days.
           </p>
@@ -49,17 +49,6 @@ export default function ShippingPolicy() {
             On-demand dispatch (Porter/Rapido) for Kolkata & Howrah. Same-day priority.
           </p>
         </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-xs">
-          <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
-            <Store className="h-4 w-4 text-emerald-700" />
-            <span>Store Takeaway</span>
-          </div>
-          <p className="text-base font-extrabold text-emerald-700">FREE</p>
-          <p className="text-[11px] text-slate-600 leading-relaxed">
-            Prepaid pickup at College Street dispatch desk. 3–4 time slots offered to choose.
-          </p>
-        </div>
       </div>
 
       {/* Main Details */}
@@ -79,7 +68,7 @@ export default function ShippingPolicy() {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-slate-900">2. Cash on Delivery (COD) Handling Fee</h2>
           <p>
-            Cash on Delivery is available across most serviceable Indian pincodes for eligible book values. An additional handling fee of <b>₹20</b> is appended to the order total at checkout to cover courier cash processing. (Store Takeaway is prepaid-only).
+            Cash on Delivery is available across most serviceable Indian pincodes for eligible book values. An additional handling fee of <b>₹20</b> is appended to the order total at checkout to cover courier cash processing.
           </p>
           <p className="text-xs text-slate-500">
             Please keep exact change ready upon arrival of the delivery executive.

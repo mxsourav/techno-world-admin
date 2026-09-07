@@ -341,11 +341,24 @@ export default function ProductsWorkspace() {
               
               {/* Header Info */}
               <div className="flex gap-6">
-                {viewingBook.coverUrl ? (
-                  <img src={getImageUrl(viewingBook.coverUrl)} className="h-32 w-24 rounded-lg object-cover shadow border border-slate-200 bg-slate-50 shrink-0" alt={viewingBook.title} onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                ) : (
-                  <div className="h-32 w-24 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xs text-center p-2">No Cover Available</div>
-                )}
+                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0 shadow-sm flex items-center justify-center">
+                  {viewingBook.coverUrl ? (
+                    <img
+                      src={getImageUrl(viewingBook.coverUrl)}
+                      className="h-full w-full object-cover"
+                      alt={viewingBook.title}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 -z-1 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-100">
+                    <BookOpen className="h-6 w-6 text-slate-300 mb-1" />
+                    <span className="text-[10px] font-bold text-slate-500 line-clamp-2">{viewingBook.title}</span>
+                  </div>
+                </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{viewingBook.status}</span>
@@ -377,8 +390,8 @@ export default function ProductsWorkspace() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between"><span className="text-slate-500">MRP</span><span className="font-medium text-slate-400 line-through">{formatINR(viewingBook.mrp)}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Selling Price</span><span className="font-bold text-slate-900">{formatINR(viewingBook.price)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Cost Price</span><span className="font-medium text-slate-900">{formatINR(viewingBook.costPrice || 0)}</span></div>
-                    <div className="flex justify-between border-t border-slate-100 pt-2"><span className="text-slate-500 font-bold">Margin</span><span className="font-bold text-emerald-600">{viewingBook.costPrice ? Math.round(((viewingBook.price - viewingBook.costPrice) / viewingBook.price) * 100) : 0}%</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Cost Price</span><span className="font-medium text-slate-900">{viewingBook.costPrice ? formatINR(viewingBook.costPrice) : '₹0 (Not Set)'}</span></div>
+                    <div className="flex justify-between border-t border-slate-100 pt-2"><span className="text-slate-500 font-bold">Margin</span><span className={`font-bold ${viewingBook.costPrice ? 'text-emerald-600' : 'text-slate-400'}`}>{viewingBook.costPrice ? `${Math.round(((viewingBook.price - viewingBook.costPrice) / viewingBook.price) * 100)}%` : '0%'}</span></div>
                   </div>
                 </div>
                 
@@ -390,7 +403,7 @@ export default function ProductsWorkspace() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between"><span className="text-slate-500">Available</span><span className="font-bold text-slate-900">{viewingBook.stock}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Reserved</span><span className="font-medium text-slate-900">{viewingBook.reservedStock || 0}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Reorder Level</span><span className="font-medium text-amber-600">{viewingBook.reorderLevel || 20}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Reorder Level</span><span className="font-medium text-amber-600">{viewingBook.reorderLevel ?? 20} <span className="text-[10px] text-slate-400 font-normal">(Alert at ≤ {viewingBook.reorderLevel ?? 20})</span></span></div>
                     <div className="flex justify-between border-t border-slate-100 pt-2"><span className="text-slate-500">Warehouse</span><span className="font-medium text-slate-700">{viewingBook.warehouse || 'Main Warehouse'}</span></div>
                   </div>
                 </div>
@@ -406,11 +419,11 @@ export default function ProductsWorkspace() {
                    </div>
                    <div className="text-center p-3 bg-slate-50 rounded-lg">
                      <p className="text-xs text-slate-500 mb-1">In Cart</p>
-                     <p className="text-lg font-extrabold text-blue-700">12</p>
+                     <p className="text-lg font-extrabold text-blue-700">{viewingBook.inCartCount ?? 0}</p>
                    </div>
                    <div className="text-center p-3 bg-slate-50 rounded-lg">
                      <p className="text-xs text-slate-500 mb-1">Wishlisted</p>
-                     <p className="text-lg font-extrabold text-rose-700">45</p>
+                     <p className="text-lg font-extrabold text-rose-700">{viewingBook.wishlistCount ?? 0}</p>
                    </div>
                  </div>
               </div>

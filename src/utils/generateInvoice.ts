@@ -195,11 +195,11 @@ export function generateAndPrintInvoice(order: any) {
             </div>
           </div>
 
-          <!-- Enterprise Division Notice -->
+          <!-- Customer Support & Tax Note -->
           <div style="margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 14px; font-size: 10px; color: #64748b; line-height: 1.5;">
             <b>Tax Compliance Note:</b> Printed books (HSN 4901) are exempt from Goods & Services Tax (GST) under Indian tax laws. This is an electronically generated tax invoice requiring no physical signature.
             <br/><br/>
-            <b>Notice Regarding Corporate Structure:</b> Techno World Books Online and the College Street offline retail bookstore operate under the same parent brand trademark, but are managed as independent business entities with distinct inventory and accounting. Offline counter exchanges or retail returns are strictly prohibited. For store self-pickup orders, present this invoice at the College Street dispatch desk during your appointed time to collect your items.
+            <b>Customer Support & Assistance:</b> For queries, tracking assistance, or replacement requests regarding this order, please visit our Help & Support center at technoworldbooks.in/contact or WhatsApp our support desk at +91 747 913 5626 (College Street, Kolkata).
           </div>
         </div>
       </body>

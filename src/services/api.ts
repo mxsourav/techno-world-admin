@@ -633,4 +633,33 @@ export const analyticsService = {
   getOverview: () => api.get<any>('/analytics/overview'),
 };
 
+export const contactService = {
+  submitMessage: (data: { name: string; email: string; orderNumber?: string; message: string }) =>
+    api.post<any>('/contact', data),
+  getMessages: (params?: { page?: number; limit?: number; status?: string; search?: string }) =>
+    api.get<any>('/contact', params as Record<string, string | number | boolean>),
+  updateStatus: (id: string, data: { status?: string; reply?: string }) =>
+    api.patch<any>(`/contact/${id}`, data),
+};
+
+export const bookRequestService = {
+  submitRequest: (data: {
+    title: string;
+    author: string;
+    email: string;
+    phone?: string;
+    publisher?: string;
+    edition?: string;
+    notes?: string;
+    imageUrl?: string;
+  }) => api.post<any>('/book-requests', data),
+  getRequests: (params?: { page?: number; limit?: number; status?: string; search?: string }) =>
+    api.get<any>('/book-requests', params as Record<string, string | number | boolean>),
+  updateRequest: (id: string, data: { status?: string; adminNotes?: string }) =>
+    api.patch<any>(`/book-requests/${id}`, data),
+  deleteRequest: (id: string) =>
+    api.delete<any>(`/book-requests/${id}`),
+};
+
+
 

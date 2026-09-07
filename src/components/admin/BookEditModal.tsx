@@ -151,7 +151,11 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     bookCode: book?.bookCode || '',
     price: book?.price || 0,
     mrp: book?.mrp || 0,
+    costPrice: book?.costPrice !== undefined && book?.costPrice !== null ? book.costPrice : '',
     stock: book?.stock || 0,
+    reservedStock: book?.reservedStock !== undefined && book?.reservedStock !== null ? book.reservedStock : 0,
+    reorderLevel: book?.reorderLevel !== undefined && book?.reorderLevel !== null ? book.reorderLevel : 20,
+    warehouse: book?.warehouse || 'Main Warehouse',
     pages: book?.pages || 0,
     description: book?.description || '',
     shortDescription: book?.shortDescription || '',
@@ -352,23 +356,67 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             </div>
           </div>
 
-          {/* Pricing & Stock */}
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Selling Price (₹) *</label>
-              <input required type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500" />
+          {/* Pricing Details */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <span>💰 Pricing & Profit Margins</span>
+              </h3>
+              {formData.price && formData.costPrice && Number(formData.price) > 0 ? (
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${Number(formData.price) >= Number(formData.costPrice) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                  Profit: ₹{(Number(formData.price) - Number(formData.costPrice)).toFixed(2)} ({Math.round(((Number(formData.price) - Number(formData.costPrice)) / Number(formData.price)) * 100)}% Margin)
+                </span>
+              ) : null}
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Printed MRP (₹) *</label>
-              <input required type="number" step="0.01" name="mrp" value={formData.mrp} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:border-emerald-500" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Selling Price (₹) *</label>
+                <input required type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Printed MRP (₹) *</label>
+                <input required type="number" step="0.01" name="mrp" value={formData.mrp} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Cost Price (₹)</label>
+                <input type="number" step="0.01" name="costPrice" placeholder="Purchase cost" value={formData.costPrice} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none focus:border-emerald-500" />
+                <p className="text-[10px] text-slate-400 mt-0.5">Your procurement cost</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Page Count</label>
+                <input type="number" name="pages" value={formData.pages || ''} onChange={handleChange} placeholder="e.g. 480" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Stock Quantity</label>
-              <input type="number" name="stock" value={formData.stock} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium outline-none focus:border-emerald-500" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Page Count</label>
-              <input type="number" name="pages" value={formData.pages || ''} onChange={handleChange} placeholder="e.g. 480" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          </div>
+
+          {/* Inventory & Warehouse Management */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+              <span>📦 Inventory & Stock Thresholds</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Available Stock *</label>
+                <input type="number" name="stock" value={formData.stock} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500" />
+                <p className="text-[10px] text-slate-400 mt-0.5">Ready for online orders</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Reserved Stock</label>
+                <input type="number" name="reservedStock" value={formData.reservedStock} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-emerald-500" />
+                <p className="text-[10px] text-slate-400 mt-0.5">Held for counter / bulk</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Reorder Level</label>
+                <input type="number" name="reorderLevel" value={formData.reorderLevel} onChange={handleChange} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-amber-600 outline-none focus:border-emerald-500" />
+                <p className="text-[10px] text-slate-400 mt-0.5">Low-stock alert threshold</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Warehouse</label>
+                <input name="warehouse" value={formData.warehouse} onChange={handleChange} placeholder="Main Warehouse" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-emerald-500" />
+                <p className="text-[10px] text-slate-400 mt-0.5">Physical storage hub</p>
+              </div>
             </div>
           </div>
 

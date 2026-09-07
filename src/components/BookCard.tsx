@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Heart, ShoppingCart, Star, Zap } from 'lucide-react';
 import type { Book } from '@/types';
@@ -98,6 +99,37 @@ export function BookCardSkeleton() {
 }
 
 export function BookRow({ title, icon, books, viewAllLink, loading }: { title: string; icon?: React.ReactNode; books: Book[]; viewAllLink?: string; loading?: boolean }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // If user is already scrolling horizontally, let native behavior handle it
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 0) return;
+
+      const isScrollingForward = e.deltaY > 0;
+      const isScrollingBackward = e.deltaY < 0;
+
+      const canScrollForward = isScrollingForward && el.scrollLeft < maxScroll - 1;
+      const canScrollBackward = isScrollingBackward && el.scrollLeft > 1;
+
+      if (canScrollForward || canScrollBackward) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, [books.length, loading]);
+
   if (!loading && !books.length) return null;
 
   return (
@@ -112,7 +144,10 @@ export function BookRow({ title, icon, books, viewAllLink, loading }: { title: s
           </Link>
         )}
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]">
+      <div 
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]"
+      >
         {loading
           ? Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)
           : books.map((b) => <BookCard key={b.id} book={b} />)}

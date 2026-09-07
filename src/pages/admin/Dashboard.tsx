@@ -52,7 +52,7 @@ import {
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService , getImageUrl} from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService, bookRequestService, getImageUrl } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
@@ -181,14 +181,16 @@ export default function Dashboard() {
     }
   };
 
-  // Reviews & Q&A Moderation State
-  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions'>('reviews');
+  // Reviews, Q&A, and Book Sourcing Requests Moderation State
+  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions' | 'requests'>('reviews');
   const [adminReviews, setAdminReviews] = useState<any[]>([]);
   const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
+  const [adminBookRequests, setAdminBookRequests] = useState<any[]>([]);
   const [loadingReviewsData, setLoadingReviewsData] = useState(false);
   const [reviewSearchQuery, setReviewSearchQuery] = useState('');
   const [reviewRatingFilter, setReviewRatingFilter] = useState<string>('ALL');
   const [questionStatusFilter, setQuestionStatusFilter] = useState<string>('ALL');
+  const [bookRequestStatusFilter, setBookRequestStatusFilter] = useState<string>('ALL');
   const [replyingQuestionId, setReplyingQuestionId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replySignature, setReplySignature] = useState('Techno World Direct · Verified Seller');
@@ -410,9 +412,10 @@ export default function Dashboard() {
   const fetchReviewsAndQuestions = async () => {
     setLoadingReviewsData(true);
     try {
-      const [revRes, qRes] = await Promise.all([
+      const [revRes, qRes, reqRes] = await Promise.all([
         reviewService.getAdminReviews(),
         questionService.getAdminQuestions(),
+        bookRequestService.getRequests().catch(() => ({ success: false, data: [] })),
       ]);
       if (revRes.success && Array.isArray(revRes.data)) {
         setAdminReviews(revRes.data);
@@ -420,8 +423,12 @@ export default function Dashboard() {
       if (qRes.success && Array.isArray(qRes.data)) {
         setAdminQuestions(qRes.data);
       }
+      if (reqRes && reqRes.success) {
+        const rawReqs = Array.isArray(reqRes.data) ? reqRes.data : (reqRes.data?.requests || []);
+        setAdminBookRequests(rawReqs);
+      }
     } catch (err) {
-      console.error('Failed to load reviews or questions', err);
+      console.error('Failed to load reviews, questions, or book requests', err);
     } finally {
       setLoadingReviewsData(false);
     }
@@ -540,6 +547,31 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       toast.error(err?.message || 'Failed to delete question');
+    }
+  };
+
+  const handleUpdateBookRequestStatus = async (id: string, status: string) => {
+    try {
+      const res = await bookRequestService.updateRequest(id, { status });
+      if (res.success) {
+        toast.success(`Request marked as ${status}`);
+        setAdminBookRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update request status');
+    }
+  };
+
+  const handleDeleteBookRequest = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this book request record?')) return;
+    try {
+      const res = await bookRequestService.deleteRequest(id);
+      if (res.success) {
+        toast.success('Book request record removed');
+        setAdminBookRequests(prev => prev.filter(r => r.id !== id));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete request');
     }
   };
 
@@ -3722,8 +3754,8 @@ admin@technoworld.com`
                 </div>
               </div>
 
-              {/* Sub-Tab Navigation: Reviews vs Questions */}
-              <div className="mt-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+              {/* Sub-Tab Navigation: Reviews vs Questions vs Requests */}
+              <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4">
                 <button
                   type="button"
                   onClick={() => setReviewSubTab('reviews')}
@@ -3759,6 +3791,29 @@ admin@technoworld.com`
                     </span>
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReviewSubTab('requests')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    reviewSubTab === 'requests'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>Book Sourcing Requests</span>
+                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                    reviewSubTab === 'requests' ? 'bg-white/20 text-white' : 'bg-white text-slate-700'
+                  }`}>
+                    {adminBookRequests.length}
+                  </span>
+                  {adminBookRequests.filter(r => r.status === 'PENDING').length > 0 && (
+                    <span className="ml-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950">
+                      {adminBookRequests.filter(r => r.status === 'PENDING').length} New
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Filter Toolbar */}
@@ -3769,7 +3824,13 @@ admin@technoworld.com`
                     type="text"
                     value={reviewSearchQuery}
                     onChange={(e) => setReviewSearchQuery(e.target.value)}
-                    placeholder={reviewSubTab === 'reviews' ? 'Search by book title, reviewer name, or comment...' : 'Search by question, book, or answer...'}
+                    placeholder={
+                      reviewSubTab === 'reviews'
+                        ? 'Search by book title, reviewer name, or comment...'
+                        : reviewSubTab === 'questions'
+                        ? 'Search by question, book, or answer...'
+                        : 'Search by book title, author, email, or phone...'
+                    }
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-xs font-medium outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -3789,7 +3850,7 @@ admin@technoworld.com`
                       <option value="1">1 Star ★☆☆☆☆</option>
                     </select>
                   </div>
-                ) : (
+                ) : reviewSubTab === 'questions' ? (
                   <div className="flex items-center gap-2">
                     <select
                       value={questionStatusFilter}
@@ -3799,6 +3860,21 @@ admin@technoworld.com`
                       <option value="ALL">All Questions</option>
                       <option value="PENDING">Pending Reply</option>
                       <option value="ANSWERED">Answered & Published</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={bookRequestStatusFilter}
+                      onChange={(e) => setBookRequestStatusFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none"
+                    >
+                      <option value="ALL">All Statuses</option>
+                      <option value="PENDING">Pending (New)</option>
+                      <option value="SOURCED">Book Sourced</option>
+                      <option value="CONTACTED">Customer Contacted</option>
+                      <option value="FULFILLED">Fulfilled & Closed</option>
+                      <option value="REJECTED">Unavailable / Rejected</option>
                     </select>
                   </div>
                 )}
@@ -4079,6 +4155,212 @@ admin@technoworld.com`
                     <HelpCircle className="mx-auto h-10 w-10 text-slate-300 mb-2" />
                     <p className="font-bold text-slate-700">No customer questions submitted</p>
                     <p className="text-xs text-slate-400 mt-1">Questions asked by visitors on any book page will appear here for you to reply.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-TAB 3: BOOK SOURCING REQUESTS */}
+            {reviewSubTab === 'requests' && (
+              <div className="space-y-4">
+                {adminBookRequests
+                  .filter((req: any) => {
+                    if (bookRequestStatusFilter !== 'ALL' && req.status !== bookRequestStatusFilter) return false;
+                    if (reviewSearchQuery.trim()) {
+                      const q = reviewSearchQuery.toLowerCase();
+                      const matchTitle = (req.title || '').toLowerCase().includes(q);
+                      const matchAuthor = (req.author || '').toLowerCase().includes(q);
+                      const matchEmail = (req.email || '').toLowerCase().includes(q);
+                      const matchPhone = (req.phone || '').toLowerCase().includes(q);
+                      const matchPub = (req.publisher || '').toLowerCase().includes(q);
+                      const matchNotes = (req.notes || '').toLowerCase().includes(q);
+                      return matchTitle || matchAuthor || matchEmail || matchPhone || matchPub || matchNotes;
+                    }
+                    return true;
+                  })
+                  .map((req: any) => {
+                    const cleanPhone = (req.phone || '').replace(/[^0-9]/g, '');
+                    const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                    const waText = encodeURIComponent(
+                      `Hello! Regarding your book request for "${req.title}" by ${req.author} on Techno World Books — College Street:`
+                    );
+                    const mailSubject = encodeURIComponent(`Regarding your book request: "${req.title}" — Techno World Books`);
+
+                    const statusColors: Record<string, string> = {
+                      PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+                      SOURCED: 'bg-blue-50 text-blue-800 border-blue-200',
+                      CONTACTED: 'bg-purple-50 text-purple-800 border-purple-200',
+                      FULFILLED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                      REJECTED: 'bg-rose-50 text-rose-800 border-rose-200',
+                    };
+
+                    return (
+                      <div
+                        key={req.id}
+                        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300"
+                      >
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div className="flex items-start gap-4 flex-1">
+                            {/* Book Image (if uploaded) */}
+                            {req.imageUrl ? (
+                              <a
+                                href={getImageUrl(req.imageUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group relative block h-24 w-18 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm"
+                                title="Click to view full photo"
+                              >
+                                <img
+                                  src={getImageUrl(req.imageUrl)}
+                                  alt={req.title}
+                                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <ExternalLink className="h-4 w-4 text-white" />
+                                </div>
+                              </a>
+                            ) : (
+                              <div className="flex h-20 w-16 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-300">
+                                <BookOpen className="h-7 w-7" />
+                              </div>
+                            )}
+
+                            {/* Book & Requester Details */}
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+                                  {req.title}
+                                </h3>
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                                    statusColors[req.status] || 'bg-slate-100 text-slate-700 border-slate-200'
+                                  }`}
+                                >
+                                  {req.status}
+                                </span>
+                              </div>
+
+                              <p className="text-xs font-semibold text-slate-600">
+                                By <span className="text-slate-900 font-bold">{req.author}</span>
+                              </p>
+
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-0.5">
+                                {req.publisher && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                    <Building2 className="h-3 w-3 text-slate-400" />
+                                    Pub: {req.publisher}
+                                  </span>
+                                )}
+                                {req.edition && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                    Ed: {req.edition}
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(req.createdAt).toLocaleString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+
+                              {/* Customer Contact Badges */}
+                              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                                <a
+                                  href={`mailto:${req.email}?subject=${mailSubject}`}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                >
+                                  <Mail className="h-3 w-3 text-blue-600" />
+                                  <span>{req.email}</span>
+                                </a>
+
+                                {req.phone && (
+                                  <a
+                                    href={`tel:${req.phone}`}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                  >
+                                    <Phone className="h-3 w-3 text-emerald-600" />
+                                    <span>{req.phone}</span>
+                                  </a>
+                                )}
+                              </div>
+
+                              {/* Notes */}
+                              {req.notes && (
+                                <p className="mt-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-xs text-slate-600 italic">
+                                  &ldquo;{req.notes}&rdquo;
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons & Status Selector */}
+                          <div className="flex flex-col items-end gap-2 shrink-0 md:min-w-[180px]">
+                            {/* WhatsApp Fast Reply */}
+                            {cleanPhone && (
+                              <a
+                                href={`https://wa.me/${waPhone}?text=${waText}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                              >
+                                <MessageSquare className="h-3.5 w-3.5" />
+                                <span>Chat WhatsApp</span>
+                              </a>
+                            )}
+
+                            {/* Email Reply */}
+                            <a
+                              href={`mailto:${req.email}?subject=${mailSubject}`}
+                              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                            >
+                              <Mail className="h-3.5 w-3.5 text-blue-600" />
+                              <span>Email Requester</span>
+                            </a>
+
+                            {/* Status Changer */}
+                            <div className="flex w-full items-center gap-1 pt-1">
+                              <select
+                                value={req.status}
+                                onChange={(e) => handleUpdateBookRequestStatus(req.id, e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-blue-500"
+                              >
+                                <option value="PENDING">Status: Pending</option>
+                                <option value="SOURCED">Status: Sourced / Found</option>
+                                <option value="CONTACTED">Status: Contacted</option>
+                                <option value="FULFILLED">Status: Fulfilled</option>
+                                <option value="REJECTED">Status: Unavailable</option>
+                              </select>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteBookRequest(req.id)}
+                                className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                                title="Delete request record"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {adminBookRequests.length === 0 && !loadingReviewsData && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-400">
+                    <BookOpen className="mx-auto h-10 w-10 text-slate-300 mb-2" />
+                    <p className="font-bold text-slate-700">No book sourcing requests yet</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Customer requests submitted through the &quot;Can&apos;t Find a Book?&quot; sourcing form will show up here.
+                    </p>
                   </div>
                 )}
               </div>
