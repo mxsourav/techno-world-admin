@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { heroService, getImageUrl } from '@/services/api';
+import { BOOK_PRESETS, type BookPresetId } from '@/types/hero';
 
 export default function HeroBookCoverManager() {
   const [heroConfig, setHeroConfig] = useState<{
     id?: string;
     hero_book_cover_url: string | null;
     hero_book_cover_updated_at: string | null;
+    hero_book_model?: string | null;
   } | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -26,8 +28,24 @@ export default function HeroBookCoverManager() {
   // Staged file for upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<'auto' | BookPresetId>('auto');
+  const [imageRatio, setImageRatio] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Derive active preset
+  let effectivePresetId: BookPresetId = 'academic';
+  if (selectedModel !== 'auto') {
+    effectivePresetId = selectedModel;
+  } else if (imageRatio) {
+    if (imageRatio < 1.42) effectivePresetId = 'novel';
+    else if (imageRatio > 1.58) effectivePresetId = 'reference';
+    else effectivePresetId = 'academic';
+  } else if (heroConfig?.hero_book_model && (heroConfig.hero_book_model in BOOK_PRESETS)) {
+    effectivePresetId = heroConfig.hero_book_model as BookPresetId;
+  }
+
+  const activePreset = BOOK_PRESETS[effectivePresetId] || BOOK_PRESETS.academic;
 
   const fetchConfig = async () => {
     setIsLoading(true);
@@ -35,6 +53,9 @@ export default function HeroBookCoverManager() {
       const res = await heroService.getHeroConfig();
       if (res.success && res.data) {
         setHeroConfig(res.data);
+        if (res.data.hero_book_model && (res.data.hero_book_model in BOOK_PRESETS)) {
+          setSelectedModel(res.data.hero_book_model as BookPresetId);
+        }
       }
     } catch (err: any) {
       console.error('Failed to load hero configuration:', err);
@@ -79,7 +100,7 @@ export default function HeroBookCoverManager() {
 
     setIsUploading(true);
     try {
-      const res = await heroService.uploadCover(selectedFile);
+      const res = await heroService.uploadCover(selectedFile, selectedModel !== 'auto' ? selectedModel : undefined);
       if (res.success) {
         toast.success('Hero 3D book cover uploaded and updated successfully!');
         setSelectedFile(null);
@@ -226,6 +247,39 @@ export default function HeroBookCoverManager() {
               )}
             </div>
 
+            {/* 3D Book Model Selector */}
+            <div className="space-y-2 pt-1">
+              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>Select 3D Book Model Format:</span>
+                <span className="text-[11px] text-slate-400 font-normal">Controls 3D thickness & proportions</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  { id: 'auto', name: 'Auto-detect (Smart)', desc: 'Chooses model from image aspect ratio' },
+                  { id: 'academic', name: 'Academic Textbook', desc: 'Standard ~1:1.45 college book' },
+                  { id: 'novel', name: 'Paperback / Novel', desc: 'Wider ~1:1.38 literature & guide' },
+                  { id: 'reference', name: 'Reference / Handbook', desc: 'Tall & thick ~1:1.60 volume' },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedModel(m.id as any)}
+                    className={`text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                      selectedModel === m.id
+                        ? 'border-emerald-600 bg-emerald-50/70 text-emerald-900 shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center justify-between">
+                      <span>{m.name}</span>
+                      {selectedModel === m.id && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{m.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Action Bar */}
             {selectedFile && (
               <div className="flex items-center justify-between gap-3 pt-2">
@@ -278,45 +332,68 @@ export default function HeroBookCoverManager() {
               {/* 3D Perspective Simulation Box */}
               <div className="relative h-64 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#02120b] p-4">
                 {currentCoverUrl ? (
-                  <div className="relative" style={{ perspective: '800px' }}>
+                  <div className="relative h-56 w-38 flex items-center justify-center">
+                    {/* Realistic Dual Contact Shadow */}
                     <div
-                      className="relative h-44 w-28 overflow-hidden rounded-r-[2px] rounded-l-[1px] shadow-2xl transition-transform duration-300 hover:scale-105"
+                      className="absolute pointer-events-none"
                       style={{
-                        transform: 'matrix3d(0.874545, -0.094545, 0, -0.000456, 0, 1, 0, 0, 0, 0, 1, 0, 0, 12, 0, 1)',
+                        left: '12%',
+                        bottom: '2px',
+                        width: '76%',
+                        height: '10px',
+                        transform: 'rotate(5deg)',
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(10,5,2,0.4) 50%, transparent 75%)',
+                        filter: 'blur(4px)',
+                      }}
+                    />
+
+                    {/* Base 3D book asset */}
+                    <img
+                      src={activePreset.imageSrc}
+                      alt={activePreset.name}
+                      className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
+                    />
+
+                    {/* Mapped cover overlay */}
+                    <div
+                      className="absolute overflow-hidden"
+                      style={{
+                        left: activePreset.previewOverlay.left,
+                        top: activePreset.previewOverlay.top,
+                        width: activePreset.previewOverlay.width,
+                        height: activePreset.previewOverlay.height,
                         transformOrigin: '0% 0%',
+                        transform: activePreset.previewOverlay.matrix,
                         transformStyle: 'preserve-3d',
                       }}
                     >
-                      {/* Cover Image */}
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
                         className="h-full w-full object-cover select-none"
-                      />
-
-                      {/* Paperback Texture Overlay (Fine Paper Grain Noise) */}
-                      <div
-                        className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.35'/%3E%3C/svg%3E")`,
+                        onLoad={(e) => {
+                          const img = e.currentTarget;
+                          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                            setImageRatio(img.naturalHeight / img.naturalWidth);
+                          }
                         }}
                       />
 
-                      {/* Shading Layer 1: Spine Fold Shadow & Page Swell */}
+                      {/* Spine crease shadow */}
                       <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 5%, rgba(0,0,0,0.02) 12%, rgba(255,255,255,0.14) 35%, rgba(255,255,255,0.04) 55%, transparent 75%, rgba(0,0,0,0.25) 100%)',
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 3%, transparent 8%)',
                           mixBlendMode: 'multiply',
                         }}
                       />
 
-                      {/* Shading Layer 2: Gloss & Specular Sheen */}
+                      {/* Satin sheen */}
                       <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.25) 35%, rgba(255,255,255,0.08) 45%, transparent 60%)',
-                          mixBlendMode: 'screen',
+                          background: 'linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.18) 42%, transparent 65%)',
+                          mixBlendMode: 'soft-light',
                         }}
                       />
                     </div>

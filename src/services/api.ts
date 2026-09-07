@@ -663,11 +663,14 @@ export const bookRequestService = {
 
 export const heroService = {
   getHeroConfig: () =>
-    api.get<{ id: string; hero_book_cover_url: string | null; hero_book_cover_updated_at: string | null }>('/hero'),
-  uploadCover: (file: File) => {
+    api.get<{ id: string; hero_book_cover_url: string | null; hero_book_cover_updated_at: string | null; hero_book_model?: string | null }>('/hero'),
+  uploadCover: (file: File, heroBookModel?: string) => {
     const formData = new FormData();
     formData.append('cover_image', file);
-    return api.upload<{ id: string; hero_book_cover_url: string; hero_book_cover_updated_at: string }>('/hero/admin/cover', formData);
+    if (heroBookModel) {
+      formData.append('hero_book_model', heroBookModel);
+    }
+    return api.upload<{ id: string; hero_book_cover_url: string; hero_book_cover_updated_at: string; hero_book_model?: string | null }>('/hero/admin/cover', formData);
   },
   deleteCover: () =>
     api.delete<{ id: string; hero_book_cover_url: null; hero_book_cover_updated_at: string }>('/hero/admin/cover'),
