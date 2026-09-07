@@ -369,27 +369,35 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center px-3 py-3 sm:px-6">
         {/* Left Section (Fixed width to anchor search and balance centering) */}
         <div className="flex w-[220px] lg:w-[280px] shrink-0 items-center justify-start gap-3 sm:gap-5">
-          {/* mobile menu */}
           <Sheet>
             <SheetTrigger className="md:hidden" aria-label="Menu"><Menu className="h-6 w-6" /></SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <div className="bg-[#0a2e1f] p-4 text-white">
-                <p className="flex items-center gap-2 font-bold"><img src="/techno_world.png" alt="Techno World Books Logo" className="h-8 w-auto object-contain brightness-0 invert" /></p>
-                <p className="mt-1 text-xs text-emerald-200">{user ? `Hi, ${user.name}` : 'India ka apna bookstore'}</p>
+            <SheetContent side="left" className="w-80 p-0 flex flex-col h-full max-h-[100dvh] overflow-hidden bg-white">
+              {/* Top Branding Strip (Fixed) */}
+              <div className="shrink-0 bg-[#0a2e1f] p-4 pr-12 text-white relative">
+                <p className="flex items-center gap-2 font-bold">
+                  <img src="/techno_world.png" alt="Techno World Books Logo" className="h-8 w-auto object-contain brightness-0 invert" />
+                </p>
+                <p className="mt-1 text-xs text-emerald-200 truncate">{user ? `Hi, ${user.name}` : 'India ka apna bookstore'}</p>
               </div>
-              <nav className="p-4">
+
+              {/* Scrollable Categories & Links */}
+              <nav className="flex-1 overflow-y-auto overscroll-contain p-4 pb-20 touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Categories</p>
-                {categories.map((c: any) => (
-                  <Link key={c.slug} to={`/category/${c.slug}`} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">
-                    {c.icon && <span className="text-emerald-700">{c.icon}</span>} <span>{c.name}</span>
-                  </Link>
-                ))}
-                <div className="mt-3 border-t pt-3">
-                  <Link to="/search?publisher=Techno%20World%20Publications" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">🏢 Our Publications</Link>
-                  <Link to="/track" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">📦 Track Order</Link>
-                  <Link to="/blog" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">✍️ Blog & Book Lists</Link>
-                  <Link to="/help" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">❓ Help Center</Link>
-                  <Link to="/admin" className="block rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-emerald-50">🛠️ Admin Panel</Link>
+                <div className="space-y-0.5">
+                  {categories.map((c: any) => (
+                    <Link key={c.slug} to={`/category/${c.slug}`} className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                      {c.icon && <span className="text-emerald-700">{c.icon}</span>}
+                      <span>{c.name}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-4 border-t border-slate-100 pt-3 space-y-0.5">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Quick Links</p>
+                  <Link to="/search?publisher=Techno%20World%20Publications" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">🏢 Our Publications</Link>
+                  <Link to="/track" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">📦 Track Order</Link>
+                  <Link to="/blog" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">✍️ Blog & Book Lists</Link>
+                  <Link to="/help" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">❓ Help Center</Link>
+                  <Link to="/admin" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">🛠️ Admin Panel</Link>
                 </div>
               </nav>
             </SheetContent>

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router';
-import { BadgePercent, Sparkles, Gift, Truck, ArrowRight, Trophy, Flame, TrendingUp, Sparkle, Stethoscope, Settings, GraduationCap, Library, BookOpen, Quote, Languages, Globe2, Gem, Heart, Clock, ShieldCheck, Package, MessageCircle, Tag, Users } from 'lucide-react';
+import { BadgePercent, Sparkles, Gift, Truck, ArrowRight, Trophy, Flame, TrendingUp, Sparkle, Stethoscope, Settings, GraduationCap, Library, BookOpen, Quote, Languages, Globe2, Gem, Heart, Clock, Tag } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { bookService } from '@/services/api';
@@ -172,37 +172,41 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Feature Icons (Flows naturally 40px below left content) */}
-            <div className="mt-[30px] w-full rounded-[20px] bg-[#f8f5ef] py-2.5 px-5 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.5)] hidden lg:flex items-center justify-around border border-[#e5e0d8]">
-              <div className="flex items-center gap-3 px-3">
-                <Package className="h-6 w-6 text-slate-800" strokeWidth={1.5} />
+            {/* Offer Highlights Bar (White Card Look) */}
+            <div className="mt-[28px] w-full rounded-[20px] bg-[#f8f5ef] py-3 px-4 sm:px-6 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-stretch md:items-center justify-around border border-[#e5e0d8] gap-3.5 md:gap-0">
+              <div className="flex items-center gap-3 px-2 sm:px-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 shadow-xs">
+                  <BadgePercent className="h-5 w-5" strokeWidth={2} />
+                </div>
                 <div>
-                  <div className="font-bold text-slate-900 text-[13px]">Easy Returns</div>
-                  <div className="text-slate-500 text-[11px]">Hassle-free returns</div>
+                  <div className="font-bold text-slate-900 text-[13px] leading-tight">STUDENT15 — 15% off</div>
+                  <div className="text-slate-600 text-[11px] leading-tight mt-0.5 font-medium">For students on exam & academic books</div>
                 </div>
               </div>
-              <div className="w-px h-7 bg-slate-200"></div>
-              <div className="flex items-center gap-3 px-3">
-                <ShieldCheck className="h-6 w-6 text-slate-800" strokeWidth={1.5} />
+
+              <div className="hidden md:block w-px h-8 bg-slate-200"></div>
+              <div className="block md:hidden h-px w-full bg-slate-200/80"></div>
+
+              <div className="flex items-center gap-3 px-2 sm:px-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 shadow-xs">
+                  <Truck className="h-5 w-5" strokeWidth={2} />
+                </div>
                 <div>
-                  <div className="font-bold text-slate-900 text-[13px]">Secure Payments</div>
-                  <div className="text-slate-500 text-[11px]">100% protected</div>
+                  <div className="font-bold text-slate-900 text-[13px] leading-tight">Free Delivery</div>
+                  <div className="text-slate-600 text-[11px] leading-tight mt-0.5 font-medium">On all orders above ₹999 across India</div>
                 </div>
               </div>
-              <div className="w-px h-7 bg-slate-200"></div>
-              <div className="flex items-center gap-3 px-3">
-                <Users className="h-6 w-6 text-slate-800" strokeWidth={1.5} />
-                <div>
-                  <div className="font-bold text-slate-900 text-[13px]">Trusted by Students</div>
-                  <div className="text-slate-500 text-[11px]">Across India</div>
+
+              <div className="hidden md:block w-px h-8 bg-slate-200"></div>
+              <div className="block md:hidden h-px w-full bg-slate-200/80"></div>
+
+              <div className="flex items-center gap-3 px-2 sm:px-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-800 shadow-xs">
+                  <Gift className="h-5 w-5" strokeWidth={2} />
                 </div>
-              </div>
-              <div className="w-px h-7 bg-slate-200"></div>
-              <div className="flex items-center gap-3 px-3">
-                <MessageCircle className="h-6 w-6 text-slate-800" strokeWidth={1.5} />
                 <div>
-                  <div className="font-bold text-slate-900 text-[13px]">24/7 Support</div>
-                  <div className="text-slate-500 text-[11px]">We're here to help</div>
+                  <div className="font-bold text-slate-900 text-[13px] leading-tight">Techno Rewards</div>
+                  <div className="text-slate-600 text-[11px] leading-tight mt-0.5 font-medium">Earn 1 Techno Coin per ₹100 spent (excl. delivery)</div>
                 </div>
               </div>
             </div>
@@ -217,23 +221,6 @@ export default function Home() {
       <PublishedByTechnoWorld />
       
       <StudyGuides />
-
-      {/* OFFER STRIP */}
-      <section className="mx-auto grid max-w-7xl gap-3 px-3 sm:grid-cols-3 sm:px-6 mb-8">
-        {[
-          { icon: BadgePercent, t: 'STUDENT15 — 15% off', d: 'For students on exam & academic books', c: 'from-amber-400 to-orange-400' },
-          { icon: Truck, t: 'Free Delivery', d: 'On all orders above ₹499 across India', c: 'from-emerald-500 to-teal-500' },
-          { icon: Gift, t: 'Techno Rewards', d: 'Earn 5 points per ₹100 spent, redeem anytime', c: 'from-violet-500 to-purple-500' },
-        ].map((o) => (
-          <div key={o.t} className={`flex items-center gap-3 rounded-xl bg-gradient-to-r ${o.c} p-4 text-white shadow-sm`}>
-            <o.icon className="h-8 w-8 shrink-0 opacity-90" />
-            <div>
-              <p className="text-sm font-extrabold">{o.t}</p>
-              <p className="text-xs opacity-90">{o.d}</p>
-            </div>
-          </div>
-        ))}
-      </section>
 
       {error ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-500">
