@@ -398,35 +398,8 @@ export default function HeroBookCoverManager() {
                       <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 2.5%, transparent 6%)',
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.18) 2%, transparent 4%)',
                           mixBlendMode: 'multiply',
-                        }}
-                      />
-
-                      {/* Specular ridge */}
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: 'linear-gradient(90deg, transparent 2.5%, rgba(255,255,255,0.25) 3.5%, transparent 5%)',
-                          mixBlendMode: 'screen',
-                        }}
-                      />
-
-                      {/* Satin sheen */}
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: 'linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.18) 42%, transparent 65%)',
-                          mixBlendMode: 'soft-light',
-                        }}
-                      />
-
-                      {/* Warm ambient lamp light */}
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: 'radial-gradient(circle at 90% 10%, rgba(255,215,140,0.18) 0%, transparent 60%)',
-                          mixBlendMode: 'screen',
                         }}
                       />
                     </div>
