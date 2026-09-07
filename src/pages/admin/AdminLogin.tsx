@@ -22,6 +22,10 @@ export default function AdminLogin() {
       
       if (res.success) {
         const token = res.data?.accessToken || res.data?.token || '';
+        const refreshToken = res.data?.refreshToken || '';
+        if (refreshToken) {
+          localStorage.setItem('tw_admin_refresh_token', refreshToken);
+        }
         const userData = res.data?.user || res.data;
         login(token, userData);
         toast.success('Welcome back!');

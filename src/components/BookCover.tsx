@@ -23,7 +23,7 @@ export function BookCover({ book, className = '' }: { book: Book; className?: st
         <img 
           src={imageUrl} 
           alt={`Cover of ${book.title}`} 
-          className="w-full h-full object-cover" 
+          className="w-full h-full object-cover" loading="lazy" decoding="async" 
           onError={(e) => {
             // Hide the broken image if it fails to load
             e.currentTarget.style.display = 'none';

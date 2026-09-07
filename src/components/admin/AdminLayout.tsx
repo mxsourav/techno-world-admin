@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 import {
@@ -17,15 +18,18 @@ import {
   Bell,
   Settings,
   AlertTriangle,
+  Loader2,
   ArrowRight,
   CreditCard,
   Plus,
   CheckCircle2,
   XCircle,
   BookOpen,
+  Search,
+  Clock
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
-import { orderService } from '@/services/api';
+import { orderService, authService } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 
 const TABS = [
@@ -46,6 +50,42 @@ const TABS = [
 
 export default function AdminLayout() {
   const { logout } = useAuthStore();
+  // In-Place Session Unlock Dialog State (Prevents form data loss)
+  const [isReAuthOpen, setIsReAuthOpen] = useState(false);
+  const [reAuthPassword, setReAuthPassword] = useState('');
+  const [isReAuthing, setIsReAuthing] = useState(false);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setIsReAuthOpen(true);
+    };
+    window.addEventListener('tw:admin-auth-expired', handleAuthExpired);
+    return () => window.removeEventListener('tw:admin-auth-expired', handleAuthExpired);
+  }, []);
+
+  const handleReAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reAuthPassword) return;
+    setIsReAuthing(true);
+    try {
+      const res = await authService.login({ email: 'admin', password: reAuthPassword });
+      if (res.success) {
+        const token = res.data?.accessToken || res.data?.token || '';
+        const refreshToken = res.data?.refreshToken || '';
+        if (token) localStorage.setItem('tw_admin_token', token);
+        if (refreshToken) localStorage.setItem('tw_admin_refresh_token', refreshToken);
+        setIsReAuthOpen(false);
+        setReAuthPassword('');
+        toast.success('Session verified! You can now save your form without losing any work.');
+      } else {
+        toast.error(res.message || 'Invalid admin password');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Re-authentication failed');
+    } finally {
+      setIsReAuthing(false);
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
@@ -330,15 +370,36 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-slate-50 h-full">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-slate-200 flex-shrink-0 z-20 relative">
+        <header className="h-16 flex items-center justify-between px-6 sm:px-8 bg-white border-b border-slate-200 flex-shrink-0 z-20 relative">
           {/* Breadcrumbs */}
-          <div className="flex items-center text-sm font-medium">
-            <span className="text-slate-400">Admin</span>
-            <ChevronRight className="h-4 w-4 mx-1.5 text-slate-300" />
-            <span className="text-slate-900">{tabName}</span>
+          <div className="flex items-center text-sm font-medium min-w-0 pr-4">
+            <span className="text-slate-400 shrink-0">Admin</span>
+            <ChevronRight className="h-4 w-4 mx-1.5 text-slate-300 shrink-0" />
+            <span className="text-slate-900 font-bold truncate max-w-[180px] lg:max-w-[260px]">{tabName}</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Global Order Lookup Bar - Mathematically Locked in Absolute Center */}
+          <div className="hidden md:flex items-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
+            <div className="relative w-64 lg:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Lookup Order (e.g. #TW-1002)..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val) {
+                      navigate(`/admin/dashboard?tab=orders&lookup=${encodeURIComponent(val)}`);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-300 bg-slate-50/80 pl-9 pr-3 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {/* Interactive Notification Bell */}
             <div className="relative" ref={notifRef}>
               <button
@@ -408,7 +469,7 @@ export default function AdminLayout() {
                                 Customer: <b>{ord.address?.fullName || ord.user?.name || 'Customer'}</b>
                               </p>
                               <span className="text-[10px] font-semibold text-slate-400 shrink-0" title={timeStr}>
-                                🕒 {relTime}
+                                <Clock className="h-3 w-3 inline text-slate-400 mr-1" />{relTime}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -458,7 +519,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-slate-50 p-6">
+        <main className="flex-1 overflow-auto bg-slate-50 p-3 sm:p-5 lg:p-6">
           <Outlet />
         </main>
       </div>
@@ -738,6 +799,61 @@ export default function AdminLayout() {
                 Hidden / Drafts
               </span>
             </Link>
+          </div>
+        </div>
+      )}
+          {/* Non-Disruptive In-Place Admin Re-Authentication Dialog */}
+      {isReAuthOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-5 text-white">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white">Session Re-Verification</h3>
+                  <p className="text-xs text-amber-100">Your work is safe! Enter your password to continue.</p>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleReAuthSubmit} className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your session timed out. Enter your admin password below to re-verify your session. Any open forms (including your book description, catalog changes, and order updates) will remain open with zero lost progress.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Admin Password</label>
+                <input
+                  type="password"
+                  autoFocus
+                  required
+                  value={reAuthPassword}
+                  onChange={(e) => setReAuthPassword(e.target.value)}
+                  placeholder="Enter admin password..."
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsReAuthOpen(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Dismiss
+                </button>
+                <button
+                  type="submit"
+                  disabled={isReAuthing || !reAuthPassword}
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-700 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-800 shadow transition-all disabled:opacity-50"
+                >
+                  {isReAuthing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  <span>Unlock & Resume Work</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

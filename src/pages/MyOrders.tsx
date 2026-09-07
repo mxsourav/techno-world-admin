@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Package, Truck, CheckCircle2, XCircle, Clock, ExternalLink, Store, CalendarCheck, Download, Loader2 } from 'lucide-react';
-import { orderService } from '@/services/api';
+import { Package, Truck, CheckCircle2, XCircle, Clock, ExternalLink, Store, CalendarCheck, Download, Loader2, Link2, HelpCircle, MessageSquare, Phone, Mail, X } from 'lucide-react';
+import { orderService, getImageUrl } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
-import { generateAndPrintInvoice } from '@/utils/generateInvoice';
+import { downloadOrderInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
+import { useStore } from '@/store/StoreContext';
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -26,10 +27,13 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function MyOrders() {
+  const { user } = useStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlotsByOrder, setSelectedSlotsByOrder] = useState<{ [orderId: string]: string }>({});
   const [isConfirmingSlot, setIsConfirmingSlot] = useState<string | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [helpOrderModal, setHelpOrderModal] = useState<any | null>(null);
 
   const loadOrders = async () => {
     try {
@@ -97,8 +101,21 @@ export default function MyOrders() {
             <div key={order.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
               <div className="flex flex-wrap justify-between items-start border-b border-slate-100 pb-4 mb-4 gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-xs text-slate-500 font-medium">ORDER ID</p>
+                    {order.isMerged && (
+                      <span className="rounded-full bg-blue-100 text-blue-800 border border-blue-300 px-2.5 py-0.5 text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                        <Link2 className="h-3 w-3 text-blue-700" /> Consolidated with #{order.parentOrder?.orderNumber || order.parentOrderId?.slice(0, 8)}
+                        {order.shippingRefunded > 0 && (
+                          <span className="text-emerald-700 font-bold ml-1">· ₹{order.shippingRefunded} refunded to TechnoWallet</span>
+                        )}
+                      </span>
+                    )}
+                    {order.childOrders && order.childOrders.length > 0 && (
+                      <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                        <Package className="h-3 w-3 text-emerald-700" /> Master Consignment ({order.childOrders.length} Add-on{order.childOrders.length > 1 ? 's' : ''} Merged)
+                      </span>
+                    )}
                     {(order.shippingMethod === 'SELF_PICKUP' || order.shippingCarrier === 'STORE_TAKEAWAY') && (
                       <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 text-[10px] font-extrabold flex items-center gap-1">
                         <Store className="h-3 w-3 text-emerald-700" /> Store Takeaway
@@ -108,10 +125,46 @@ export default function MyOrders() {
                   <p className="font-bold text-slate-900">{order.orderNumber}</p>
                   <p className="text-xs text-slate-400 mt-1">{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end">
                   <p className="text-xs text-slate-500 font-medium mb-1">TOTAL AMOUNT</p>
                   <p className="font-bold text-slate-900">{formatINR(order.totalAmount)}</p>
                   <div className="mt-1">{getStatusBadge(order.status)}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 justify-end">
+                    {order.status !== 'CANCELLED' && order.status !== 'REFUNDED' && (
+                      <button
+                        type="button"
+                        disabled={downloadingInvoiceId === order.id}
+                        onClick={async () => {
+                          try {
+                            setDownloadingInvoiceId(order.id);
+                            await downloadOrderInvoice(order);
+                            toast.success('Invoice downloaded');
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to download invoice');
+                          } finally {
+                            setDownloadingInvoiceId(null);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-800 transition-colors shadow-xs disabled:opacity-50"
+                      >
+                        {downloadingInvoiceId === order.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-emerald-700" />
+                        ) : (
+                          <Download className="h-3 w-3 text-emerald-700" />
+                        )}
+                        <span>Tax Invoice</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setHelpOrderModal(order)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-800 transition-colors shadow-xs"
+                    >
+                      <HelpCircle className="h-3 w-3 text-blue-600" />
+                      <span>Need Help?</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -120,7 +173,7 @@ export default function MyOrders() {
                   <div key={item.id} className="flex gap-4 items-center">
                     <div className="w-12 h-16 bg-slate-100 rounded overflow-hidden flex-shrink-0 border border-slate-200">
                       {item.book?.coverUrl && (
-                        <img src={item.book.coverUrl} alt={item.book.title} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(item.book?.coverUrl)} alt={item.book?.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -144,10 +197,26 @@ export default function MyOrders() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => generateAndPrintInvoice(order)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 shadow-sm transition-colors"
+                      disabled={downloadingInvoiceId === order.id}
+                      onClick={async () => {
+                        try {
+                          setDownloadingInvoiceId(order.id);
+                          await downloadOrderInvoice(order);
+                          toast.success('Invoice downloaded');
+                        } catch (err: any) {
+                          toast.error(err.message || 'Failed to download invoice');
+                        } finally {
+                          setDownloadingInvoiceId(null);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 shadow-sm transition-colors disabled:opacity-50"
                     >
-                      <Download className="h-3.5 w-3.5" /> Download Tax Invoice
+                      {downloadingInvoiceId === order.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                      <span>Download Tax Invoice</span>
                     </button>
                   </div>
 
@@ -244,9 +313,9 @@ export default function MyOrders() {
                     </div>
                   )}
 
-                  {/* Enterprise Division Notice */}
-                  <p className="text-[10px] text-slate-400 leading-relaxed">
-                    * <b>Notice:</b> Techno World Books Online and the College Street offline retail store operate independently under the same trademark. Offline retail counter exchanges are strictly prohibited. Takeaway collection is via official invoice verification only.
+                  {/* Pickup Note */}
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    * <b>Note:</b> For store self-pickups, please present your order confirmation or digital invoice at our College Street desk at your appointed time slot.
                   </p>
                 </div>
               )}
@@ -330,7 +399,7 @@ export default function MyOrders() {
                     <p className="text-[11px] text-blue-800">Eligible for 100% refund cancellation before courier dispatch.</p>
                   </div>
                   <a
-                    href={`https://wa.me/919876543210?text=Hi%2C%20I%20want%20to%20cancel%20order%20%23${order.orderNumber}`}
+                    href={`https://wa.me/917479135626?text=Hi%2C%20I%20want%20to%20cancel%20order%20%23${order.orderNumber}`}
                     target="_blank"
                     rel="noreferrer"
                     className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-800 hover:bg-blue-100 transition"
@@ -341,6 +410,103 @@ export default function MyOrders() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Need Help? Order Support Modal */}
+      {helpOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4 border border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <HelpCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Need Help with Order?</h3>
+                  <p className="text-xs text-slate-500 font-mono">Order #{helpOrderModal.orderNumber}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHelpOrderModal(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Option 1: WhatsApp 24/7 Faster Support */}
+              <a
+                href={`https://wa.me/917479135626?text=${encodeURIComponent(
+                  `Hello Techno World Books! I need support regarding my order #${helpOrderModal.orderNumber}.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-start gap-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 hover:bg-emerald-100/70 hover:border-emerald-300 transition-all"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-emerald-950">WhatsApp 24/7 (Faster Support)</p>
+                    <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-900">24/7</span>
+                  </div>
+                  <p className="text-xs text-emerald-800 font-semibold mt-0.5">+91 747 913 5626</p>
+                  <p className="text-[11px] text-emerald-700/90 mt-1">Usually replies within minutes for order updates, changes & delivery tracking.</p>
+                </div>
+              </a>
+
+              {/* Option 2: Call Support 9am to 8pm */}
+              <a
+                href="tel:+917479135626"
+                className="group flex items-start gap-3.5 rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 hover:bg-blue-100/70 hover:border-blue-300 transition-all"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                  <Phone className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-blue-950">Call Support Desk</p>
+                    <span className="rounded-full bg-blue-200 px-2 py-0.5 text-[10px] font-black text-blue-900">9 AM – 8 PM</span>
+                  </div>
+                  <p className="text-xs text-blue-800 font-semibold mt-0.5">+91 747 913 5626 / 033 2219 6115</p>
+                  <p className="text-[11px] text-blue-700/90 mt-1">Direct phone assistance from our College Street office team (Usually replies within hours).</p>
+                </div>
+              </a>
+
+              {/* Option 3: Support Form (Direct Prefilled) */}
+              <Link
+                to={`/contact?orderId=${encodeURIComponent(helpOrderModal.orderNumber)}&name=${encodeURIComponent(user?.name || '')}&email=${encodeURIComponent(user?.email || '')}`}
+                onClick={() => setHelpOrderModal(null)}
+                className="group flex items-start gap-3.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 hover:bg-slate-100 hover:border-slate-300 transition-all"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-white shadow-sm">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-slate-900">Fill Help &amp; Support Form</p>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full">Auto-prefilled</span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">Submit an official inquiry with your order details prefilled.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Saves directly to system & sends confirmation to your email.</p>
+                </div>
+              </Link>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setHelpOrderModal(null)}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

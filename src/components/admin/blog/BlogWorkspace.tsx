@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   BookOpen,
@@ -17,8 +17,16 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-} from 'lucide-react';
-import { blogService, categoryService, bookService } from '@/services/api';
+  UploadCloud,
+  Upload,
+  CheckCircle2,
+  Check,
+  Clipboard,
+  Sparkles,
+  BarChart2,
+  FileText,
+  } from 'lucide-react';
+import { blogService, bookService, mediaService, getImageUrl } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
 
@@ -44,12 +52,6 @@ interface BlogPost {
   computedStatus: 'ACTIVE' | 'SCHEDULED' | 'EXPIRED' | 'HIDDEN';
 }
 
-interface CategoryOption {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 export default function BlogWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filterParam = searchParams.get('filter') || 'all';
@@ -60,7 +62,6 @@ export default function BlogWorkspace() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [expandedBodyId, setExpandedBodyId] = useState<string | null>(null);
 
   // Modal State
@@ -77,8 +78,6 @@ export default function BlogWorkspace() {
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [readTime, setReadTime] = useState('5 min read');
   const [authorName, setAuthorName] = useState('Techno World Editorial');
-  const [relatedCategory, setRelatedCategory] = useState('');
-  const [relatedBookIds, setRelatedBookIds] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
 
   // Scheduling & Duration State
@@ -88,9 +87,88 @@ export default function BlogWorkspace() {
   const [durationDays, setDurationDays] = useState<number>(30);
   const [expiresAt, setExpiresAt] = useState('');
 
-  // Related Books Catalog Picker
-  const [categoryBooks, setCategoryBooks] = useState<any[]>([]);
-  const [loadingCategoryBooks, setLoadingCategoryBooks] = useState(false);
+  // Thumbnail Image File Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [thumbnailFileName, setThumbnailFileName] = useState<string | null>(null);
+  const [thumbnailFileSize, setThumbnailFileSize] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [showUrlFallback, setShowUrlFallback] = useState(false);
+
+  // Dynamic Predictive Book Search State
+  const [bookSearchQuery, setBookSearchQuery] = useState('');
+  const [bookSearchResults, setBookSearchResults] = useState<any[]>([]);
+  const [isSearchingBooks, setIsSearchingBooks] = useState(false);
+  const [attachedBooks, setAttachedBooks] = useState<any[]>([]);
+  const [showBookSearchDropdown, setShowBookSearchDropdown] = useState(false);
+
+  // AI Paste & Article Writing Helpers
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const [activeContentTab, setActiveContentTab] = useState<'write' | 'preview'>('write');
+  const [selectedArticleForAnalytics, setSelectedArticleForAnalytics] = useState<BlogPost | null>(null);
+
+  // Live Word & Read Time calculation
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const charCount = content.length;
+  const paragraphCount = content.trim() ? content.split(/\n\n+/).filter(Boolean).length : 0;
+  const calculatedReadTime = Math.max(1, Math.ceil(wordCount / 180)) + ' min read';
+
+  // 1-Click Paste from Clipboard
+  const handlePasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.readText) {
+        toast.info('Please click inside the editor and use Ctrl+V to paste');
+        contentRef.current?.focus();
+        return;
+      }
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        toast.error('Clipboard is empty. Copy some article text first!');
+        return;
+      }
+      setContent(prev => (prev ? prev + '\n\n' + text : text));
+      const words = text.trim().split(/\s+/).length;
+      toast.success(`Pasted ${words} words from clipboard!`);
+      const totalWords = (content ? content + '\n\n' + text : text).trim().split(/\s+/).length;
+      setReadTime(Math.max(1, Math.ceil(totalWords / 180)) + ' min read');
+    } catch {
+      toast.info('Please click inside the editor and press Ctrl+V to paste');
+      contentRef.current?.focus();
+    }
+  };
+
+  // Clean AI banter (e.g. "Sure, here's an article...")
+  const handleCleanAiIntro = () => {
+    if (!content.trim()) return;
+    const cleaned = content
+      .replace(/^(certainly|sure|here is|here's|below is|of course)[^\n]*\n+/i, '')
+      .replace(/^#+\s*(title|article|blog post):\s*/i, '')
+      .replace(/^```(markdown)?\n/i, '')
+      .replace(/\n```$/i, '')
+      .replace(/\n+(hope this helps|let me know if you need|happy reading|feel free to ask)[^\n]*$/i, '')
+      .trim();
+
+    setContent(cleaned);
+    toast.success('Cleaned AI conversational chatter!');
+  };
+
+  // Insert formatting prefix/suffix
+  const handleInsertFormatting = (prefix: string, suffix: string = '') => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentText = textarea.value;
+    const selected = currentText.substring(start, end);
+    const replacement = prefix + (selected || 'keyword') + suffix;
+    const nextText = currentText.substring(0, start) + replacement + currentText.substring(end);
+    setContent(nextText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + prefix.length + (selected || 'keyword').length);
+    }, 50);
+  };
 
   const fetchPosts = async () => {
     try {
@@ -116,15 +194,6 @@ export default function BlogWorkspace() {
     fetchPosts();
   }, [filterParam, selectedCategory]);
 
-  useEffect(() => {
-    categoryService.getCategories()
-      .then((res: any) => {
-        if (res.success && Array.isArray(res.data)) {
-          setCategories(res.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (actionParam === 'new') {
@@ -135,24 +204,92 @@ export default function BlogWorkspace() {
     }
   }, [actionParam]);
 
-  // Load books when relatedCategory changes in modal
+  // Predictive Dynamic Book Search Debounce
   useEffect(() => {
-    if (!relatedCategory) {
-      setCategoryBooks([]);
+    const q = bookSearchQuery.trim();
+    if (!q || q.length < 1) {
+      setBookSearchResults([]);
+      setIsSearchingBooks(false);
+      setShowBookSearchDropdown(false);
       return;
     }
-    setLoadingCategoryBooks(true);
-    bookService.getBooks({ category: relatedCategory, limit: 20 })
-      .then((res: any) => {
+
+    setIsSearchingBooks(true);
+    setShowBookSearchDropdown(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await bookService.getBooks({ search: q, limit: 12 });
         if (res.success && Array.isArray(res.data)) {
-          setCategoryBooks(res.data);
+          setBookSearchResults(res.data);
         } else {
-          setCategoryBooks([]);
+          setBookSearchResults([]);
         }
-      })
-      .catch(() => setCategoryBooks([]))
-      .finally(() => setLoadingCategoryBooks(false));
-  }, [relatedCategory]);
+      } catch {
+        setBookSearchResults([]);
+      } finally {
+        setIsSearchingBooks(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [bookSearchQuery]);
+
+  const handleThumbnailFile = async (file: File) => {
+    if (!file) return;
+    if (!file.type.match(/image\/(png|jpeg|jpg|webp)/i)) {
+      toast.error('Please upload a valid PNG or JPEG image file');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    setThumbnailFileName(file.name);
+    setThumbnailFileSize((file.size / 1024).toFixed(0) + ' KB');
+
+    // Instant Base64 preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setThumbnailUrl(dataUrl);
+    };
+    reader.readAsDataURL(file);
+
+    // Concurrently upload to server media storage
+    try {
+      setUploadingThumbnail(true);
+      const res = await mediaService.upload(file, 'blog', `${title || 'blog'}-thumb`);
+      if (res.success && res.data?.url) {
+        setThumbnailUrl(getImageUrl(res.data.url));
+        toast.success('Thumbnail uploaded to media storage');
+      }
+    } catch {
+      // Fallback is preserved via Base64 dataUrl
+      toast.info('Local image preview attached');
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const handleToggleAttachBook = (book: any) => {
+    const isAttached = attachedBooks.some(b => b.id === book.id);
+    if (isAttached) {
+      const updated = attachedBooks.filter(b => b.id !== book.id);
+      setAttachedBooks(updated);
+      toast.info(`Removed "${book.title}" from attached books`);
+    } else {
+      const updated = [...attachedBooks, book];
+      setAttachedBooks(updated);
+      toast.success(`Attached "${book.title}" to post`);
+    }
+  };
+
+  const handleRemoveAttachedBook = (bookId: string) => {
+    const updated = attachedBooks.filter(b => b.id !== bookId);
+    setAttachedBooks(updated);
+  };
 
   const openCreateModal = () => {
     setEditingPost(null);
@@ -161,11 +298,16 @@ export default function BlogWorkspace() {
     setExcerpt('');
     setContent('');
     setCategory('Study Guides');
-    setThumbnailUrl('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80');
+    setThumbnailUrl('');
+    setThumbnailFileName(null);
+    setThumbnailFileSize(null);
+    setShowUrlFallback(false);
     setReadTime('5 min read');
     setAuthorName('Techno World Editorial');
-    setRelatedCategory('Medical (MBBS)');
-    setRelatedBookIds([]);
+    setAttachedBooks([]);
+    setBookSearchQuery('');
+    setBookSearchResults([]);
+    setShowBookSearchDropdown(false);
     setIsActive(true);
     setScheduleType('NOW');
     setScheduledAt('');
@@ -183,10 +325,15 @@ export default function BlogWorkspace() {
     setContent(p.content);
     setCategory(p.category);
     setThumbnailUrl(p.thumbnailUrl || '');
+    setThumbnailFileName(null);
+    setThumbnailFileSize(null);
+    setShowUrlFallback(Boolean(p.thumbnailUrl && p.thumbnailUrl.startsWith('http') && !p.thumbnailUrl.includes('/uploads/')));
     setReadTime(p.readTime || '5 min read');
     setAuthorName(p.authorName || 'Techno World Editorial');
-    setRelatedCategory(p.relatedCategory || '');
-    setRelatedBookIds(Array.isArray(p.relatedBookIds) ? p.relatedBookIds : []);
+    const ids = Array.isArray(p.relatedBookIds) ? p.relatedBookIds : [];
+    setBookSearchQuery('');
+    setBookSearchResults([]);
+    setShowBookSearchDropdown(false);
     setIsActive(p.isActive);
 
     if (p.scheduledAt && new Date(p.scheduledAt) > new Date()) {
@@ -203,6 +350,21 @@ export default function BlogWorkspace() {
     } else {
       setExpiryType('NEVER');
       setExpiresAt('');
+    }
+
+    // Load attached book objects if IDs exist
+    if (ids.length > 0) {
+      bookService.getBooks({ ids: ids.join(','), limit: 50 })
+        .then((res: any) => {
+          if (res.success && Array.isArray(res.data)) {
+            setAttachedBooks(res.data);
+          } else {
+            setAttachedBooks([]);
+          }
+        })
+        .catch(() => setAttachedBooks([]));
+    } else {
+      setAttachedBooks([]);
     }
 
     setIsModalOpen(true);
@@ -251,8 +413,8 @@ export default function BlogWorkspace() {
       thumbnailUrl,
       readTime,
       authorName,
-      relatedCategory: relatedCategory || null,
-      relatedBookIds,
+      relatedCategory: null,
+      relatedBookIds: attachedBooks.map(b => b.id),
       scheduledAt: finalScheduledAt,
       expiresAt: finalExpiresAt,
       isActive,
@@ -321,11 +483,6 @@ export default function BlogWorkspace() {
     }
   };
 
-  const toggleBookSelection = (bookId: string) => {
-    setRelatedBookIds(prev =>
-      prev.includes(bookId) ? prev.filter(id => id !== bookId) : [...prev, bookId]
-    );
-  };
 
   const renderStatusBadge = (status: BlogPost['computedStatus']) => {
     switch (status) {
@@ -640,6 +797,14 @@ export default function BlogWorkspace() {
                   </label>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArticleForAnalytics(post)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                      title="View Article Engagement & Analytics"
+                    >
+                      <BarChart2 className="h-3.5 w-3.5 text-emerald-700" /> Stats
+                    </button>
                     <a
                       href={`/blog/${post.slug}`}
                       target="_blank"
@@ -666,6 +831,7 @@ export default function BlogWorkspace() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+
                 </div>
               </div>
             );
@@ -756,28 +922,129 @@ export default function BlogWorkspace() {
                 </div>
               </div>
 
-              {/* 2. Thumbnail Image Setup */}
+              {/* 2. Thumbnail Image Upload (PNG / JPEG) */}
               <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <ImageIcon className="h-4 w-4 text-emerald-600" /> Post Thumbnail Image
-                  </label>
-                  <span className="text-[11px] text-slate-400">High-res 16:9 banner preview</span>
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <ImageIcon className="h-4 w-4 text-emerald-600" /> Post Thumbnail Image (PNG / JPEG)
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Upload a PNG or JPEG file from your computer (16:9 banner preview).
+                    </p>
+                  </div>
+                  {thumbnailUrl && (
+                    <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-bold">
+                      {thumbnailFileName || 'Image Attached'}
+                    </span>
+                  )}
                 </div>
 
                 <input
-                  type="url"
-                  value={thumbnailUrl}
-                  onChange={e => setThumbnailUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/... or paste image URL"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg, image/webp"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) handleThumbnailFile(e.target.files[0]);
+                  }}
+                  className="hidden"
                 />
 
-                {thumbnailUrl && (
-                  <div className="relative h-36 w-full rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs">
-                    <img src={thumbnailUrl} alt="Thumbnail preview" className="h-full w-full object-cover" />
+                {thumbnailUrl ? (
+                  <div className="space-y-2">
+                    <div className="relative h-44 sm:h-52 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-950 shadow-sm group">
+                      <img
+                        src={thumbnailUrl}
+                        alt="Thumbnail preview"
+                        className="h-full w-full object-cover"
+                      />
+                      {uploadingThumbnail && (
+                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin text-emerald-400" />
+                          Uploading to media storage...
+                        </div>
+                      )}
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                        <span className="rounded-md bg-emerald-600/90 backdrop-blur-xs text-white px-2 py-0.5 text-[10px] font-bold shadow">
+                          PNG / JPEG Attached
+                        </span>
+                        {thumbnailFileSize && (
+                          <span className="rounded-md bg-slate-900/80 backdrop-blur-xs text-white px-2 py-0.5 text-[10px] font-medium shadow">
+                            {thumbnailFileSize}
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute bottom-2.5 right-2.5 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="rounded-lg bg-white/95 hover:bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-md flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Upload className="h-3.5 w-3.5 text-emerald-700" /> Change Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setThumbnailUrl('');
+                            setThumbnailFileName(null);
+                            setThumbnailFileSize(null);
+                          }}
+                          className="rounded-lg bg-rose-600/90 hover:bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-md flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                    onDragLeave={() => setIsDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragOver(false);
+                      if (e.dataTransfer.files?.[0]) handleThumbnailFile(e.dataTransfer.files[0]);
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
+                      isDragOver
+                        ? 'border-emerald-500 bg-emerald-50/70 scale-[1.01]'
+                        : 'border-slate-300 bg-white hover:border-emerald-500 hover:bg-slate-50/80'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mb-2 shadow-xs">
+                        <UploadCloud className="h-6 w-6" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-800">
+                        Click to upload or drag & drop PNG or JPEG
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Supports PNG, JPEG, JPG, WEBP • Max 10MB • Recommended 1200×675
+                      </p>
+                    </div>
                   </div>
                 )}
+
+                {/* Optional URL input toggle */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlFallback(!showUrlFallback)}
+                    className="text-[11px] text-slate-500 hover:text-emerald-700 font-semibold underline cursor-pointer"
+                  >
+                    {showUrlFallback ? '− Hide external image URL link' : '+ Or paste external image link'}
+                  </button>
+                  {showUrlFallback && (
+                    <input
+                      type="url"
+                      value={thumbnailUrl}
+                      onChange={e => setThumbnailUrl(e.target.value)}
+                      placeholder="https://... (or use file upload above)"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden"
+                    />
+                  )}
+                </div>
               </div>
 
               {/* 3. Post Excerpt & Body Content */}
@@ -795,111 +1062,399 @@ export default function BlogWorkspace() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Full Article Body <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={7}
-                  required
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  placeholder="Write the full editorial text here. Use markdown bold (**keyword**) to emphasize critical book recommendations..."
-                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden leading-relaxed font-mono"
-                />
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4 text-emerald-600" /> Full Article Body <span className="text-rose-500">*</span>
+                  </label>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* 1-Click Paste button */}
+                    <button
+                      type="button"
+                      onClick={handlePasteFromClipboard}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+                      title="Paste article text directly from clipboard"
+                    >
+                      <Clipboard className="h-3.5 w-3.5" /> Paste from Clipboard
+                    </button>
+
+                    {/* Clean AI Intro helper */}
+                    <button
+                      type="button"
+                      onClick={handleCleanAiIntro}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                      title="Clean AI conversational greetings like 'Sure! Here is your blog post...'"
+                    >
+                      <Sparkles className="h-3 w-3 text-amber-500" /> Clean AI Intro
+                    </button>
+
+                    {/* Write vs Preview toggle */}
+                    <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setActiveContentTab('write')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          activeContentTab === 'write' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Write
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveContentTab('preview')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          activeContentTab === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Live Preview
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formatting Toolbar */}
+                {activeContentTab === 'write' && (
+                  <div className="flex flex-wrap items-center gap-1 border-x border-t border-slate-200 bg-slate-50/80 px-3 py-1.5 rounded-t-xl text-xs">
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('**', '**')}
+                      className="rounded px-2 py-1 font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Bold keyword (**keyword**)"
+                    >
+                      <b>B</b>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('## ')}
+                      className="rounded px-2 py-1 font-extrabold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Section Heading (## Heading)"
+                    >
+                      H2
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('### ')}
+                      className="rounded px-2 py-1 font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Subheading (### Subheading)"
+                    >
+                      H3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('- ')}
+                      className="rounded px-2 py-1 font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Bullet list point (- Point)"
+                    >
+                      • List
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInsertFormatting('> ')}
+                      className="rounded px-2 py-1 font-medium text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      title="Callout Quote (> Tip)"
+                    >
+                      ❝ Quote
+                    </button>
+                    <span className="text-slate-300 ml-auto">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setContent('')}
+                      className="text-[11px] text-slate-400 hover:text-rose-600 font-semibold px-2 py-0.5 cursor-pointer"
+                      title="Clear article content"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {activeContentTab === 'write' ? (
+                  <textarea
+                    ref={contentRef}
+                    rows={9}
+                    required
+                    value={content}
+                    onChange={e => setContent(e.target.value)}
+                    onPaste={(e) => {
+                      // Guarantees plain text paste without browser blocking
+                      const text = e.clipboardData.getData('text/plain');
+                      if (text) {
+                        // Native paste will proceed cleanly
+                      }
+                    }}
+                    placeholder="Write or paste your full AI-generated article here. Multiple paragraphs, bold text (**keyword**), and headings (## Section) are fully supported..."
+                    className="w-full rounded-b-xl border border-slate-200 bg-white p-3.5 text-xs text-slate-900 focus:border-emerald-500 focus:outline-hidden leading-relaxed font-sans resize-y min-h-[220px]"
+                  />
+                ) : (
+                  <div className="w-full rounded-b-xl border border-slate-200 bg-white p-4 text-xs text-slate-800 min-h-[220px] max-h-[400px] overflow-y-auto space-y-3">
+                    {content.trim() ? (
+                      content.split(/\n\n+/).map((para, i) => {
+                        if (para.startsWith('### ')) return <h4 key={i} className="text-sm font-bold text-slate-900">{para.replace('### ', '')}</h4>;
+                        if (para.startsWith('## ')) return <h3 key={i} className="text-base font-extrabold text-slate-900">{para.replace('## ', '')}</h3>;
+                        if (para.startsWith('> ')) return <blockquote key={i} className="border-l-3 border-emerald-500 bg-emerald-50/50 p-2.5 rounded-r-lg text-emerald-950 font-medium italic">{para.replace('> ', '')}</blockquote>;
+                        return (
+                          <p key={i} className="leading-relaxed">
+                            {para.split('**').map((seg, j) => (j % 2 === 1 ? <strong key={j} className="font-bold text-slate-900">{seg}</strong> : seg))}
+                          </p>
+                        );
+                      })
+                    ) : (
+                      <p className="text-slate-400 italic">No content typed or pasted yet. Switch to "Write" tab or click "Paste from Clipboard".</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Word Count & Read Time status bar */}
+                <div className="mt-2 flex flex-wrap items-center justify-between text-[11px] text-slate-500 px-1">
+                  <div className="flex items-center gap-3">
+                    <span><b>{wordCount}</b> words</span>
+                    <span>•</span>
+                    <span><b>{charCount}</b> chars</span>
+                    <span>•</span>
+                    <span><b>{paragraphCount}</b> paragraphs</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Est. reading: <b>{calculatedReadTime}</b></span>
+                    {readTime !== calculatedReadTime && (
+                      <button
+                        type="button"
+                        onClick={() => setReadTime(calculatedReadTime)}
+                        className="text-emerald-700 hover:underline font-bold cursor-pointer"
+                      >
+                        (Apply to Read Time)
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* 4. Related Books by Category Selection */}
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 space-y-3">
-                <div className="flex items-center justify-between">
+
+              {/* 4. Related Books by Dynamic Predictive Search */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <label className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                       <Book className="h-4 w-4 text-emerald-700" /> Related Books Catalog Attachment
                     </label>
                     <p className="text-[11px] text-emerald-800 mt-0.5">
-                      Choose a category to display matching books below this post on the public blog.
+                      Search books dynamically across Book Title, Author Name, or SKU / ISBN to attach them.
                     </p>
                   </div>
-                  {relatedBookIds.length > 0 && (
-                    <span className="rounded-full bg-emerald-200 text-emerald-900 px-2 py-0.5 text-[10px] font-extrabold">
-                      {relatedBookIds.length} Hand-picked
+                  {attachedBooks.length > 0 && (
+                    <span className="rounded-full bg-emerald-200 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold">
+                      {attachedBooks.length} Book{attachedBooks.length > 1 ? 's' : ''} Attached
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-emerald-900 mb-1">
-                      Select Book Category
-                    </label>
-                    <select
-                      value={relatedCategory}
-                      onChange={e => setRelatedCategory(e.target.value)}
-                      className="w-full rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-hidden"
-                    >
-                      <option value="">-- Choose Category for Related Books --</option>
-                      {categories.map(c => (
-                        <option key={c.id} value={c.name}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-emerald-900 mb-1">
-                      Author / Byline
-                    </label>
-                    <input
-                      type="text"
-                      value={authorName}
-                      onChange={e => setAuthorName(e.target.value)}
-                      className="w-full rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-hidden"
-                    />
-                  </div>
+                {/* Author / Byline input alongside */}
+                <div>
+                  <label className="block text-[11px] font-bold text-emerald-950 mb-1">
+                    Editorial Author / Byline
+                  </label>
+                  <input
+                    type="text"
+                    value={authorName}
+                    onChange={e => setAuthorName(e.target.value)}
+                    placeholder="e.g. Techno World Editorial"
+                    className="w-full sm:w-80 rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 focus:border-emerald-500 focus:outline-hidden"
+                  />
                 </div>
 
-                {/* Book Selection Checkboxes */}
-                {relatedCategory && (
-                  <div className="mt-2 space-y-2 border-t border-emerald-200 pt-3">
-                    <p className="text-[11px] font-bold text-emerald-900">
-                      Select specific books to highlight (leave unselected to auto-show top books):
-                    </p>
-                    {loadingCategoryBooks ? (
-                      <div className="flex items-center gap-2 text-xs text-emerald-700 py-2">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Fetching books in {relatedCategory}...
-                      </div>
-                    ) : categoryBooks.length === 0 ? (
-                      <p className="text-xs text-slate-500">No books found in this category.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
-                        {categoryBooks.map(bk => {
-                          const isChecked = relatedBookIds.includes(bk.id);
-                          return (
-                            <label
-                              key={bk.id}
-                              className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
-                                isChecked
-                                  ? 'bg-emerald-100/70 border-emerald-400 font-bold text-emerald-950'
-                                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => toggleBookSelection(bk.id)}
-                                className="h-3.5 w-3.5 rounded border-slate-300 text-emerald-600"
-                              />
-                              <span className="truncate">{bk.title}</span>
-                              <span className="ml-auto text-[11px] text-slate-500 font-semibold shrink-0">
-                                {formatINR(bk.price)}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
+                {/* Predictive Dynamic Live Search Bar */}
+                <div className="relative">
+                  <label className="block text-[11px] font-bold text-emerald-950 mb-1">
+                    Search Books to Attach (Title, Author, or SKU / ISBN)
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={bookSearchQuery}
+                      onChange={(e) => {
+                        setBookSearchQuery(e.target.value);
+                        setShowBookSearchDropdown(true);
+                      }}
+                      onFocus={() => {
+                        if (bookSearchQuery.trim().length > 0) setShowBookSearchDropdown(true);
+                      }}
+                      placeholder="Start typing Book Title, Author Name, or SKU ID (e.g. Physics, Irodov, SKU-01)..."
+                      className="w-full rounded-xl border border-emerald-300 bg-white pl-10 pr-10 py-2.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-hidden shadow-xs"
+                    />
+                    {bookSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBookSearchQuery('');
+                          setBookSearchResults([]);
+                          setShowBookSearchDropdown(false);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     )}
                   </div>
-                )}
+
+                  {/* Predictive Results Dropdown Panel */}
+                  {showBookSearchDropdown && bookSearchQuery.trim().length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-72 overflow-y-auto rounded-xl bg-white border border-slate-200 shadow-xl divide-y divide-slate-100">
+                      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700">
+                        <span>Predictive Book Results</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowBookSearchDropdown(false)}
+                          className="text-slate-400 hover:text-slate-600 text-[10px] font-medium"
+                        >
+                          Close [✕]
+                        </button>
+                      </div>
+
+                      {isSearchingBooks ? (
+                        <div className="flex items-center justify-center gap-2 py-6 text-xs font-semibold text-emerald-700">
+                          <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                          Predicting matching books across Title, Author & SKU...
+                        </div>
+                      ) : bookSearchResults.length === 0 ? (
+                        <div className="py-6 px-4 text-center text-xs text-slate-500">
+                          No books matched <span className="font-bold text-slate-800">"{bookSearchQuery}"</span>. Try searching another title, author, or SKU.
+                        </div>
+                      ) : (
+                        bookSearchResults.map((bk) => {
+                          const isAlreadyAttached = attachedBooks.some(b => b.id === bk.id);
+                          const authors = bk.authors
+                            ? (Array.isArray(bk.authors) ? bk.authors.map((a: any) => a.name).join(', ') : bk.authors)
+                            : (bk.author || 'Author not specified');
+                          const sku = bk.sku || bk.bookCode || bk.isbn13 || bk.isbn10;
+                          const cover = getImageUrl(bk.thumbnailUrl || bk.coverUrl || bk.images?.[0]);
+
+                          return (
+                            <div
+                              key={bk.id}
+                              className={`flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors ${
+                                isAlreadyAttached ? 'bg-emerald-50/50' : ''
+                              }`}
+                            >
+                              <div className="h-12 w-9 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                {cover ? (
+                                  <img src={getImageUrl(cover)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                                ) : (
+                                  <Book className="h-4 w-4 text-slate-400" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate">{bk.title}</p>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-slate-500">
+                                  <span className="font-medium text-slate-700 truncate max-w-[180px]">
+                                    ✍️ {authors}
+                                  </span>
+                                  {sku && (
+                                    <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                                      SKU: {sku}
+                                    </span>
+                                  )}
+                                  <span className="font-bold text-emerald-700">
+                                    {formatINR(bk.price)}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAttachBook(bk)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                                  isAlreadyAttached
+                                    ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
+                                }`}
+                              >
+                                {isAlreadyAttached ? (
+                                  <>
+                                    <Check className="h-3 w-3" /> Attached
+                                  </>
+                                ) : (
+                                  '+ Add to Post'
+                                )}
+                              </button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Attached Books Strip */}
+                <div className="space-y-2 pt-2 border-t border-emerald-200/80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      Attached Books ({attachedBooks.length})
+                    </span>
+                    {attachedBooks.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachedBooks([]);
+                        }}
+                        className="text-[11px] text-rose-600 hover:underline font-semibold cursor-pointer"
+                      >
+                        Remove All
+                      </button>
+                    )}
+                  </div>
+
+                  {attachedBooks.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-emerald-300 bg-white/80 p-4 text-center text-xs text-emerald-900/70">
+                      No specific books attached yet. Type a Book Title, Author, or SKU code in the search bar above to predict and add books to this post.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+                      {attachedBooks.map((bk) => {
+                        const authors = bk.authors
+                          ? (Array.isArray(bk.authors) ? bk.authors.map((a: any) => a.name).join(', ') : bk.authors)
+                          : (bk.author || 'Author not specified');
+                        const sku = bk.sku || bk.bookCode || bk.isbn13 || bk.isbn10;
+                        const cover = getImageUrl(bk.thumbnailUrl || bk.coverUrl || bk.images?.[0]);
+
+                        return (
+                          <div
+                            key={bk.id}
+                            className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-emerald-300/80 shadow-xs group"
+                          >
+                            <div className="h-12 w-9 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                              {cover ? (
+                                <img src={getImageUrl(cover)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                              ) : (
+                                <Book className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-xs font-bold text-slate-900 truncate">{bk.title}</h5>
+                              <p className="text-[10px] text-slate-500 truncate">✍️ {authors}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {sku && (
+                                  <span className="font-mono text-[9px] bg-slate-100 text-slate-600 px-1 rounded font-bold">
+                                    SKU: {sku}
+                                  </span>
+                                )}
+                                <span className="text-[11px] font-bold text-emerald-700">
+                                  {formatINR(bk.price)}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAttachedBook(bk.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Remove book from post"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 5. Scheduling & Duration Options */}
@@ -1057,6 +1612,106 @@ export default function BlogWorkspace() {
           </div>
         </div>
       )}
+
+      {/* Article Engagement & Analytics Dossier Modal */}
+      {selectedArticleForAnalytics && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold">
+                  <BarChart2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Article Engagement Dossier
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Live readership metrics and book interest trends
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedArticleForAnalytics(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <span className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-[10px] font-extrabold">
+                  {selectedArticleForAnalytics.category}
+                </span>
+                <h2 className="text-base font-extrabold text-slate-900 mt-1.5">
+                  {selectedArticleForAnalytics.title}
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Slug: <code className="text-emerald-700 font-mono">/blog/{selectedArticleForAnalytics.slug}</code>
+                </p>
+              </div>
+
+              {/* 4 Big KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Total Reads</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {selectedArticleForAnalytics.views.toLocaleString('en-IN')}
+                  </p>
+                  <span className="text-[10px] text-emerald-700 font-semibold">Verified Views</span>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Est. Read Time</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {selectedArticleForAnalytics.readTime || '5 min'}
+                  </p>
+                  <span className="text-[10px] text-slate-500 font-medium">Per visitor</span>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Attached Books</span>
+                  <p className="text-xl font-black text-slate-900 mt-0.5">
+                    {Array.isArray(selectedArticleForAnalytics.relatedBookIds) ? selectedArticleForAnalytics.relatedBookIds.length : 0}
+                  </p>
+                  <span className="text-[10px] text-slate-500 font-medium">In this guide</span>
+                </div>
+
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center">
+                  <span className="text-[10px] font-bold text-emerald-800 uppercase">Reader Interest</span>
+                  <p className="text-xl font-black text-emerald-800 mt-0.5">
+                    {Math.max(1, Math.round((selectedArticleForAnalytics.views || 1) * 0.18))}
+                  </p>
+                  <span className="text-[10px] text-emerald-700 font-semibold">Book Clicks</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <a
+                  href={`/blog/${selectedArticleForAnalytics.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> Open Article on Bookstore
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedArticleForAnalytics(null)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Close Dossier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

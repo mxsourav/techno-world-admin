@@ -1,16 +1,58 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
-  BookOpen, Plus, Search, ShoppingCart, Users, Download, IndianRupee, AlertCircle,
-  Pause, Play, Trash2, Edit3, Truck, Printer, ShieldCheck, X, Loader2, Mail,
-  CheckCircle2, XCircle, Send, ChevronDown, ChevronUp,
-  Settings, ArrowRight, Bell, RotateCcw, Box, Star, ExternalLink,
-  SlidersHorizontal, Clock, Package, Zap, Store, CalendarCheck,
-  MessageSquare, HelpCircle, CornerDownRight, Check, FileText, Link2
+  BookOpen,
+  Plus,
+  Search,
+  ShoppingCart,
+  Users,
+  Download,
+  IndianRupee,
+  AlertCircle,
+  Pause,
+  Play,
+  Trash2,
+  Edit3,
+  Truck,
+  Printer,
+  ShieldCheck,
+  X,
+  Loader2,
+  Mail,
+  CheckCircle2,
+  XCircle,
+  Send,
+  ChevronDown,
+  ChevronUp,
+  Settings,
+  ArrowRight,
+  Bell,
+  RotateCcw,
+  Box,
+  Star,
+  ExternalLink,
+  SlidersHorizontal,
+  Clock,
+  Package,
+  Zap,
+  Store,
+  CalendarCheck,
+  MessageSquare,
+  HelpCircle,
+  CornerDownRight,
+  Check,
+  FileText,
+  Link2,
+  Clipboard,
+  Sparkles,
+  CreditCard,
+  MapPin,
+  Phone,
+  Building2
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService } from '@/services/api';
+import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService, bookRequestService, getImageUrl } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
@@ -22,6 +64,14 @@ export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tab = searchParams.get('tab') || 'dashboard';
+  const lookupParam = searchParams.get('lookup');
+
+  useEffect(() => {
+    if (lookupParam && lookupParam.trim()) {
+      setUniversalOrderSearch(lookupParam.trim());
+      handleUniversalLookup(lookupParam.trim());
+    }
+  }, [lookupParam]);
   const navigate = useNavigate();
 
 
@@ -89,14 +139,58 @@ export default function Dashboard() {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any | null>(null);
 
-  // Reviews & Q&A Moderation State
-  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions'>('reviews');
+  // Universal Instant Order Lookup State
+  const [universalOrderSearch, setUniversalOrderSearch] = useState('');
+  const [isLookingUpOrder, setIsLookingUpOrder] = useState(false);
+  const [lookupOrderDossier, setLookupOrderDossier] = useState<any | null>(null);
+
+  const handleUniversalLookup = async (queryText?: string) => {
+    const q = (queryText !== undefined ? queryText : universalOrderSearch).trim();
+    if (!q) {
+      toast.error('Please enter or paste an Order ID to search');
+      return;
+    }
+    setIsLookingUpOrder(true);
+    try {
+      const res: any = await orderService.adminLookupOrder(q);
+      if (res.success && res.data) {
+        setLookupOrderDossier(res.data);
+        toast.success(`Found order #${res.data.orderNumber} (${res.data.status})`);
+      } else {
+        toast.error(res.message || `No order found matching "${q}"`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || `No order found matching "${q}"`);
+    } finally {
+      setIsLookingUpOrder(false);
+    }
+  };
+
+  const handlePasteAndLookup = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        toast.error('Clipboard is empty! Copy an Order ID first.');
+        return;
+      }
+      const clean = text.trim();
+      setUniversalOrderSearch(clean);
+      await handleUniversalLookup(clean);
+    } catch {
+      toast.error('Could not access clipboard automatically. Please paste into the box.');
+    }
+  };
+
+  // Reviews, Q&A, and Book Sourcing Requests Moderation State
+  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions' | 'requests'>('reviews');
   const [adminReviews, setAdminReviews] = useState<any[]>([]);
   const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
+  const [adminBookRequests, setAdminBookRequests] = useState<any[]>([]);
   const [loadingReviewsData, setLoadingReviewsData] = useState(false);
   const [reviewSearchQuery, setReviewSearchQuery] = useState('');
   const [reviewRatingFilter, setReviewRatingFilter] = useState<string>('ALL');
   const [questionStatusFilter, setQuestionStatusFilter] = useState<string>('ALL');
+  const [bookRequestStatusFilter, setBookRequestStatusFilter] = useState<string>('ALL');
   const [replyingQuestionId, setReplyingQuestionId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replySignature, setReplySignature] = useState('Techno World Direct · Verified Seller');
@@ -318,9 +412,10 @@ export default function Dashboard() {
   const fetchReviewsAndQuestions = async () => {
     setLoadingReviewsData(true);
     try {
-      const [revRes, qRes] = await Promise.all([
+      const [revRes, qRes, reqRes] = await Promise.all([
         reviewService.getAdminReviews(),
         questionService.getAdminQuestions(),
+        bookRequestService.getRequests().catch(() => ({ success: false, data: [] })),
       ]);
       if (revRes.success && Array.isArray(revRes.data)) {
         setAdminReviews(revRes.data);
@@ -328,8 +423,12 @@ export default function Dashboard() {
       if (qRes.success && Array.isArray(qRes.data)) {
         setAdminQuestions(qRes.data);
       }
+      if (reqRes && reqRes.success) {
+        const rawReqs = Array.isArray(reqRes.data) ? reqRes.data : (reqRes.data?.requests || []);
+        setAdminBookRequests(rawReqs);
+      }
     } catch (err) {
-      console.error('Failed to load reviews or questions', err);
+      console.error('Failed to load reviews, questions, or book requests', err);
     } finally {
       setLoadingReviewsData(false);
     }
@@ -448,6 +547,31 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       toast.error(err?.message || 'Failed to delete question');
+    }
+  };
+
+  const handleUpdateBookRequestStatus = async (id: string, status: string) => {
+    try {
+      const res = await bookRequestService.updateRequest(id, { status });
+      if (res.success) {
+        toast.success(`Request marked as ${status}`);
+        setAdminBookRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update request status');
+    }
+  };
+
+  const handleDeleteBookRequest = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this book request record?')) return;
+    try {
+      const res = await bookRequestService.deleteRequest(id);
+      if (res.success) {
+        toast.success('Book request record removed');
+        setAdminBookRequests(prev => prev.filter(r => r.id !== id));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete request');
     }
   };
 
@@ -1207,7 +1331,7 @@ admin@technoworld.com`
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 py-6 sm:py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
         {['dashboard', 'products', 'inventory'].includes(tab) && (
@@ -1343,7 +1467,7 @@ admin@technoworld.com`
                   </button>
                 </div>
                 
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-sm font-bold text-slate-800">Latest Reviews</p>
                     <button
@@ -1493,6 +1617,74 @@ admin@technoworld.com`
 
           return (
             <div className="space-y-4">
+                            {/* Universal Order Dossier Lookup Card */}
+              <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white p-4 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 shrink-0">
+                      <Search className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5"><Zap className="h-4 w-4 text-blue-600" /> Universal Order Dossier Lookup</h3>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                          Global Search
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Paste ANY Order ID (e.g. <span className="font-mono font-bold text-slate-700">#TW-1002</span>, UUID), India Post tracking number, customer phone, or email to inspect full details across all pipeline stages.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:max-w-md w-full">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={universalOrderSearch}
+                        onChange={(e) => setUniversalOrderSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleUniversalLookup(universalOrderSearch);
+                        }}
+                        placeholder="Paste #TW-..., tracking #, or phone..."
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+                      />
+                      {universalOrderSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setUniversalOrderSearch('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handlePasteAndLookup}
+                      disabled={isLookingUpOrder}
+                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-100/90 px-3 py-2 text-xs font-extrabold text-blue-900 hover:bg-blue-200 transition-all shadow-2xs shrink-0 disabled:opacity-50"
+                      title="Paste from clipboard and search immediately"
+                    >
+                      <Clipboard className="h-3.5 w-3.5 text-blue-700" />
+                      <span className="hidden sm:inline">Paste & Inspect</span>
+                      <span className="sm:hidden">Paste</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUniversalLookup(universalOrderSearch)}
+                      disabled={isLookingUpOrder || !universalOrderSearch.trim()}
+                      className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-all shadow-sm shrink-0 disabled:opacity-50"
+                    >
+                      {isLookingUpOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                      <span>Lookup</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Flipkart Seller Hub Header */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1586,7 +1778,7 @@ admin@technoworld.com`
                             ? 'bg-white text-blue-700 border-blue-200'
                             : 'bg-white text-amber-800 border-amber-200'
                         }`}>
-                          {isBefore2PM ? '⚡ Same Day Dispatch' : '🕒 Next Day Dispatch'}
+                          {isBefore2PM ? 'Same Day Dispatch' : 'Next Day Dispatch'}
                         </span>
                         <span className="text-[11px] font-semibold text-slate-500 bg-white/80 px-2.5 py-0.5 rounded-full border border-slate-200">
                           India Post Speed Post
@@ -1833,7 +2025,7 @@ admin@technoworld.com`
                                     </span>
                                     {grp.isMultiOrder && (
                                       <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                                        📦 {grp.orderCount} Orders Bundled
+                                        <Package className="h-3 w-3 text-emerald-700 inline mr-1" /> {grp.orderCount} Orders Bundled
                                       </span>
                                     )}
                                     <span
@@ -1848,7 +2040,7 @@ admin@technoworld.com`
                                       <ExternalLink className="h-2.5 w-2.5 text-slate-400" />
                                     </span>
                                     <span className="text-[10px] text-slate-400 block font-mono">
-                                      📞 {grp.customerPhone}
+                                      <Phone className="h-3 w-3 text-slate-400 inline mr-1" /> {grp.customerPhone}
                                     </span>
                                   </td>
 
@@ -1885,7 +2077,7 @@ admin@technoworld.com`
                                               </span>
                                               <div className="h-8 w-6 rounded bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                                                 {bk.coverUrl ? (
-                                                  <img src={bk.coverUrl} alt={bk.title} className="h-full w-full object-cover" />
+                                                  <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                 ) : (
                                                   <span className="text-[10px]">📖</span>
                                                 )}
@@ -1942,14 +2134,14 @@ admin@technoworld.com`
                                     ) : (
                                       <>
                                         <p className="text-[11px] text-slate-800 font-semibold">
-                                          🏤 <b>{grp.postOffice}</b>
+                                          <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> <b>{grp.postOffice}</b>
                                         </p>
                                         <p className="text-[11px] text-slate-600">
                                           {grp.city}, {grp.state} — <b>{grp.pincode}</b>
                                         </p>
                                         {grp.landmark && (
                                           <p className="text-[10px] text-slate-500">
-                                            📍 Landmark: {grp.landmark}
+                                            <MapPin className="h-3 w-3 text-slate-400 inline mr-1" /> Landmark: {grp.landmark}
                                           </p>
                                         )}
                                         <div className="flex items-center gap-1.5 pt-1">
@@ -2187,7 +2379,7 @@ admin@technoworld.com`
                                                     <div className="flex items-center gap-2.5">
                                                       <div className="h-10 w-8 rounded border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
                                                         {bk.coverUrl ? (
-                                                          <img src={bk.coverUrl} alt={bk.title} className="h-full w-full object-cover" />
+                                                          <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                         ) : (
                                                           <span className="text-xs">📖</span>
                                                         )}
@@ -2315,7 +2507,7 @@ admin@technoworld.com`
                                   <div className="flex items-start gap-3">
                                     <div className="h-12 w-9 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                                       {book.coverUrl ? (
-                                        <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover" />
+                                        <img src={getImageUrl(book.coverUrl)} alt={book.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                       ) : (
                                         <span className="text-xs">📖</span>
                                       )}
@@ -2381,7 +2573,7 @@ admin@technoworld.com`
                                         <ExternalLink className="h-2.5 w-2.5 text-slate-400" />
                                       </p>
                                       <p className="text-[11px] text-slate-700 font-semibold">
-                                        🏤 {ord.address?.postOffice || 'Local Post Office'}
+                                        <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> {ord.address?.postOffice || 'Local Post Office'}
                                       </p>
                                       <p className="text-[10px] text-slate-500">
                                         {ord.address?.city || 'City'}, {ord.address?.state || 'State'} — <b>{ord.address?.pincode}</b>
@@ -2694,7 +2886,7 @@ admin@technoworld.com`
                       <div className="flex flex-col sm:flex-row gap-5 items-start">
                         <div className="h-44 w-32 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center shadow-md">
                           {previewBook.coverUrl ? (
-                            <img src={previewBook.coverUrl} alt={previewBook.title} className="h-full w-full object-cover" />
+                            <img src={getImageUrl(previewBook.coverUrl)} alt={previewBook.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                           ) : (
                             <span className="text-3xl">📖</span>
                           )}
@@ -2769,6 +2961,249 @@ admin@technoworld.com`
                 </div>
               )}
 
+                            {/* Universal Order Dossier Modal */}
+              {lookupOrderDossier && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                  <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
+                          <Package className="h-5 w-5 text-blue-300" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-black text-white text-base">Order Dossier: #{lookupOrderDossier.orderNumber}</h3>
+                            <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border shadow-2xs ${
+                              lookupOrderDossier.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
+                              lookupOrderDossier.status === 'CONFIRMED' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
+                              lookupOrderDossier.status === 'PROCESSING' ? 'bg-purple-500/20 text-purple-300 border-purple-400/30' :
+                              lookupOrderDossier.status === 'SHIPPED' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30' :
+                              lookupOrderDossier.status === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
+                              'bg-rose-500/20 text-rose-300 border-rose-400/30'
+                            }`}>
+                              {lookupOrderDossier.status}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-300">
+                            Placed on {new Date(lookupOrderDossier.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setLookupOrderDossier(null)}
+                        className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-xl font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
+                      {/* Tracking / Logistics Banner if Shipped */}
+                      {lookupOrderDossier.trackingNumber && (
+                        <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3.5 flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-indigo-700" />
+                            <div>
+                              <span className="text-[11px] font-bold text-slate-500 block">India Post Tracking Number:</span>
+                              <span className="font-mono text-sm font-black text-indigo-950">{lookupOrderDossier.trackingNumber}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(lookupOrderDossier.trackingNumber);
+                                toast.success('Tracking number copied to clipboard');
+                              }}
+                              className="rounded-lg border border-indigo-300 bg-white px-2.5 py-1 text-xs font-bold text-indigo-900 hover:bg-indigo-50 shadow-2xs"
+                            >
+                              <Clipboard className="h-3 w-3 text-indigo-700 inline mr-1" /> Copy
+                            </button>
+                            <a
+                              href="https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application/tracking.aspx"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-lg bg-indigo-700 px-3 py-1 text-xs font-bold text-white hover:bg-indigo-800 shadow-2xs"
+                            >
+                              Track on India Post &rarr;
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delivery Destination & Customer Card */}
+                      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-blue-950 flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-slate-500 inline mr-1" /> Consignee & Shipping Destination:
+                          </span>
+                          <span className="text-[11px] font-bold text-blue-800 bg-white px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                            {lookupOrderDossier.shippingMethod || 'Standard Delivery'}
+                          </span>
+                        </div>
+
+                        <div className="text-slate-800 space-y-1 text-xs">
+                          <p className="text-sm font-extrabold text-slate-950">
+                            {lookupOrderDossier.address?.fullName || lookupOrderDossier.user?.name || 'Customer Name'}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                            <p><b>Phone:</b> <span className="font-mono font-bold text-slate-900">{lookupOrderDossier.address?.phone || lookupOrderDossier.user?.phone || 'N/A'}</span></p>
+                            <p><b>Email:</b> <span className="font-mono text-emerald-800">{lookupOrderDossier.customerEmail || lookupOrderDossier.address?.email || lookupOrderDossier.user?.email || 'N/A'}</span></p>
+                          </div>
+                          {lookupOrderDossier.address && (
+                            <p className="text-[11px] text-slate-600 pt-1 border-t border-blue-100">
+                              <b>Full Address:</b> {lookupOrderDossier.address.addressLine1 || lookupOrderDossier.address.line1}, {lookupOrderDossier.address.landmark ? `${lookupOrderDossier.address.landmark}, ` : ''}{lookupOrderDossier.address.city}, {lookupOrderDossier.address.state} — <b className="text-slate-900 font-mono">{lookupOrderDossier.address.pincode}</b>
+                              {lookupOrderDossier.address.postOffice && (
+                                <span className="block text-slate-500 mt-0.5"><Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> Post Office: <b>{lookupOrderDossier.address.postOffice}</b></span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="pt-2 border-t border-blue-100 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500">
+                            Account: <b>{lookupOrderDossier.user?.email || 'Guest User'}</b>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLookupOrderDossier(null);
+                              navigateToCustomer(lookupOrderDossier.address?.fullName || lookupOrderDossier.user?.name || lookupOrderDossier.user?.email || '');
+                            }}
+                            className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-blue-700 shadow-2xs transition-all"
+                          >
+                            <Users className="h-3.5 w-3.5" /> View Customer Profile &rarr;
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Items in Order */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-900">
+                            Books Ordered ({lookupOrderDossier.items?.length || 0} items):
+                          </h4>
+                          <span className="text-slate-500 text-[11px]">
+                            Payment: <b className="text-slate-800">{lookupOrderDossier.paymentMethod}</b> ({lookupOrderDossier.paymentStatus})
+                          </span>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                          {Array.isArray(lookupOrderDossier.items) && lookupOrderDossier.items.map((item: any, idx: number) => {
+                            const b = item.book || {};
+                            return (
+                              <div key={idx} className="p-3 flex items-center justify-between gap-3 bg-white hover:bg-slate-50/50">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {b.coverUrl ? (
+                                      <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                                    ) : (
+                                      <BookOpen className="h-4 w-4 text-slate-400" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="font-bold text-slate-900 truncate">{b.title || 'Book Title'}</h5>
+                                    <p className="text-[11px] font-mono text-slate-500 mt-0.5">
+                                      SKU: {formatClientSku(b)} | FSN: {formatClientFsn(b)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0">
+                                  <span className="font-bold text-slate-900 block font-mono">
+                                    {formatINR(item.priceAtPurchase || b.price || 0)} &times; {item.quantity || 1}
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-slate-400">
+                                    Item Total: {formatINR((item.priceAtPurchase || b.price || 0) * (item.quantity || 1))}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Financial Total Breakdown */}
+                      <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-slate-700 block text-xs">
+                            {lookupOrderDossier.paymentMethod === 'COD' ? 'Total COD Amount to Collect:' : 'Total Order Amount Paid:'}
+                          </span>
+                          {lookupOrderDossier.paymentMethod === 'COD' && (
+                            <span className="text-[11px] font-medium text-amber-700">Includes ₹20 Cash on Delivery handling fee</span>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-semibold text-slate-500">
+                              Payment: <b className="text-slate-700">{lookupOrderDossier.paymentMethod}</b>
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-400">&bull;</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              lookupOrderDossier.paymentStatus === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {lookupOrderDossier.paymentStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xl font-black text-emerald-700 font-mono">
+                          {formatINR(lookupOrderDossier.totalAmount || 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer Actions */}
+                    <div className="flex flex-wrap items-center justify-between border-t border-slate-200 px-6 py-3.5 bg-slate-50 gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadSingleInvoice(lookupOrderDossier.id, lookupOrderDossier.orderNumber, lookupOrderDossier)}
+                          className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 shadow-2xs transition-all"
+                        >
+                          <Printer className="h-3.5 w-3.5 text-slate-600" />
+                          <span>Download Tax Invoice</span>
+                        </button>
+
+                        {lookupOrderDossier.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleAcceptOrder(lookupOrderDossier);
+                              setLookupOrderDossier(null);
+                            }}
+                            className="flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 shadow transition-all"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>Accept Order</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            openEmailModal(lookupOrderDossier, 'DELAY_NOTICE');
+                            setLookupOrderDossier(null);
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 shadow-2xs transition-all"
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          <span>Send Customer Notice</span>
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setLookupOrderDossier(null)}
+                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all shadow-2xs"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Order Details & Destination Modal */}
               {previewOrder && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
@@ -2804,7 +3239,7 @@ admin@technoworld.com`
                           </p>
                           <p><b>Phone:</b> {previewOrder.address?.phone || previewOrder.user?.phone || 'N/A'}</p>
                           <p><b>Recipient Email:</b> <span className="font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{previewOrder.customerEmail || previewOrder.address?.email || previewOrder.user?.email || 'N/A'}</span></p>
-                          <p><b>Post Office:</b> 🏤 {previewOrder.address?.postOffice || 'Local Post Office'}</p>
+                          <p><b>Post Office:</b> <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> {previewOrder.address?.postOffice || 'Local Post Office'}</p>
                           <p><b>Address:</b> {previewOrder.address?.addressLine1 || previewOrder.address?.line1 || 'Street Address'}, {previewOrder.address?.landmark ? `${previewOrder.address.landmark}, ` : ''}{previewOrder.address?.city || 'Kolkata'}, {previewOrder.address?.state || 'West Bengal'} — <b>{previewOrder.address?.pincode || '700001'}</b></p>
                         </div>
 
@@ -2834,7 +3269,7 @@ admin@technoworld.com`
                               <div key={idx} className="p-3 flex items-center justify-between gap-3 bg-white">
                                 <div className="flex items-center gap-3">
                                   <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                    {b.coverUrl ? <img src={b.coverUrl} alt={b.title} className="h-full w-full object-cover" /> : <span>📖</span>}
+                                    {b.coverUrl ? <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} /> : <span>📖</span>}
                                   </div>
                                   <div>
                                     <h5 className="font-bold text-slate-900 line-clamp-1">{b.title || 'Book Title'}</h5>
@@ -3052,7 +3487,7 @@ admin@technoworld.com`
 
         {tab === 'customers' && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100">
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Customer Accounts & Order History</h2>
@@ -3100,18 +3535,18 @@ admin@technoworld.com`
                   <p className="text-xs text-slate-500 mt-1">Customers who register or place orders on the bookstore will appear here.</p>
                 </div>
               ) : (
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700">
+                <div className="mt-4 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
+                  <table className="w-full text-left text-xs text-slate-700 table-auto">
                     <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                       <tr>
-                        <th className="px-4 py-3">Customer</th>
-                        <th className="px-4 py-3">Contact</th>
-                        <th className="px-4 py-3">Total Orders</th>
-                        <th className="px-4 py-3">Lifetime Spend</th>
-                        <th className="px-4 py-3">TechnoPoints</th>
-                        <th className="px-4 py-3">TechnoWallet</th>
-                        <th className="px-4 py-3">Primary Address</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
+                        <th className="px-3 py-2.5 whitespace-nowrap">Customer</th>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Contact</th>
+                        <th className="px-2 py-2.5 text-center whitespace-nowrap">Total Orders</th>
+                        <th className="px-2 py-2.5 text-right whitespace-nowrap">Lifetime Spend</th>
+                        <th className="px-2 py-2.5 text-center whitespace-nowrap">TechnoPoints</th>
+                        <th className="px-2 py-2.5 text-center whitespace-nowrap">TechnoWallet</th>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Primary Address</th>
+                        <th className="px-3 py-2.5 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -3119,56 +3554,63 @@ admin@technoworld.com`
                         const defaultAddr = c.addresses?.[0] || {};
                         return (
                           <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-4 py-3.5">
-                              <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-800 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm border border-blue-200">
+                            <td className="px-3 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-2.5">
+                                <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-800 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-blue-200">
                                   {(c.name || 'C').charAt(0).toUpperCase()}
                                 </div>
-                                <div>
-                                  <span className="font-bold text-slate-900 block">{c.name || 'Anonymous User'}</span>
-                                  <span className="text-[11px] text-slate-400 block font-mono">{c.email}</span>
+                                <div className="min-w-0 max-w-[150px] lg:max-w-[190px]">
+                                  <span className="font-bold text-slate-900 block truncate" title={c.name || 'Anonymous User'}>
+                                    {c.name || 'Anonymous User'}
+                                  </span>
+                                  <span className="text-[11px] text-slate-400 block font-mono truncate" title={c.email}>
+                                    {c.email}
+                                  </span>
                                 </div>
                               </div>
                             </td>
 
-                            <td className="px-4 py-3.5 font-semibold text-slate-700">
-                              {c.phone || defaultAddr.phone || 'No phone'}
+                            <td className="px-2.5 py-3 font-semibold text-slate-700 whitespace-nowrap font-mono text-xs">
+                              {c.phone || defaultAddr.phone || <span className="text-slate-400 font-sans font-normal">No phone</span>}
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 font-extrabold text-blue-800 text-xs">
+                            <td className="px-2 py-3 text-center whitespace-nowrap">
+                              <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 font-extrabold text-blue-800 text-[11px] whitespace-nowrap shadow-2xs">
                                 {c.totalOrders} {c.totalOrders === 1 ? 'Order' : 'Orders'}
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5 font-black text-slate-900 text-sm">
+                            <td className="px-2 py-3 text-right font-black text-slate-900 text-xs sm:text-sm whitespace-nowrap">
                               {formatINR(c.totalSpent || 0)}
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 font-bold text-amber-800 text-xs">
-                                ⭐ {c.technoPoints || 0} pts
+                            <td className="px-2 py-3 text-center whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 font-bold text-amber-800 text-[11px] whitespace-nowrap shadow-2xs">
+                                <Sparkles className="h-3 w-3 text-amber-600 shrink-0" /> {c.technoPoints || 0} pts
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5">
-                              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 font-extrabold text-emerald-800 text-xs">
-                                💳 {formatINR(c.technoWallet || 0)}
+                            <td className="px-2 py-3 text-center whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-extrabold text-emerald-800 text-[11px] whitespace-nowrap shadow-2xs">
+                                <CreditCard className="h-3 w-3 text-emerald-600 shrink-0" /> {formatINR(c.technoWallet || 0)}
                               </span>
                             </td>
 
-                            <td className="px-4 py-3.5 text-[11px] text-slate-500 max-w-xs truncate">
+                            <td className="px-2.5 py-3 text-[11px] text-slate-500 max-w-[170px] lg:max-w-[240px] xl:max-w-[320px] truncate">
                               {defaultAddr.city ? (
-                                <span>📍 {defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})</span>
+                                <span className="inline-flex items-center gap-1" title={`${defaultAddr.addressLine1 || defaultAddr.line1}, ${defaultAddr.city} (${defaultAddr.pincode})`}>
+                                  <MapPin className="h-3 w-3 text-rose-500 shrink-0 inline" />
+                                  <span className="truncate">{defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})</span>
+                                </span>
                               ) : (
                                 <span className="text-slate-400">No saved address</span>
                               )}
                             </td>
 
-                            <td className="px-4 py-3.5 text-right">
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
                               <button
                                 onClick={() => setSelectedCustomerDetail(c)}
-                                className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm"
+                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs transition-all"
                               >
                                 View History
                               </button>
@@ -3312,8 +3754,8 @@ admin@technoworld.com`
                 </div>
               </div>
 
-              {/* Sub-Tab Navigation: Reviews vs Questions */}
-              <div className="mt-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+              {/* Sub-Tab Navigation: Reviews vs Questions vs Requests */}
+              <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4">
                 <button
                   type="button"
                   onClick={() => setReviewSubTab('reviews')}
@@ -3349,6 +3791,29 @@ admin@technoworld.com`
                     </span>
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReviewSubTab('requests')}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    reviewSubTab === 'requests'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>Book Sourcing Requests</span>
+                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                    reviewSubTab === 'requests' ? 'bg-white/20 text-white' : 'bg-white text-slate-700'
+                  }`}>
+                    {adminBookRequests.length}
+                  </span>
+                  {adminBookRequests.filter(r => r.status === 'PENDING').length > 0 && (
+                    <span className="ml-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950">
+                      {adminBookRequests.filter(r => r.status === 'PENDING').length} New
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Filter Toolbar */}
@@ -3359,7 +3824,13 @@ admin@technoworld.com`
                     type="text"
                     value={reviewSearchQuery}
                     onChange={(e) => setReviewSearchQuery(e.target.value)}
-                    placeholder={reviewSubTab === 'reviews' ? 'Search by book title, reviewer name, or comment...' : 'Search by question, book, or answer...'}
+                    placeholder={
+                      reviewSubTab === 'reviews'
+                        ? 'Search by book title, reviewer name, or comment...'
+                        : reviewSubTab === 'questions'
+                        ? 'Search by question, book, or answer...'
+                        : 'Search by book title, author, email, or phone...'
+                    }
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-xs font-medium outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -3379,7 +3850,7 @@ admin@technoworld.com`
                       <option value="1">1 Star ★☆☆☆☆</option>
                     </select>
                   </div>
-                ) : (
+                ) : reviewSubTab === 'questions' ? (
                   <div className="flex items-center gap-2">
                     <select
                       value={questionStatusFilter}
@@ -3389,6 +3860,21 @@ admin@technoworld.com`
                       <option value="ALL">All Questions</option>
                       <option value="PENDING">Pending Reply</option>
                       <option value="ANSWERED">Answered & Published</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={bookRequestStatusFilter}
+                      onChange={(e) => setBookRequestStatusFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none"
+                    >
+                      <option value="ALL">All Statuses</option>
+                      <option value="PENDING">Pending (New)</option>
+                      <option value="SOURCED">Book Sourced</option>
+                      <option value="CONTACTED">Customer Contacted</option>
+                      <option value="FULFILLED">Fulfilled & Closed</option>
+                      <option value="REJECTED">Unavailable / Rejected</option>
                     </select>
                   </div>
                 )}
@@ -3417,7 +3903,7 @@ admin@technoworld.com`
                           {/* Book Thumbnail */}
                           <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
                             {r.bookCover ? (
-                              <img src={r.bookCover} alt={r.bookTitle} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(r.bookCover)} alt={r.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
                             )}
@@ -3539,7 +4025,7 @@ admin@technoworld.com`
                           {/* Book Thumbnail */}
                           <div className="h-14 w-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
                             {q.bookCover ? (
-                              <img src={q.bookCover} alt={q.bookTitle} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(q.bookCover)} alt={q.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
                             )}
@@ -3669,6 +4155,212 @@ admin@technoworld.com`
                     <HelpCircle className="mx-auto h-10 w-10 text-slate-300 mb-2" />
                     <p className="font-bold text-slate-700">No customer questions submitted</p>
                     <p className="text-xs text-slate-400 mt-1">Questions asked by visitors on any book page will appear here for you to reply.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-TAB 3: BOOK SOURCING REQUESTS */}
+            {reviewSubTab === 'requests' && (
+              <div className="space-y-4">
+                {adminBookRequests
+                  .filter((req: any) => {
+                    if (bookRequestStatusFilter !== 'ALL' && req.status !== bookRequestStatusFilter) return false;
+                    if (reviewSearchQuery.trim()) {
+                      const q = reviewSearchQuery.toLowerCase();
+                      const matchTitle = (req.title || '').toLowerCase().includes(q);
+                      const matchAuthor = (req.author || '').toLowerCase().includes(q);
+                      const matchEmail = (req.email || '').toLowerCase().includes(q);
+                      const matchPhone = (req.phone || '').toLowerCase().includes(q);
+                      const matchPub = (req.publisher || '').toLowerCase().includes(q);
+                      const matchNotes = (req.notes || '').toLowerCase().includes(q);
+                      return matchTitle || matchAuthor || matchEmail || matchPhone || matchPub || matchNotes;
+                    }
+                    return true;
+                  })
+                  .map((req: any) => {
+                    const cleanPhone = (req.phone || '').replace(/[^0-9]/g, '');
+                    const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                    const waText = encodeURIComponent(
+                      `Hello! Regarding your book request for "${req.title}" by ${req.author} on Techno World Books — College Street:`
+                    );
+                    const mailSubject = encodeURIComponent(`Regarding your book request: "${req.title}" — Techno World Books`);
+
+                    const statusColors: Record<string, string> = {
+                      PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+                      SOURCED: 'bg-blue-50 text-blue-800 border-blue-200',
+                      CONTACTED: 'bg-purple-50 text-purple-800 border-purple-200',
+                      FULFILLED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                      REJECTED: 'bg-rose-50 text-rose-800 border-rose-200',
+                    };
+
+                    return (
+                      <div
+                        key={req.id}
+                        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300"
+                      >
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div className="flex items-start gap-4 flex-1">
+                            {/* Book Image (if uploaded) */}
+                            {req.imageUrl ? (
+                              <a
+                                href={getImageUrl(req.imageUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group relative block h-24 w-18 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm"
+                                title="Click to view full photo"
+                              >
+                                <img
+                                  src={getImageUrl(req.imageUrl)}
+                                  alt={req.title}
+                                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <ExternalLink className="h-4 w-4 text-white" />
+                                </div>
+                              </a>
+                            ) : (
+                              <div className="flex h-20 w-16 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-300">
+                                <BookOpen className="h-7 w-7" />
+                              </div>
+                            )}
+
+                            {/* Book & Requester Details */}
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+                                  {req.title}
+                                </h3>
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                                    statusColors[req.status] || 'bg-slate-100 text-slate-700 border-slate-200'
+                                  }`}
+                                >
+                                  {req.status}
+                                </span>
+                              </div>
+
+                              <p className="text-xs font-semibold text-slate-600">
+                                By <span className="text-slate-900 font-bold">{req.author}</span>
+                              </p>
+
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-0.5">
+                                {req.publisher && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                    <Building2 className="h-3 w-3 text-slate-400" />
+                                    Pub: {req.publisher}
+                                  </span>
+                                )}
+                                {req.edition && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                    Ed: {req.edition}
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(req.createdAt).toLocaleString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+
+                              {/* Customer Contact Badges */}
+                              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                                <a
+                                  href={`mailto:${req.email}?subject=${mailSubject}`}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                >
+                                  <Mail className="h-3 w-3 text-blue-600" />
+                                  <span>{req.email}</span>
+                                </a>
+
+                                {req.phone && (
+                                  <a
+                                    href={`tel:${req.phone}`}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                  >
+                                    <Phone className="h-3 w-3 text-emerald-600" />
+                                    <span>{req.phone}</span>
+                                  </a>
+                                )}
+                              </div>
+
+                              {/* Notes */}
+                              {req.notes && (
+                                <p className="mt-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-xs text-slate-600 italic">
+                                  &ldquo;{req.notes}&rdquo;
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons & Status Selector */}
+                          <div className="flex flex-col items-end gap-2 shrink-0 md:min-w-[180px]">
+                            {/* WhatsApp Fast Reply */}
+                            {cleanPhone && (
+                              <a
+                                href={`https://wa.me/${waPhone}?text=${waText}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                              >
+                                <MessageSquare className="h-3.5 w-3.5" />
+                                <span>Chat WhatsApp</span>
+                              </a>
+                            )}
+
+                            {/* Email Reply */}
+                            <a
+                              href={`mailto:${req.email}?subject=${mailSubject}`}
+                              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                            >
+                              <Mail className="h-3.5 w-3.5 text-blue-600" />
+                              <span>Email Requester</span>
+                            </a>
+
+                            {/* Status Changer */}
+                            <div className="flex w-full items-center gap-1 pt-1">
+                              <select
+                                value={req.status}
+                                onChange={(e) => handleUpdateBookRequestStatus(req.id, e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-blue-500"
+                              >
+                                <option value="PENDING">Status: Pending</option>
+                                <option value="SOURCED">Status: Sourced / Found</option>
+                                <option value="CONTACTED">Status: Contacted</option>
+                                <option value="FULFILLED">Status: Fulfilled</option>
+                                <option value="REJECTED">Status: Unavailable</option>
+                              </select>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteBookRequest(req.id)}
+                                className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                                title="Delete request record"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {adminBookRequests.length === 0 && !loadingReviewsData && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-400">
+                    <BookOpen className="mx-auto h-10 w-10 text-slate-300 mb-2" />
+                    <p className="font-bold text-slate-700">No book sourcing requests yet</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Customer requests submitted through the &quot;Can&apos;t Find a Book?&quot; sourcing form will show up here.
+                    </p>
                   </div>
                 )}
               </div>
@@ -3924,7 +4616,7 @@ admin@technoworld.com`
                 {mediaItems.map(m => (
                   <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                     {m.type === 'image' ? (
-                      <img src={m.url} alt={m.altText || m.filename} className="h-full w-full object-cover" />
+                      <img src={getImageUrl(m.url)} alt={m.altText || m.filename} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 p-2 text-center">
                         <BookOpen className="h-8 w-8 mb-2" />
