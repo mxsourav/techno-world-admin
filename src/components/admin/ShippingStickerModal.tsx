@@ -27,7 +27,7 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
   const isBatch = Array.isArray(orders) && orders.length > 0;
   const currentOrder = isBatch ? orders[0] : order;
 
-  const [size, setSize] = useState<ShippingLabelSize>('A6');
+  const [size, setSize] = useState<ShippingLabelSize>('75x125');
   const [showLogo, setShowLogo] = useState(true);
   const [showSkus, setShowSkus] = useState(true);
   const [showOrderBarcode, setShowOrderBarcode] = useState(true);
@@ -124,10 +124,11 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
                 1. Select Sticker Paper Size
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {[
+                  { id: '75x125', title: '75 × 125 mm', sub: 'Standard 3" × 5" Thermal Roll (Default)' },
                   { id: 'A7', title: 'A7 Thermal', sub: '74 × 105 mm (3" Roll)' },
-                  { id: 'A6', title: 'A6 Standard', sub: '105 × 148 mm (4"x6")' },
+                  { id: 'A6', title: 'A6 Standard', sub: '105 × 148 mm (4" × 6")' },
                   { id: 'A5', title: 'A5 Laser', sub: '148 × 210 mm (Half A4)' },
                 ].map((s) => (
                   <button

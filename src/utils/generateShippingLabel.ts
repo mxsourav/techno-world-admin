@@ -1,6 +1,6 @@
 import { TECHNO_WORLD_BLACK_LOGO_B64 } from './logoBase64';
 
-export type ShippingLabelSize = 'A7' | 'A6' | 'A5';
+export type ShippingLabelSize = '75x125' | 'A7' | 'A6' | 'A5';
 
 export interface ShippingLabelOptions {
   size?: ShippingLabelSize;
@@ -87,7 +87,7 @@ export function generateIndiaPostEmblemSvg(): string {
 }
 
 export function generateSingleStickerCardHtml(order: any, options: ShippingLabelOptions = {}): string {
-  const size = options.size || 'A6';
+  const size = options.size || '75x125';
   const showLogo = options.showLogo !== false;
   const showSkus = options.showSkus !== false;
   const showOrderBarcode = options.showOrderBarcode !== false;
@@ -129,8 +129,17 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
     return `<div style="font-size:10px;line-height:1.2;margin-bottom:2px;"><b>[${sku}]</b> ${title.slice(0, 32)} (Qty: ${qty})</div>`;
   }).join('');
 
-  const articleBarcodeSvg = generateCode128Svg(articleNo, size === 'A7' ? 36 : 46, size === 'A7' ? 1.4 : 1.7);
-  const orderBarcodeSvg = showOrderBarcode ? generateCode128Svg(orderNum, size === 'A7' ? 24 : 30, 1.2) : '';
+  const isCompact = size === 'A7' || size === '75x125';
+  const articleBarcodeSvg = generateCode128Svg(
+    articleNo, 
+    size === 'A7' ? 36 : size === '75x125' ? 42 : 46, 
+    isCompact ? 1.45 : 1.7
+  );
+  const orderBarcodeSvg = showOrderBarcode ? generateCode128Svg(
+    orderNum, 
+    size === 'A7' ? 24 : size === '75x125' ? 26 : 30, 
+    1.15
+  ) : '';
 
   return `
     <div class="sticker-container size-${size}">
@@ -222,8 +231,14 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
   `;
 }
 
-export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLabelSize = 'A6'): string {
+export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLabelSize = '75x125'): string {
   const sizeStyles: Record<ShippingLabelSize, { page: string; width: string; height: string; fontSize: string }> = {
+    '75x125': {
+      page: 'size: 75mm 125mm; margin: 2mm;',
+      width: '71mm',
+      height: '121mm',
+      fontSize: '9.5px',
+    },
     A7: {
       page: 'size: 74mm 105mm; margin: 2mm;',
       width: '70mm',
@@ -244,7 +259,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
     },
   };
 
-  const currentSize = sizeStyles[size] || sizeStyles.A6;
+  const currentSize = sizeStyles[size] || sizeStyles['75x125'];
 
   return `
     <!DOCTYPE html>
@@ -561,7 +576,7 @@ export function printSingleShippingSticker(order: any, options: ShippingLabelOpt
   }
 
   const cardHtml = `<div class="sticker-page-break">${generateSingleStickerCardHtml(order, options)}</div>`;
-  const docHtml = generatePrintDocumentHtml(cardHtml, options.size || 'A6');
+  const docHtml = generatePrintDocumentHtml(cardHtml, options.size || '75x125');
 
   printWindow.document.open();
   printWindow.document.write(docHtml);
@@ -588,7 +603,7 @@ export function printBatchShippingStickers(orders: any[], options: ShippingLabel
   }
 
   const cardsHtml = orders.map((o) => `<div class="sticker-page-break">${generateSingleStickerCardHtml(o, options)}</div>`).join('\n');
-  const docHtml = generatePrintDocumentHtml(cardsHtml, options.size || 'A6');
+  const docHtml = generatePrintDocumentHtml(cardsHtml, options.size || '75x125');
 
   printWindow.document.open();
   printWindow.document.write(docHtml);
