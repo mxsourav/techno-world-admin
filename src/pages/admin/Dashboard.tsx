@@ -1929,15 +1929,15 @@ admin@technoworld.com`
                       <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
                     </button>
 
-                    {/* Quick Shipping Stickers Print Action */}
+                    {/* Quick Shipping Labels Print Action */}
                     <button
                       onClick={() => handleBatchPrintStickers()}
                       disabled={activeStageOrders.length === 0}
-                      className="flex items-center gap-1.5 rounded-xl border border-red-300 bg-red-50 px-3.5 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100 shadow-sm transition-all disabled:opacity-50"
-                      title={selectedOrderIds.size > 0 ? `Print India Post stickers for ${selectedOrderIds.size} selected order(s)` : `Print India Post stickers for all ${activeStageOrders.length} order(s) in this stage`}
+                      className="flex items-center gap-1.5 rounded-xl border border-red-300 bg-red-50 px-3.5 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                      title={selectedOrderIds.size > 0 ? `Print shipping labels for ${selectedOrderIds.size} selected order(s)` : `Print shipping labels for all ${activeStageOrders.length} order(s) in this stage`}
                     >
                       <Tag className="h-3.5 w-3.5 text-red-700" />
-                      <span>{selectedOrderIds.size > 0 ? `Print Stickers (${selectedOrderIds.size})` : 'Print Stickers'}</span>
+                      <span>{selectedOrderIds.size > 0 ? `Print Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
                     </button>
 
                     {/* Other Actions Dropdown */}
@@ -1986,7 +1986,7 @@ admin@technoworld.com`
                             }}
                             className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-800 font-bold"
                           >
-                            <Tag className="h-3.5 w-3.5 text-red-700" /> Print Parcel Stickers (A7/A6/A5)
+                            <Tag className="h-3.5 w-3.5 text-red-700" /> Print Shipping Labels (Thermal / A6 / A5)
                           </button>
                           <button
                             disabled={isBatchGeneratingInvoices}
@@ -2407,11 +2407,11 @@ admin@technoworld.com`
                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoices
                                           </button>
                                           <button
-                                            title="Print Official India Post Shipping Stickers for all orders in this bundle"
+                                            title="Print Official India Post Shipping Labels for all orders in this bundle"
                                             onClick={() => handleOpenStickers(grp.orders)}
                                             className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                           >
-                                            <Tag className="h-3 w-3 text-red-700" /> Stickers
+                                            <Tag className="h-3 w-3 text-red-700" /> Shipping Labels
                                           </button>
                                         </>
                                       ) : (
@@ -2424,11 +2424,11 @@ admin@technoworld.com`
                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoice
                                           </button>
                                           <button
-                                            title="Print Official India Post Shipping Sticker (A7 / A6 / A5)"
+                                            title="Print Official India Post Shipping Label (Thermal / A6 / A5)"
                                             onClick={() => handleOpenStickers(ord)}
                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                           >
-                                            <Tag className="h-3 w-3 text-red-700" /> Sticker
+                                            <Tag className="h-3 w-3 text-red-700" /> Shipping Label
                                           </button>
                                         </>
                                       )}
@@ -2854,11 +2854,11 @@ admin@technoworld.com`
                                              <FileText className="h-3 w-3 text-emerald-700" /> Invoices
                                            </button>
                                            <button
-                                             title="Print Official India Post Shipping Stickers for all orders in this bundle"
+                                             title="Print Official India Post Shipping Labels for all orders in this bundle"
                                              onClick={() => handleOpenStickers(entry.group.orders)}
                                              className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                            >
-                                             <Tag className="h-3 w-3 text-red-700" /> Stickers
+                                             <Tag className="h-3 w-3 text-red-700" /> Shipping Labels
                                            </button>
                                          </>
                                        ) : (
@@ -2871,11 +2871,11 @@ admin@technoworld.com`
                                              <FileText className="h-3 w-3 text-emerald-700" /> Invoice
                                            </button>
                                            <button
-                                             title="Print Official India Post Shipping Sticker (A7 / A6 / A5)"
+                                             title="Print Official India Post Shipping Label (Thermal / A6 / A5)"
                                              onClick={() => handleOpenStickers(ord)}
                                              className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                            >
-                                             <Tag className="h-3 w-3 text-red-700" /> Sticker
+                                             <Tag className="h-3 w-3 text-red-700" /> Shipping Label
                                            </button>
                                          </>
                                        )}
@@ -3295,10 +3295,10 @@ admin@technoworld.com`
                         <button
                           type="button"
                           onClick={() => handleOpenStickers(lookupOrderDossier)}
-                          className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-100 shadow-2xs transition-all"
+                          className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-100 shadow-2xs transition-all cursor-pointer"
                         >
                           <Tag className="h-3.5 w-3.5 text-red-700" />
-                          <span>Print Shipping Sticker</span>
+                          <span>Print Shipping Label</span>
                         </button>
 
                         {lookupOrderDossier.status === 'PENDING' && (
