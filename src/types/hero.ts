@@ -48,6 +48,13 @@ export interface BookPresetConfig {
       height: string;
       angle: string;
     };
+    pageBlock?: {
+      left: string;
+      top: string;
+      width: string;
+      height: string;
+      angle: string;
+    };
     diffuse: {
       left: string;
       top: string;
@@ -103,18 +110,25 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '63.0%',
-        top: '74.8%',
-        width: '21.5%',
+        left: '63.4%',
+        top: '75.0%',
+        width: '15.2%',
         height: '1.8%',
-        angle: '4.9deg',
+        angle: '6.2deg',
+      },
+      pageBlock: {
+        left: '78.4%',
+        top: '77.8%',
+        width: '2.6%',
+        height: '1.6%',
+        angle: '-24.0deg',
       },
       diffuse: {
         left: '61.0%',
         top: '74.0%',
         width: '26.0%',
         height: '5.0%',
-        angle: '4.9deg',
+        angle: '5.0deg',
       },
     },
   },
@@ -162,11 +176,18 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '62.8%',
-        top: '74.8%',
-        width: '22.0%',
+        left: '63.2%',
+        top: '75.0%',
+        width: '15.4%',
         height: '1.8%',
-        angle: '4.8deg',
+        angle: '6.0deg',
+      },
+      pageBlock: {
+        left: '78.5%',
+        top: '77.8%',
+        width: '2.5%',
+        height: '1.6%',
+        angle: '-24.0deg',
       },
       diffuse: {
         left: '60.8%',
@@ -221,11 +242,18 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '63.2%',
-        top: '74.8%',
-        width: '21.5%',
+        left: '63.4%',
+        top: '75.0%',
+        width: '14.8%',
         height: '1.8%',
-        angle: '5.0deg',
+        angle: '6.3deg',
+      },
+      pageBlock: {
+        left: '78.1%',
+        top: '77.7%',
+        width: '2.6%',
+        height: '1.6%',
+        angle: '-24.0deg',
       },
       diffuse: {
         left: '61.0%',
@@ -237,3 +265,4 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
   },
 };
+

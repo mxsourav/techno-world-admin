@@ -48,12 +48,14 @@ import {
   CreditCard,
   MapPin,
   Phone,
-  Building2
+  Building2,
+  Tag
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
 import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService, bookRequestService, getImageUrl } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
+import { ShippingStickerModal } from '@/components/admin/ShippingStickerModal';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
@@ -244,6 +246,71 @@ export default function Dashboard() {
   const [isCollectingOrder, setIsCollectingOrder] = useState<string | null>(null);
   const [isDownloadingInvoices, setIsDownloadingInvoices] = useState(false);
   const [isBatchGeneratingInvoices, setIsBatchGeneratingInvoices] = useState(false);
+
+  // Official India Post Shipping Sticker Modal State
+  const [stickerModalState, setStickerModalState] = useState<{ isOpen: boolean; order?: any; orders?: any[] }>({
+    isOpen: false,
+  });
+
+  const handleOpenStickers = (orderOrOrders: any) => {
+    if (Array.isArray(orderOrOrders)) {
+      setStickerModalState({ isOpen: true, orders: orderOrOrders });
+    } else {
+      setStickerModalState({ isOpen: true, order: orderOrOrders });
+    }
+  };
+
+  const handleBatchPrintStickers = (orderIdsToPrint?: string[]) => {
+    let targetIds = orderIdsToPrint;
+    if (!targetIds || targetIds.length === 0) {
+      if (selectedOrderIds.size > 0) {
+        targetIds = Array.from(selectedOrderIds);
+      } else if (selectedGroupKeys.size > 0) {
+        const stageOrders = orders.filter((o: any) => {
+          if (forwardStage === 'to_accept') return o.status === 'PENDING';
+          if (forwardStage === 'to_pack') return o.status === 'CONFIRMED';
+          if (forwardStage === 'to_dispatch') return o.status === 'PROCESSING';
+          if (forwardStage === 'in_transit') return o.status === 'SHIPPED';
+          if (forwardStage === 'completed') return o.status === 'DELIVERED';
+          return true;
+        });
+        const activeGroups = getSmartGroups(stageOrders);
+        const collectedIds: string[] = [];
+        selectedGroupKeys.forEach((k: string) => {
+          const found = activeGroups.find((g: any) => g.key === k);
+          if (found && Array.isArray(found.orders)) {
+            collectedIds.push(...found.orders.map((ordItem: any) => ordItem.id));
+          } else if (found && (found as any).order) {
+            collectedIds.push((found as any).order.id);
+          }
+        });
+        targetIds = Array.from(new Set(collectedIds));
+      } else {
+        const stageOrders = orders.filter((o: any) => {
+          if (forwardStage === 'to_accept') return o.status === 'PENDING';
+          if (forwardStage === 'to_pack') return o.status === 'CONFIRMED';
+          if (forwardStage === 'to_dispatch') return o.status === 'PROCESSING';
+          if (forwardStage === 'in_transit') return o.status === 'SHIPPED';
+          if (forwardStage === 'completed') return o.status === 'DELIVERED';
+          return true;
+        });
+        targetIds = stageOrders.map((o: any) => o.id);
+      }
+    }
+
+    if (!targetIds || targetIds.length === 0) {
+      toast.error('No orders available to print shipping stickers');
+      return;
+    }
+
+    const matchedOrders = orders.filter((o: any) => targetIds!.includes(o.id));
+    if (matchedOrders.length === 0) {
+      toast.error('No matching order details found');
+      return;
+    }
+
+    handleOpenStickers(matchedOrders);
+  };
 
   // Manual Child Order Merge State
   const [mergeModalOrder, setMergeModalOrder] = useState<any | null>(null);
@@ -1858,6 +1925,17 @@ admin@technoworld.com`
                       <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
                     </button>
 
+                    {/* Quick Shipping Stickers Print Action */}
+                    <button
+                      onClick={() => handleBatchPrintStickers()}
+                      disabled={activeStageOrders.length === 0}
+                      className="flex items-center gap-1.5 rounded-xl border border-red-300 bg-red-50 px-3.5 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100 shadow-sm transition-all disabled:opacity-50"
+                      title={selectedOrderIds.size > 0 ? `Print India Post stickers for ${selectedOrderIds.size} selected order(s)` : `Print India Post stickers for all ${activeStageOrders.length} order(s) in this stage`}
+                    >
+                      <Tag className="h-3.5 w-3.5 text-red-700" />
+                      <span>{selectedOrderIds.size > 0 ? `Print Stickers (${selectedOrderIds.size})` : 'Print Stickers'}</span>
+                    </button>
+
                     {/* Other Actions Dropdown */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
@@ -1896,6 +1974,15 @@ admin@technoworld.com`
                             className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-800 font-bold"
                           >
                             <FileText className="h-3.5 w-3.5 text-emerald-700" /> Download Invoices (Merged PDF)
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsOtherActionsOpen(false);
+                              handleBatchPrintStickers();
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-800 font-bold"
+                          >
+                            <Tag className="h-3.5 w-3.5 text-red-700" /> Print Parcel Stickers (A7/A6/A5)
                           </button>
                           <button
                             disabled={isBatchGeneratingInvoices}
@@ -2307,21 +2394,39 @@ admin@technoworld.com`
                                         </>
                                       )}
                                       {grp.orders && grp.orders.length > 1 ? (
-                                        <button
-                                          title="Download Invoices for all orders in this consignment group (PDF)"
-                                          onClick={() => handleDownloadBatchInvoices(grp.orders.map((o: any) => o.id))}
-                                          className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                        >
-                                          <FileText className="h-3 w-3 text-emerald-700" /> Invoices
-                                        </button>
+                                        <>
+                                          <button
+                                            title="Download Invoices for all orders in this consignment group (PDF)"
+                                            onClick={() => handleDownloadBatchInvoices(grp.orders.map((o: any) => o.id))}
+                                            className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                          >
+                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                          </button>
+                                          <button
+                                            title="Print Official India Post Shipping Stickers for all orders in this bundle"
+                                            onClick={() => handleOpenStickers(grp.orders)}
+                                            className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                          >
+                                            <Tag className="h-3 w-3 text-red-700" /> Stickers
+                                          </button>
+                                        </>
                                       ) : (
-                                        <button
-                                          title="Download Official Tax Invoice (PDF)"
-                                          onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
-                                          className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                        >
-                                          <FileText className="h-3 w-3 text-emerald-700" /> Invoice
-                                        </button>
+                                        <>
+                                          <button
+                                            title="Download Official Tax Invoice (PDF)"
+                                            onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
+                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                          >
+                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                          </button>
+                                          <button
+                                            title="Print Official India Post Shipping Sticker (A7 / A6 / A5)"
+                                            onClick={() => handleOpenStickers(ord)}
+                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                          >
+                                            <Tag className="h-3 w-3 text-red-700" /> Sticker
+                                          </button>
+                                        </>
                                       )}
                                        {(!ord.trackingNumber && ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(ord.status) && !ord.parentOrderId) && (
                                          <button
@@ -2736,21 +2841,39 @@ admin@technoworld.com`
                                          </>
                                        )}
                                        {entry.isBundled && entry.group?.orders && entry.group.orders.length > 1 ? (
-                                         <button
-                                           title="Download Invoices for all orders in this bundle (PDF)"
-                                           onClick={() => handleDownloadBatchInvoices(entry.group.orders.map((o: any) => o.id))}
-                                           className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                         >
-                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoices
-                                         </button>
+                                         <>
+                                           <button
+                                             title="Download Invoices for all orders in this bundle (PDF)"
+                                             onClick={() => handleDownloadBatchInvoices(entry.group.orders.map((o: any) => o.id))}
+                                             className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                           </button>
+                                           <button
+                                             title="Print Official India Post Shipping Stickers for all orders in this bundle"
+                                             onClick={() => handleOpenStickers(entry.group.orders)}
+                                             className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <Tag className="h-3 w-3 text-red-700" /> Stickers
+                                           </button>
+                                         </>
                                        ) : (
-                                         <button
-                                           title="Download Official Tax Invoice (PDF)"
-                                           onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
-                                           className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
-                                         >
-                                           <FileText className="h-3 w-3 text-emerald-700" /> Invoice
-                                         </button>
+                                         <>
+                                           <button
+                                             title="Download Official Tax Invoice (PDF)"
+                                             onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
+                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                           </button>
+                                           <button
+                                             title="Print Official India Post Shipping Sticker (A7 / A6 / A5)"
+                                             onClick={() => handleOpenStickers(ord)}
+                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                           >
+                                             <Tag className="h-3 w-3 text-red-700" /> Sticker
+                                           </button>
+                                         </>
                                        )}
                                        {(!ord.trackingNumber && ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(ord.status) && !ord.parentOrderId) && (
                                          <button
@@ -3164,6 +3287,14 @@ admin@technoworld.com`
                         >
                           <Printer className="h-3.5 w-3.5 text-slate-600" />
                           <span>Download Tax Invoice</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenStickers(lookupOrderDossier)}
+                          className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-100 shadow-2xs transition-all"
+                        >
+                          <Tag className="h-3.5 w-3.5 text-red-700" />
+                          <span>Print Shipping Sticker</span>
                         </button>
 
                         {lookupOrderDossier.status === 'PENDING' && (
@@ -6388,9 +6519,18 @@ admin@technoworld.com`
         </div>
       )}
 
+      {/* Official India Post Shipping Sticker Modal (A7 / A6 / A5) */}
+      <ShippingStickerModal
+        isOpen={stickerModalState.isOpen}
+        onClose={() => setStickerModalState({ isOpen: false })}
+        order={stickerModalState.order}
+        orders={stickerModalState.orders}
+      />
+
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
 }
+

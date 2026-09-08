@@ -456,7 +456,7 @@ export default function HeroBookCoverManager() {
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
-                        className="relative z-10 h-full w-full object-fill select-none block contrast-[1.08] brightness-[1.04] saturate-[1.12]"
+                        className="relative z-10 h-full w-full object-fill select-none block"
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
