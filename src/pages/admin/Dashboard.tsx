@@ -690,7 +690,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (tab === 'orders') {
       fetchOrders();
-      const interval = setInterval(fetchOrders, 4000);
+      const interval = setInterval(() => {
+        if (!document.hidden) {
+          fetchOrders();
+        }
+      }, 15000);
       return () => clearInterval(interval);
     }
   }, [tab]);

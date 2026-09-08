@@ -199,8 +199,12 @@ export default function AdminLayout() {
 
   useEffect(() => {
     fetchNotifications();
-    // Fast polling every 4 seconds for real-time order alerts
-    const interval = setInterval(fetchNotifications, 4000);
+    // Intelligent polling: 15s when active, paused when tab is hidden
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchNotifications();
+      }
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
