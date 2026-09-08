@@ -55,6 +55,13 @@ export interface BookPresetConfig {
       height: string;
       angle: string;
     };
+    pageBlockCast?: {
+      left: string;
+      top: string;
+      width: string;
+      height: string;
+      angle?: string;
+    };
     diffuse: {
       left: string;
       top: string;
@@ -74,7 +81,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     aspectRatio: '1041 / 1511',
     container: {
       left: '59.96%',
-      top: '14.03%',
+      top: '15.20%',
       width: '26.93%',
       height: '69.39%',
     },
@@ -110,22 +117,29 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '63.0%',
-        top: '74.8%',
+        left: '63.3%',
+        top: '76.0%',
         width: '18.2%',
         height: '2.4%',
-        angle: '6.1deg',
+        angle: '5.8deg',
       },
       pageBlock: {
-        left: '80.8%',
-        top: '78.1%',
-        width: '3.6%',
-        height: '2.4%',
-        angle: '-26.5deg',
+        left: '80.7%',
+        top: '79.1%',
+        width: '3.4%',
+        height: '2.0%',
+        angle: '-21.5deg',
+      },
+      pageBlockCast: {
+        left: '80.2%',
+        top: '77.2%',
+        width: '4.8%',
+        height: '4.0%',
+        angle: '12.0deg',
       },
       diffuse: {
         left: '61.5%',
-        top: '74.2%',
+        top: '75.5%',
         width: '24.5%',
         height: '6.5%',
         angle: '5.5deg',
@@ -140,7 +154,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     aspectRatio: '1040 / 1513',
     container: {
       left: '60.44%',
-      top: '14.56%',
+      top: '15.70%',
       width: '27.05%',
       height: '69.93%',
     },
@@ -176,22 +190,29 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '63.0%',
-        top: '74.8%',
-        width: '18.2%',
+        left: '63.5%',
+        top: '76.0%',
+        width: '18.6%',
         height: '2.4%',
-        angle: '6.0deg',
+        angle: '5.6deg',
       },
       pageBlock: {
-        left: '81.0%',
-        top: '78.2%',
-        width: '3.6%',
-        height: '2.4%',
-        angle: '-26.0deg',
+        left: '82.8%',
+        top: '79.2%',
+        width: '2.8%',
+        height: '2.0%',
+        angle: '-19.5deg',
+      },
+      pageBlockCast: {
+        left: '82.2%',
+        top: '77.5%',
+        width: '4.2%',
+        height: '3.8%',
+        angle: '12.0deg',
       },
       diffuse: {
         left: '61.5%',
-        top: '74.2%',
+        top: '75.5%',
         width: '24.5%',
         height: '6.5%',
         angle: '5.2deg',
@@ -206,7 +227,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     aspectRatio: '992 / 1586',
     container: {
       left: '59.72%',
-      top: '15.30%',
+      top: '16.20%',
       width: '24.24%',
       height: '68.76%',
     },
@@ -242,22 +263,29 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     },
     shadow: {
       contact: {
-        left: '63.0%',
-        top: '74.8%',
-        width: '18.0%',
+        left: '63.5%',
+        top: '76.0%',
+        width: '14.5%',
         height: '2.4%',
-        angle: '6.2deg',
+        angle: '6.6deg',
       },
       pageBlock: {
-        left: '80.5%',
-        top: '78.0%',
-        width: '3.6%',
-        height: '2.4%',
-        angle: '-26.0deg',
+        left: '78.0%',
+        top: '79.0%',
+        width: '2.4%',
+        height: '2.0%',
+        angle: '-22.8deg',
+      },
+      pageBlockCast: {
+        left: '77.5%',
+        top: '77.4%',
+        width: '4.0%',
+        height: '3.8%',
+        angle: '12.0deg',
       },
       diffuse: {
         left: '61.5%',
-        top: '74.2%',
+        top: '75.5%',
         width: '24.5%',
         height: '6.5%',
         angle: '5.2deg',
