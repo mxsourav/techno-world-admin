@@ -5,6 +5,7 @@ export interface BookPresetConfig {
   name: string;
   description: string;
   imageSrc: string;
+  aspectRatio: string;
   container: {
     left: string;
     top: string;
@@ -63,6 +64,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     name: 'Academic / College Textbook',
     description: 'Standard textbook format (~1:1.45). Ideal for engineering, medical & college books.',
     imageSrc: '/books mockup/Academic-College-Textbook.png',
+    aspectRatio: '1041 / 1511',
     container: {
       left: '59.96%',
       top: '14.03%',
@@ -74,29 +76,30 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
       top: '12.91%',
       width: '3.75%',
       height: '74.98%',
-      matrix: () => 'none',
+      matrix: (s: number) =>
+        `matrix3d(0.992056, -0.076923, 0, ${-0.0002037 / s}, 0, 0.992056, 0, 0, 0, 0, 1, 0, 0, ${3.0 * s}, 0, 1)`,
     },
     previewSpine: {
       left: '13.26%',
       top: '12.91%',
       width: '3.75%',
       height: '74.98%',
-      matrix: 'none',
+      matrix: 'matrix3d(0.992056, -0.076923, 0, -0.001399, 0, 0.992056, 0, 0, 0, 0, 1, 0, 0, 0.44, 0, 1)',
     },
     overlay: {
       left: '17.00%',
-      top: '9.53%',
-      width: '61.38%',
+      top: '9.46%',
+      width: '60.23%',
       height: '82.86%',
       matrix: (s: number) =>
-        `matrix3d(0.907348, -0.075117, 0, ${-0.0003352 / s}, 0, 0.907348, 0, 0, 0, 0, 1, 0, 0, ${20.76 * s}, 0, 1)`,
+        `matrix3d(0.904952, -0.082935, 0, ${-0.0001516 / s}, 0, 0.904952, 0, 0, 0, 0, 1, 0, 0, ${52.0 * s}, 0, 1)`,
     },
     previewOverlay: {
       left: '17.00%',
-      top: '9.53%',
-      width: '61.38%',
+      top: '9.46%',
+      width: '60.23%',
       height: '82.86%',
-      matrix: 'matrix3d(0.907348, -0.075117, 0, -0.000978, 0, 0.907348, 0, 0, 0, 0, 1, 0, 0, 7.12, 0, 1)',
+      matrix: 'matrix3d(0.904952, -0.082935, 0, -0.001041, 0, 0.904952, 0, 0, 0, 0, 1, 0, 0, 7.57, 0, 1)',
     },
     shadow: {
       contact: {
@@ -120,6 +123,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     name: 'Standard Paperback / Novel',
     description: 'Wider paperback format (~1:1.35 - 1:1.42). Ideal for literature, fiction & exam guides.',
     imageSrc: '/books mockup/Standard-Paperback-Novel.png',
+    aspectRatio: '1040 / 1513',
     container: {
       left: '60.44%',
       top: '14.56%',
@@ -127,33 +131,34 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
       height: '69.93%',
     },
     spine: {
-      left: '11.54%',
+      left: '11.73%',
       top: '12.23%',
-      width: '3.75%',
+      width: '3.56%',
       height: '74.09%',
-      matrix: () => 'none',
+      matrix: (s: number) =>
+        `matrix3d(0.992864, -0.054054, 0, ${-0.0001929 / s}, 0, 0.992864, 0, 0, 0, 0, 1, 0, 0, ${2.0 * s}, 0, 1)`,
     },
     previewSpine: {
-      left: '11.54%',
+      left: '11.73%',
       top: '12.23%',
-      width: '3.75%',
+      width: '3.56%',
       height: '74.09%',
-      matrix: 'none',
+      matrix: 'matrix3d(0.992864, -0.054054, 0, -0.001327, 0, 0.992864, 0, 0, 0, 0, 1, 0, 0, 0.29, 0, 1)',
     },
     overlay: {
       left: '15.29%',
-      top: '8.66%',
-      width: '68.08%',
-      height: '82.29%',
+      top: '8.72%',
+      width: '67.02%',
+      height: '82.15%',
       matrix: (s: number) =>
-        `matrix3d(0.902811, -0.072034, 0, ${-0.0003157 / s}, 0, 0.902811, 0, 0, 0, 0, 1, 0, 0, ${22.18 * s}, 0, 1)`,
+        `matrix3d(0.901850, -0.076040, 0, ${-0.0001408 / s}, 0, 0.901850, 0, 0, 0, 0, 1, 0, 0, ${53.0 * s}, 0, 1)`,
     },
     previewOverlay: {
       left: '15.29%',
-      top: '8.66%',
-      width: '68.08%',
-      height: '82.29%',
-      matrix: 'matrix3d(0.902811, -0.072034, 0, -0.000927, 0, 0.902811, 0, 0, 0, 0, 1, 0, 0, 7.55, 0, 1)',
+      top: '8.72%',
+      width: '67.02%',
+      height: '82.15%',
+      matrix: 'matrix3d(0.901850, -0.076040, 0, -0.000968, 0, 0.901850, 0, 0, 0, 0, 1, 0, 0, 7.71, 0, 1)',
     },
     shadow: {
       contact: {
@@ -177,6 +182,7 @@ export const BOOK_PRESETS: Record<BookPresetId, BookPresetConfig> = {
     name: 'Thick Reference / Handbook',
     description: 'Tall & thick handbook format (~1:1.60+). Ideal for manuals, dictionaries & comprehensive guides.',
     imageSrc: '/books mockup/Thick Reference-Handbook.png',
+    aspectRatio: '992 / 1586',
     container: {
       left: '59.72%',
       top: '15.30%',

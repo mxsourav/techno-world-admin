@@ -28,7 +28,25 @@ export default function HeroBookCoverManager() {
   // Staged file for upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<'auto' | BookPresetId>('auto');
+  const CACHED_COVER_KEY = 'tw_hero_cover_url';
+  const CACHED_MODEL_KEY = 'tw_hero_book_model';
+
+  const [cachedCoverUrl, setCachedCoverUrl] = useState<string | null>(() => {
+    try {
+      const cached = localStorage.getItem(CACHED_COVER_KEY);
+      if (cached) return cached;
+    } catch {}
+    return '/uploads/hero/hero-book-cover-1788824544793.webp';
+  });
+
+  const [selectedModel, setSelectedModel] = useState<'auto' | BookPresetId>(() => {
+    try {
+      const cached = localStorage.getItem(CACHED_MODEL_KEY);
+      if (cached && (cached in BOOK_PRESETS)) return cached as BookPresetId;
+    } catch {}
+    return 'auto';
+  });
+
   const [imageRatio, setImageRatio] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,8 +71,18 @@ export default function HeroBookCoverManager() {
       const res = await heroService.getHeroConfig();
       if (res.success && res.data) {
         setHeroConfig(res.data);
+        if (res.data.hero_book_cover_url) {
+          const fullUrl = getImageUrl(res.data.hero_book_cover_url);
+          setCachedCoverUrl(fullUrl);
+          try {
+            localStorage.setItem(CACHED_COVER_KEY, fullUrl);
+          } catch {}
+        }
         if (res.data.hero_book_model && (res.data.hero_book_model in BOOK_PRESETS)) {
           setSelectedModel(res.data.hero_book_model as BookPresetId);
+          try {
+            localStorage.setItem(CACHED_MODEL_KEY, res.data.hero_book_model);
+          } catch {}
         }
       }
     } catch (err: any) {
@@ -164,6 +192,8 @@ export default function HeroBookCoverManager() {
     ? previewUrl
     : heroConfig?.hero_book_cover_url
     ? `${getImageUrl(heroConfig.hero_book_cover_url)}?v=${new Date(heroConfig.hero_book_cover_updated_at || Date.now()).getTime()}`
+    : cachedCoverUrl
+    ? getImageUrl(cachedCoverUrl)
     : null;
 
   return (
@@ -347,7 +377,10 @@ export default function HeroBookCoverManager() {
               {/* 3D Perspective Simulation Box */}
               <div className="relative h-64 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#02120b] p-4">
                 {currentCoverUrl ? (
-                  <div className="relative h-56 w-38 flex items-center justify-center">
+                  <div
+                    className="relative h-56 flex items-center justify-center"
+                    style={{ aspectRatio: activePreset.aspectRatio || '1041 / 1511' }}
+                  >
                     {/* Realistic Dual Contact Shadow */}
                     <div
                       className="absolute pointer-events-none"
@@ -366,7 +399,7 @@ export default function HeroBookCoverManager() {
                     <img
                       src={activePreset.imageSrc}
                       alt={activePreset.name}
-                      className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
+                      className="absolute inset-0 h-full w-full object-fill pointer-events-none select-none"
                     />
 
                     {/* Dynamic Spine Wrap: Blurred & Darkened Primary Tone Blend */}
@@ -387,13 +420,12 @@ export default function HeroBookCoverManager() {
                           src={currentCoverUrl}
                           alt=""
                           aria-hidden="true"
-                          className="h-full w-full object-cover scale-125 filter blur-[2px] brightness-65 contrast-125"
+                          className="h-full w-full object-cover scale-125 filter blur-[2px] brightness-75 contrast-120 saturate-110"
                         />
                         <div
                           className="absolute inset-0 pointer-events-none"
                           style={{
-                            background: 'linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(255,255,255,0.10) 40%, rgba(0,0,0,0.65) 100%)',
-                            mixBlendMode: 'multiply',
+                            background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(255,255,255,0.15) 35%, rgba(0,0,0,0.50) 100%)',
                           }}
                         />
                       </div>
@@ -424,7 +456,7 @@ export default function HeroBookCoverManager() {
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
-                        className="relative z-10 h-full w-full object-fill select-none block"
+                        className="relative z-10 h-full w-full object-fill select-none block contrast-[1.08] brightness-[1.04] saturate-[1.12]"
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -433,12 +465,11 @@ export default function HeroBookCoverManager() {
                         }}
                       />
 
-                      {/* Spine crease shadow */}
+                      {/* Spine crease shadow: subtle seam on left edge */}
                       <div
-                        className="absolute inset-0 z-20 pointer-events-none"
+                        className="absolute left-0 top-0 bottom-0 w-[4%] z-20 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.18) 2%, transparent 4%)',
-                          mixBlendMode: 'multiply',
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, transparent 100%)',
                         }}
                       />
                     </div>
