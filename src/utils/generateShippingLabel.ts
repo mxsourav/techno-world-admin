@@ -1,7 +1,7 @@
 import { TECHNO_WORLD_BLACK_LOGO_B64 } from './logoBase64';
 
 export type ShippingLabelSize = '75x125' | '100x150' | '100x100' | 'A7' | 'A6' | 'A5' | 'A4';
-export type ShippingLabelDesign = 'india-post' | 'modern-thermal' | 'compact-courier' | 'all-in-one';
+export type ShippingLabelDesign = 'techno-speed-post' | 'india-post' | 'modern-thermal' | 'compact-courier' | 'all-in-one';
 
 export interface ShippingLabelOptions {
   size?: ShippingLabelSize;
@@ -10,11 +10,34 @@ export interface ShippingLabelOptions {
   showSkus?: boolean;
   showOrderBarcode?: boolean;
   showPrice?: boolean; // Price showing optional button/toggle
-  customWeight?: number;
+
+  // Fully Editable / Remappable Fields:
+  customCarrier?: string;       // e.g. "SPEED POST" or "BOOK POST"
+  customArticleNumber?: string; // e.g. "EE987654321IN"
+
+  // Recipient (Ship To) Remappable Fields:
+  customRecipientName?: string;
+  customRecipientAddress?: string;
+  customRecipientCity?: string;
+  customRecipientState?: string;
+  customRecipientPin?: string;
+  customRecipientPhone?: string;
+
+  // Order Items Remappable Fields:
+  customOrderItemsHeader?: string;
+  customOrderItemsText?: string;
+
+  // Return Address (Sender) Remappable Fields:
+  customSenderName?: string;
+  customSenderCompany?: string;
   customSenderAddress?: string;
-  customReturnAddress?: string; // "if not delivered" return address
-  customArticleNumber?: string;
-  customCarrier?: string;
+  customSenderPhone?: string;
+  customSenderGst?: string;
+
+  // Footer Remappable Field:
+  customFooterText?: string;
+
+  customWeight?: number;
   customNotes?: string;
 }
 
@@ -90,95 +113,170 @@ export function generateIndiaPostEmblemSvg(): string {
 }
 
 export function generateSingleStickerCardHtml(order: any, options: ShippingLabelOptions = {}): string {
-  const size = options.size || '75x125';
-  const design = options.design || 'india-post';
+  const size = options.size || '100x150';
+  const design = options.design || 'techno-speed-post'; // Default to user's exact uploaded design
   const showLogo = options.showLogo !== false;
   const showSkus = options.showSkus !== false;
   const showOrderBarcode = options.showOrderBarcode !== false;
-  const showPrice = options.showPrice !== false; // Default: show price
+  const showPrice = options.showPrice !== false;
 
   const orderNum = order.orderNumber || order.id?.slice(0, 8) || 'TW-ORD-000';
-  const articleNo = options.customArticleNumber || order.trackingNumber || `EB${Math.floor(100000000 + Math.random() * 900000000)}IN`;
-  const carrier = options.customCarrier || (order.shippingMethod === 'NORMAL_POST' ? 'BOOK POST (PARCEL)' : 'SPEED POST (DOMESTIC)');
-  const isSpeedPost = carrier.includes('SPEED');
+  const articleNo = options.customArticleNumber || order.trackingNumber || `EE${Math.floor(100000000 + Math.random() * 900000000)}IN`;
+  const carrier = options.customCarrier || (order.shippingMethod === 'NORMAL_POST' ? 'BOOK POST' : 'SPEED POST');
+  const isSpeedPost = carrier.toUpperCase().includes('SPEED');
 
+  // Recipient (Ship To) fields (Remappable)
   const addr = order.address || {};
-  const recipientName = addr.fullName || addr.name || order.user?.name || 'Valued Customer';
-  const recipientPhone = addr.phone || order.user?.phone || 'N/A';
-  const recipientLine1 = addr.addressLine1 || addr.address || 'Address Line 1';
-  const recipientLine2 = addr.addressLine2 || '';
-  const recipientCity = addr.city || 'KOLKATA';
-  const recipientState = addr.state || 'WEST BENGAL';
-  const recipientPin = String(addr.pincode || '700006').trim();
+  const recipientName = options.customRecipientName ?? (addr.fullName || addr.name || order.user?.name || 'Washim');
+  const recipientLine1 = options.customRecipientAddress ?? (addr.addressLine1 || addr.address || '90/6 A M.G Road, College Street');
+  const recipientCity = options.customRecipientCity ?? (addr.city || 'Kolkata');
+  const recipientState = options.customRecipientState ?? (addr.state || 'West Bengal');
+  const recipientPin = String(options.customRecipientPin ?? (addr.pincode || '700007')).trim();
+  const recipientPhone = options.customRecipientPhone ?? (addr.phone || order.user?.phone || '7479135626');
 
-  const senderName = 'Techno World Books Hub';
-  const senderCompany = 'Techno World Publications';
+  // Sender & Return Address fields (Remappable)
+  const senderName = options.customSenderName || 'Techno World Books Hub';
+  const senderCompany = options.customSenderCompany || 'Techno World Publications';
   const senderAddress = options.customSenderAddress || 'College Street (Bidhan Sarani), Near Presidency, Kolkata - 700006';
-  const returnAddress = options.customReturnAddress || 'Techno World Books Hub, 90/6A Mahatma Gandhi Road, College Street, Kolkata - 700007, WB. Phone: 033-2219-XXXX / 9830000000';
-  const senderPhone = '033-2219-XXXX / 9830000000';
-  const senderGst = '19AAACT0000A1Z5';
+  const senderPhone = options.customSenderPhone || '033-2219-XXXX / 9830000000';
+  const senderGst = options.customSenderGst || '19AAACT0000A1Z5';
 
+  // Order Items fields (Remappable)
   const items = Array.isArray(order.items) ? order.items : [];
   const totalQty = items.reduce((acc: number, it: any) => acc + (it.quantity || it.qty || 1), 0) || 1;
+  const booksCount = items.length || 1;
+
+  const defaultItemsHeader = `ORDER ITEMS (${booksCount} BOOK${booksCount > 1 ? 'S' : ''}, TOTAL QTY: ${totalQty})`;
+  const orderItemsHeader = options.customOrderItemsHeader || defaultItemsHeader;
+
+  let defaultItemsText = items.map((it: any) => {
+    const bk = it.book || {};
+    const sku = bk.sku || bk.isbn13 || bk.isbn10 || it.sku || 'SKU-TW';
+    const title = bk.title || it.title || 'Textbook of Educational Technology Nursing Education - Vol 1';
+    const qty = it.quantity || it.qty || 1;
+    return `[${sku}] ${title} ... Qty: ${qty}`;
+  }).join('\n');
+
+  if (!defaultItemsText) {
+    defaultItemsText = `[SKU-TW] Textbook of Educational Technology Nursing Education - Vol ... Qty: 1`;
+  }
+  const orderItemsText = options.customOrderItemsText || (showSkus ? defaultItemsText : `Total Books: ${booksCount} (Qty: ${totalQty})`);
+
+  // Footer text (Remappable)
+  const footerText = options.customFooterText || 'POSTAGE APPROVED FOR SHIPPING';
+
   const totalWeight = options.customWeight || Math.max(350, totalQty * 420);
-  const declaredValue = order.totalAmount || order.payableAmount || 0;
+  const declaredValue = order.totalAmount || order.payableAmount || 452;
   const isCOD = (order.paymentMethod || '').toUpperCase() === 'COD';
   const bookingDate = new Date(order.placedAt || order.createdAt || Date.now()).toLocaleDateString('en-IN', {
     day: '2-digit', month: 'short', year: 'numeric'
   });
 
-  // Ordered items breakdown
-  const itemsRowsHtml = items.map((it: any) => {
-    const bk = it.book || {};
-    const sku = bk.sku || bk.isbn13 || bk.isbn10 || it.sku || 'SKU-TW';
-    const title = bk.title || it.title || 'Academic Book';
-    const qty = it.quantity || it.qty || 1;
+  // Barcodes
+  const mainBarcodeSvg = generateCode128Svg(articleNo, 48, 1.7);
+  const headerBarcodeSvg = generateCode128Svg(articleNo, 26, 1.15);
+  const orderBarcodeSvg = showOrderBarcode ? generateCode128Svg(orderNum, 24, 1.1) : '';
+
+  // Optional Price display badge/note
+  let priceNoteHtml = '';
+  if (showPrice) {
+    priceNoteHtml = isCOD 
+      ? `<div class="speedpost-price-badge cod-pill">C.O.D. AMOUNT: ₹${declaredValue}</div>`
+      : `<div class="speedpost-price-badge prepaid-pill">PREPAID: ₹${declaredValue}</div>`;
+  }
+
+  // --- DESIGN: TECHNO SPEED POST (EXACT MATCH TO UPLOADED IMAGE) ---
+  if (design === 'techno-speed-post') {
     return `
-      <div class="item-row">
-        <div class="item-left">
-          <span class="item-sku">[${sku}]</span>
-          <span class="item-name">${title}</span>
-        </div>
-        <div class="item-right">
-          <span class="item-qty-badge">Qty: <b>${qty}</b></span>
-        </div>
-      </div>
-    `;
-  }).join('');
+      <div class="sticker-container design-techno-speed-post size-${size}">
+        <!-- 1. Top 3-Column Header (Rectangular Logo on Left) -->
+        <div class="speedpost-header-grid">
+          <!-- Left: Techno World Rectangular Logo -->
+          <div class="speedpost-header-col speedpost-logo-col">
+            ${showLogo ? `
+              <img src="${TECHNO_WORLD_BLACK_LOGO_B64}" class="speedpost-tw-logo" alt="Techno World Logo" />
+            ` : `
+              <div class="speedpost-text-logo">
+                <div class="brand-title">TECHNO WORLD</div>
+                <div class="brand-sub">Publisher &amp; Distributors</div>
+              </div>
+            `}
+          </div>
 
-  const isCompact = size === 'A7' || size === '75x125' || size === '100x100';
-  const articleBarcodeSvg = generateCode128Svg(
-    articleNo, 
-    size === 'A7' ? 34 : size === '75x125' ? 38 : 42, 
-    isCompact ? 1.4 : 1.65
-  );
-  const orderBarcodeSvg = showOrderBarcode ? generateCode128Svg(
-    orderNum, 
-    size === 'A7' ? 22 : size === '75x125' ? 24 : 28, 
-    1.1
-  ) : '';
+          <!-- Middle: India Post Logo -->
+          <div class="speedpost-header-col speedpost-post-col">
+            <div class="speedpost-post-title">India Post</div>
+            <div class="speedpost-post-emblem">
+              <svg viewBox="0 0 65 38" width="50" height="28" style="display:block;margin:0 auto;">
+                <rect x="5" y="4" width="48" height="28" fill="#c0262d" rx="2" />
+                <path d="M 0 14 Q 28 5 62 10" stroke="#facc15" stroke-width="2.2" fill="none" />
+                <path d="M 8 25 L 28 13 L 48 22" stroke="#facc15" stroke-width="2.2" fill="none" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="speedpost-post-sub">India Post</div>
+          </div>
 
-  // Payment Badge Text (respects showPrice option)
-  let paymentBadgeHtml = '';
-  if (isCOD) {
-    paymentBadgeHtml = `
-      <div class="payment-badge cod-badge">
-        ${showPrice ? `C.O.D. COLLECT CASH: <b>₹${declaredValue}</b>` : `C.O.D. SHIPMENT — REFER INVOICE`}
-      </div>
-    `;
-  } else {
-    paymentBadgeHtml = `
-      <div class="payment-badge prepaid-badge">
-        ${showPrice ? `PREPAID: ₹${declaredValue} (DO NOT COLLECT)` : `PREPAID SHIPMENT (DO NOT COLLECT CASH)`}
+          <!-- Right: AWB Barcode & No -->
+          <div class="speedpost-header-col speedpost-awb-col">
+            <div class="speedpost-mini-barcode">${headerBarcodeSvg}</div>
+            <div class="speedpost-mini-awb-no">AWB NO: ${articleNo}</div>
+          </div>
+        </div>
+
+        <!-- 2. SPEED POST Carrier Banner -->
+        <div class="speedpost-service-banner">
+          ${carrier}
+        </div>
+
+        <!-- 3. SHIP TO (Consignee Address) -->
+        <div class="speedpost-section-box speedpost-ship-to-box">
+          <div class="speedpost-section-title">SHIP TO:</div>
+          <div class="speedpost-recipient-name">${recipientName}</div>
+          <div class="speedpost-address-line">
+            ${recipientLine1}<br/>
+            ${recipientCity}, ${recipientState} - ${recipientPin}
+          </div>
+          <div class="speedpost-mob-line">MOB: <b>${recipientPhone}</b></div>
+        </div>
+
+        <!-- 4. ORDER ITEMS Manifest -->
+        <div class="speedpost-section-box speedpost-items-box">
+          <div class="speedpost-section-title">${orderItemsHeader}</div>
+          <div class="speedpost-items-content">
+            ${orderItemsText.replace(/\n/g, '<br/>')}
+          </div>
+        </div>
+
+        <!-- 5. RETURN ADDRESS -->
+        <div class="speedpost-section-box speedpost-return-box">
+          <div class="speedpost-section-title">RETURN ADDRESS:</div>
+          <div class="speedpost-return-name">${senderName}</div>
+          <div class="speedpost-return-sub">${senderCompany}</div>
+          <div class="speedpost-return-addr">${senderAddress}</div>
+          <div class="speedpost-return-contact">Ph: ${senderPhone}</div>
+          <div class="speedpost-return-gst">GSTIN: ${senderGst}</div>
+        </div>
+
+        <!-- 6. AWB Tracking Barcode Section -->
+        <div class="speedpost-section-box speedpost-awb-box">
+          <div class="speedpost-awb-title">AWB Tracking #</div>
+          <div class="speedpost-main-barcode">${mainBarcodeSvg}</div>
+          <div class="speedpost-awb-number">#${articleNo}</div>
+        </div>
+
+        <!-- 7. Bottom Postage Approved Footer -->
+        <div class="speedpost-footer-text">
+          <span>${footerText}</span>
+          ${priceNoteHtml}
+        </div>
       </div>
     `;
   }
 
-  // --- DESIGN 1: OFFICIAL INDIA POST (CEPT STANDARD) ---
+  // --- DESIGN: OFFICIAL INDIA POST (CEPT STANDARD) ---
   if (design === 'india-post') {
     return `
       <div class="sticker-container design-india-post size-${size}">
-        <!-- Header -->
         <div class="header-band ${isSpeedPost ? 'speed-post' : 'normal-post'}">
           <div class="header-left">
             ${generateIndiaPostEmblemSvg()}
@@ -193,13 +291,11 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
           </div>
         </div>
 
-        <!-- Primary Consignment Tracking Barcode -->
         <div class="barcode-band">
-          <div class="barcode-svg">${articleBarcodeSvg}</div>
+          <div class="barcode-svg">${mainBarcodeSvg}</div>
           <div class="article-no-text">ARTICLE NO: <b>${articleNo.replace(/(.{2})(.{3})(.{3})(.{3})(.{2})/, '$1 $2 $3 $4 $5')}</b></div>
         </div>
 
-        <!-- Routing & Delivery PIN Banner -->
         <div class="routing-band">
           <div class="pin-block">
             <span class="pin-title">DELIVERY PIN:</span>
@@ -211,19 +307,16 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
           </div>
         </div>
 
-        <!-- Addresses Grid -->
         <div class="address-band">
           <div class="to-cell">
             <div class="cell-label">DELIVER TO:</div>
             <div class="recipient-name">${recipientName}</div>
             <div class="recipient-address">
               ${recipientLine1}<br/>
-              ${recipientLine2 ? recipientLine2 + '<br/>' : ''}
               <b>${recipientCity}</b>, ${recipientState} - <b class="pin-accent">${recipientPin}</b>
             </div>
             <div class="recipient-phone">MOB: <b>${recipientPhone}</b></div>
           </div>
-
           <div class="from-cell">
             ${showLogo ? `<img src="${TECHNO_WORLD_BLACK_LOGO_B64}" class="merchant-logo" alt="Techno World Logo" />` : ''}
             <div class="cell-label">FROM (SENDER):</div>
@@ -235,15 +328,13 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
           </div>
         </div>
 
-        <!-- Package Manifest, Payment & Barcode -->
         <div class="metrics-band">
           <div class="metrics-left">
             <div class="metrics-line">
               <span><b>WT:</b> ${totalWeight}g</span>
-              <span><b>DIMS:</b> 20x15x3 cm</span>
               <span><b>PCS:</b> ${totalQty}</span>
             </div>
-            ${paymentBadgeHtml}
+            ${priceNoteHtml}
           </div>
           <div class="metrics-right">
             <div class="order-id-tag">ORDER: <b>${orderNum}</b></div>
@@ -251,282 +342,120 @@ export function generateSingleStickerCardHtml(order: any, options: ShippingLabel
           </div>
         </div>
 
-        <!-- Ordered Items Section (Clean padding & word-wrap) -->
-        ${showSkus && itemsRowsHtml ? `
-          <div class="ordered-items-band">
-            <div class="items-header">
-              <span>ORDERED ITEMS (${items.length} Book${items.length > 1 ? 's' : ''}, Total Qty: ${totalQty})</span>
-            </div>
-            <div class="items-list-container">
-              ${itemsRowsHtml}
-            </div>
-          </div>
-        ` : ''}
+        <div class="ordered-items-band">
+          <div class="items-header">${orderItemsHeader}</div>
+          <div class="items-content-text">${orderItemsText.replace(/\n/g, '<br/>')}</div>
+        </div>
 
-        <!-- If Not Delivered Return Notice -->
         <div class="return-band">
-          <b>IF UNDELIVERED, RETURN TO:</b> ${returnAddress}
+          <b>IF UNDELIVERED, RETURN TO:</b> ${senderName}, ${senderAddress}. Ph: ${senderPhone}
         </div>
 
-        <!-- Postal Warning Footer -->
         <div class="footer-band">
-          PROPERTY OF INDIA POST NETWORK • HANDLE WITH CARE - CONTAINS ACADEMIC EDUCATIONAL BOOKS
+          ${footerText} • CONTAINS ACADEMIC EDUCATIONAL BOOKS
         </div>
       </div>
     `;
   }
 
-  // --- DESIGN 2: MODERN E-COMMERCE THERMAL (FLIPKART / AMAZON / DELHIVERY STYLE) ---
-  if (design === 'modern-thermal') {
-    return `
-      <div class="sticker-container design-modern-thermal size-${size}">
-        <!-- Top Bar with Carrier & Date -->
-        <div class="thermal-header">
-          <div class="thermal-brand">
-            <span class="carrier-badge">${carrier}</span>
-            <span class="ship-date">${bookingDate}</span>
-          </div>
-          <div class="thermal-order-ref">
-            <b>ORDER #${orderNum}</b>
-          </div>
-        </div>
-
-        <!-- Tracking Barcode -->
-        <div class="thermal-barcode-box">
-          <div class="barcode-svg">${articleBarcodeSvg}</div>
-          <div class="tracking-caption">AWB / TRACKING: <b>${articleNo}</b></div>
-        </div>
-
-        <!-- High-Contrast Destination Box -->
-        <div class="thermal-dest-box">
-          <div class="dest-pin-large">PIN: <b>${recipientPin}</b></div>
-          <div class="dest-hub-text">${recipientCity.toUpperCase()} (${recipientState.toUpperCase()})</div>
-        </div>
-
-        <!-- Consignee Information -->
-        <div class="thermal-consignee-box">
-          <div class="consignee-tag">SHIP TO (BUYER):</div>
-          <div class="consignee-name">${recipientName}</div>
-          <div class="consignee-addr">${recipientLine1}, ${recipientLine2 ? recipientLine2 + ', ' : ''}${recipientCity}, ${recipientState} - <b>${recipientPin}</b></div>
-          <div class="consignee-mob">CONTACT: <b>${recipientPhone}</b></div>
-        </div>
-
-        <!-- Payment & Metrics -->
-        <div class="thermal-middle-row">
-          <div class="thermal-pay-col">
-            ${paymentBadgeHtml}
-          </div>
-          <div class="thermal-metric-col">
-            <span>WT: <b>${totalWeight}g</b></span>
-            <span>ITEMS: <b>${totalQty}</b></span>
-          </div>
-        </div>
-
-        <!-- Ordered Items Summary -->
-        ${showSkus && itemsRowsHtml ? `
-          <div class="thermal-items-box">
-            <div class="thermal-items-title">MANIFEST: ${items.length} TITLE(S) | TOTAL QTY: ${totalQty}</div>
-            <div class="items-list-container">
-              ${itemsRowsHtml}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- Return / Shipper Block -->
-        <div class="thermal-return-box">
-          <div class="return-title">RETURN IF UNDELIVERED TO:</div>
-          <div class="return-body">${senderName}, ${senderAddress} | Helpline: ${senderPhone}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  // --- DESIGN 3: COMPACT COURIER (3" OR 4" THERMAL ROLL) ---
-  if (design === 'compact-courier') {
-    return `
-      <div class="sticker-container design-compact-courier size-${size}">
-        <div class="compact-header">
-          <b>${carrier}</b>
-          <span>${bookingDate}</span>
-        </div>
-
-        <div class="compact-barcode">
-          ${articleBarcodeSvg}
-          <div class="compact-art-no">${articleNo}</div>
-        </div>
-
-        <div class="compact-routing">
-          <span>DELIVERY PIN: <b>${recipientPin}</b></span>
-          <span>${recipientCity.toUpperCase()}</span>
-        </div>
-
-        <div class="compact-to">
-          <div class="compact-to-name"><b>TO:</b> ${recipientName} (Ph: ${recipientPhone})</div>
-          <div class="compact-to-addr">${recipientLine1}, ${recipientCity} - ${recipientPin}</div>
-        </div>
-
-        <div class="compact-payment-row">
-          ${paymentBadgeHtml}
-          <span class="compact-ord">ORD: ${orderNum}</span>
-        </div>
-
-        ${showSkus && itemsRowsHtml ? `
-          <div class="compact-items">
-            ${itemsRowsHtml}
-          </div>
-        ` : ''}
-
-        <div class="compact-return">
-          <b>RTO:</b> ${senderName}, Kolkata 700006. Ph: ${senderPhone}
-        </div>
-      </div>
-    `;
-  }
-
-  // --- DESIGN 4: ALL-IN-ONE DISPATCH & PACKING SLIP ---
+  // --- DESIGN: MODERN E-COMMERCE THERMAL ---
   return `
-    <div class="sticker-container design-all-in-one size-${size}">
-      <!-- Top Half: Shipping Label -->
-      <div class="all-in-one-top">
-        <div class="header-band ${isSpeedPost ? 'speed-post' : 'normal-post'}">
-          <div class="header-left">
-            ${generateIndiaPostEmblemSvg()}
-            <div>
-              <div class="service-name">${carrier}</div>
-              <div class="service-sub">INDIA POST PARCEL CONSIGNMENT</div>
-            </div>
-          </div>
-          <div class="header-right">
-            <div>${bookingDate}</div>
-            <div class="booking-office">KOLKATA GPO</div>
-          </div>
+    <div class="sticker-container design-modern-thermal size-${size}">
+      <div class="thermal-header">
+        <div class="thermal-brand">
+          <span class="carrier-badge">${carrier}</span>
+          <span class="ship-date">${bookingDate}</span>
         </div>
+        <div class="thermal-order-ref"><b>ORDER #${orderNum}</b></div>
+      </div>
 
-        <div class="barcode-band">
-          <div class="barcode-svg">${articleBarcodeSvg}</div>
-          <div class="article-no-text">ARTICLE NO: <b>${articleNo}</b></div>
-        </div>
+      <div class="thermal-barcode-box">
+        <div class="barcode-svg">${mainBarcodeSvg}</div>
+        <div class="tracking-caption">AWB / TRACKING: <b>${articleNo}</b></div>
+      </div>
 
-        <div class="routing-band">
-          <div class="pin-block">PIN: <b>${recipientPin}</b></div>
-          <div class="hub-block">${recipientCity.toUpperCase()} HUB</div>
-        </div>
+      <div class="thermal-dest-box">
+        <div class="dest-pin-large">PIN: <b>${recipientPin}</b></div>
+        <div class="dest-hub-text">${recipientCity.toUpperCase()} (${recipientState.toUpperCase()})</div>
+      </div>
 
-        <div class="address-band">
-          <div class="to-cell">
-            <div class="cell-label">SHIP TO:</div>
-            <div class="recipient-name">${recipientName}</div>
-            <div class="recipient-address">${recipientLine1}, ${recipientCity} - <b>${recipientPin}</b></div>
-            <div class="recipient-phone">Ph: <b>${recipientPhone}</b></div>
-          </div>
-          <div class="from-cell">
-            <div class="cell-label">RETURN TO:</div>
-            <div class="sender-name">${senderName}</div>
-            <div class="sender-address">${senderAddress}</div>
-            <div class="sender-contact">Ph: ${senderPhone}</div>
-          </div>
-        </div>
+      <div class="thermal-consignee-box">
+        <div class="consignee-tag">SHIP TO:</div>
+        <div class="consignee-name">${recipientName}</div>
+        <div class="consignee-addr">${recipientLine1}, ${recipientCity}, ${recipientState} - <b>${recipientPin}</b></div>
+        <div class="consignee-mob">MOB: <b>${recipientPhone}</b></div>
+      </div>
 
-        <div class="metrics-band">
-          <div class="metrics-left">
-            ${paymentBadgeHtml}
-          </div>
-          <div class="metrics-right">
-            <span>ORDER: <b>${orderNum}</b></span>
-            <span>WT: <b>${totalWeight}g</b></span>
-          </div>
+      <div class="thermal-items-box">
+        <div class="thermal-items-title">${orderItemsHeader}</div>
+        <div class="items-content-text">${orderItemsText.replace(/\n/g, '<br/>')}</div>
+      </div>
+
+      <div class="thermal-middle-row">
+        ${priceNoteHtml}
+        <div class="thermal-metric-col">
+          <span>WT: <b>${totalWeight}g</b></span>
+          <span>ITEMS: <b>${totalQty}</b></span>
         </div>
       </div>
 
-      <!-- Tear Line -->
-      <div class="tear-divider">
-        <span>✂ FOLD / TEAR HERE FOR PACKING SLIP ✂</span>
+      <div class="thermal-return-box">
+        <div class="return-title">RETURN IF UNDELIVERED TO:</div>
+        <div class="return-body">${senderName}, ${senderAddress} | Ph: ${senderPhone}</div>
       </div>
 
-      <!-- Bottom Half: Itemized Packing Manifest -->
-      <div class="all-in-one-bottom">
-        <div class="packing-slip-title">DISPATCH PACKING MANIFEST — ORDER #${orderNum}</div>
-        <div class="packing-items-table">
-          <div class="table-head">
-            <span class="col-sku">SKU</span>
-            <span class="col-title">Book Description</span>
-            <span class="col-qty">Quantity</span>
-            ${showPrice ? `<span class="col-price">Price</span>` : ''}
-          </div>
-          ${items.map((it: any) => {
-            const bk = it.book || {};
-            const sku = bk.sku || bk.isbn13 || it.sku || 'SKU';
-            const title = bk.title || it.title || 'Book Title';
-            const qty = it.quantity || it.qty || 1;
-            const price = it.price || bk.price || '';
-            return `
-              <div class="table-row">
-                <span class="col-sku">${sku}</span>
-                <span class="col-title">${title}</span>
-                <span class="col-qty"><b>${qty}</b></span>
-                ${showPrice ? `<span class="col-price">₹${price}</span>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="packing-footer-row">
-          <span><b>Packed By:</b> Techno World Dispatch</span>
-          <span><b>Verified Count:</b> ${totalQty} Book(s)</span>
-          <span><b>Support:</b> mail@technoworldbooks.in</span>
-        </div>
-      </div>
+      <div class="thermal-footer-note">${footerText}</div>
     </div>
   `;
 }
 
-export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLabelSize = '75x125'): string {
+export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLabelSize = '100x150'): string {
   const sizeStyles: Record<ShippingLabelSize, { page: string; width: string; height: string; fontSize: string }> = {
-    '75x125': {
-      page: 'size: 75mm 125mm; margin: 0;',
-      width: '73mm',
-      height: '123mm',
-      fontSize: '9px',
-    },
     '100x150': {
       page: 'size: 100mm 150mm; margin: 0;',
-      width: '97mm',
-      height: '147mm',
+      width: '96mm',
+      height: '146mm',
       fontSize: '10px',
+    },
+    '75x125': {
+      page: 'size: 75mm 125mm; margin: 0;',
+      width: '72mm',
+      height: '122mm',
+      fontSize: '8.5px',
     },
     '100x100': {
       page: 'size: 100mm 100mm; margin: 0;',
-      width: '97mm',
-      height: '97mm',
-      fontSize: '8.5px',
+      width: '96mm',
+      height: '96mm',
+      fontSize: '8px',
     },
     A7: {
-      page: 'size: 74mm 105mm; margin: 0;',
-      width: '72mm',
-      height: '103mm',
+      page: 'size: 72mm 120mm; margin: 0;',
+      width: '69mm',
+      height: '117mm',
       fontSize: '8px',
     },
     A6: {
       page: 'size: 105mm 148mm; margin: 0;',
-      width: '101mm',
-      height: '144mm',
-      fontSize: '10px',
+      width: '100mm',
+      height: '143mm',
+      fontSize: '9.5px',
     },
     A5: {
       page: 'size: 148mm 210mm; margin: 0;',
-      width: '142mm',
-      height: '204mm',
+      width: '141mm',
+      height: '202mm',
       fontSize: '11.5px',
     },
     A4: {
       page: 'size: 210mm 297mm; margin: 0;',
-      width: '200mm',
-      height: '287mm',
+      width: '198mm',
+      height: '285mm',
       fontSize: '12.5px',
     },
   };
 
-  const currentSize = sizeStyles[size] || sizeStyles['75x125'];
+  const currentSize = sizeStyles[size] || sizeStyles['100x150'];
 
   return `
     <!DOCTYPE html>
@@ -544,8 +473,8 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             padding: 0;
           }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            color: #0f172a;
+            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #000000;
             background: #ffffff;
             font-size: ${currentSize.fontSize};
             -webkit-print-color-adjust: exact;
@@ -564,42 +493,251 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           }
           @media screen {
             body {
-              background: #f1f5f9;
-              padding: 20px;
+              background: #e2e8f0;
+              padding: 24px;
             }
             .preview-wrapper {
-              max-width: 800px;
+              max-width: 600px;
               margin: 0 auto;
             }
             .sticker-page-break {
               margin-bottom: 24px;
-              box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+              box-shadow: 0 6px 18px rgba(0,0,0,0.18);
               border-radius: 4px;
               background: #ffffff;
               display: flex;
               align-items: center;
               justify-content: center;
-              padding: 10px;
+              padding: 12px;
             }
           }
 
-          /* --- MAIN STICKER CONTAINER (Fixed padding & generous breathing room) --- */
-          .sticker-container {
+          /* --- CONTAINER FOR EXACT UPLOADED FORMAT (SPEED POST) --- */
+          .sticker-container.design-techno-speed-post {
+            box-sizing: border-box;
             width: ${currentSize.width};
             min-height: ${currentSize.height};
             max-height: ${currentSize.height};
+            padding: 2.5mm 3.5mm;
             background: #ffffff;
-            border: 2px solid #0f172a;
-            padding: 3mm 3.5mm;
+            border: 2px solid #000000;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            gap: 2.5px;
+            justify-content: space-between;
             overflow: hidden;
-            box-sizing: border-box;
+            font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif;
           }
 
-          /* --- DESIGN 1: OFFICIAL INDIA POST --- */
+          /* 1. Header Grid */
+          .speedpost-header-grid {
+            display: grid;
+            grid-template-columns: 1.35fr 0.9fr 1.15fr;
+            border-bottom: 2px solid #000000;
+            align-items: center;
+            text-align: center;
+            min-height: 52px;
+          }
+          .speedpost-header-col {
+            padding: 3px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            box-sizing: border-box;
+          }
+          .speedpost-header-col:not(:last-child) {
+            border-right: 1.5px solid #000000;
+          }
+          .speedpost-tw-logo {
+            max-width: 96%;
+            max-height: 46px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+          }
+          .speedpost-text-logo {
+            font-size: 11px;
+            line-height: 1.15;
+            text-align: center;
+          }
+          .speedpost-text-logo .brand-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 0.5px;
+          }
+          .speedpost-text-logo .brand-sub {
+            font-size: 7.5px;
+            font-weight: 700;
+            color: #333333;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 1px;
+          }
+          .speedpost-post-title {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            color: #000000;
+            line-height: 1;
+            margin-bottom: 1px;
+          }
+          .speedpost-post-sub {
+            font-size: 6.5px;
+            font-weight: 700;
+            color: #b91c1c;
+            margin-top: 1px;
+          }
+          .speedpost-mini-barcode svg {
+            max-height: 24px;
+            margin: 0 auto;
+          }
+          .speedpost-mini-awb-no {
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+          }
+
+          /* 2. Banner */
+          .speedpost-service-banner {
+            text-align: center;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 3px 0;
+            border-bottom: 2px solid #000000;
+            line-height: 1.1;
+          }
+
+          /* Section Boxes */
+          .speedpost-section-box {
+            padding: 4px 4px;
+            border-bottom: 2px solid #000000;
+          }
+          .speedpost-section-title {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+          }
+
+          /* Ship To */
+          .speedpost-recipient-name {
+            font-size: 15px;
+            font-weight: 900;
+            color: #000000;
+            line-height: 1.15;
+            margin-bottom: 2px;
+          }
+          .speedpost-address-line {
+            font-size: 10.5px;
+            line-height: 1.25;
+            margin-bottom: 3px;
+          }
+          .speedpost-mob-line {
+            font-size: 11.5px;
+            font-weight: 800;
+          }
+
+          /* Items */
+          .speedpost-items-content {
+            font-size: 10px;
+            line-height: 1.3;
+            color: #000000;
+          }
+
+          /* Return */
+          .speedpost-return-name {
+            font-size: 11.5px;
+            font-weight: 900;
+          }
+          .speedpost-return-sub {
+            font-size: 10px;
+            font-weight: 600;
+          }
+          .speedpost-return-addr {
+            font-size: 9.5px;
+            line-height: 1.2;
+            margin: 1px 0;
+          }
+          .speedpost-return-contact, .speedpost-return-gst {
+            font-size: 9px;
+            line-height: 1.2;
+          }
+
+          /* AWB Barcode Box */
+          .speedpost-awb-box {
+            text-align: center;
+            padding: 4px 2px 2px 2px;
+          }
+          .speedpost-awb-title {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+          }
+          .speedpost-main-barcode svg {
+            margin: 0 auto;
+            max-height: 48px;
+          }
+          .speedpost-awb-number {
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            font-family: Arial, monospace;
+            margin-top: 1px;
+          }
+
+          /* Footer */
+          .speedpost-footer-text {
+            text-align: center;
+            font-size: 9.5px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            padding-top: 3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+          }
+          .speedpost-price-badge {
+            font-size: 9px;
+            font-weight: 900;
+            padding: 1px 4px;
+            border-radius: 2px;
+          }
+          .cod-pill {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+          }
+          .prepaid-pill {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #4ade80;
+          }
+
+          /* --- SUPPORT STYLES FOR OTHER DESIGNS --- */
+          .sticker-container.design-india-post {
+            box-sizing: border-box;
+            width: ${currentSize.width};
+            min-height: ${currentSize.height};
+            max-height: ${currentSize.height};
+            padding: 3mm 3.5mm;
+            background: #ffffff;
+            border: 2px solid #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+          }
           .header-band {
             display: flex;
             justify-content: space-between;
@@ -607,496 +745,69 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             border-bottom: 1.5px solid #0f172a;
             padding-bottom: 2px;
           }
-          .header-left {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-          }
-          .service-name {
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            color: #b91c1c;
-            line-height: 1.1;
-          }
-          .normal-post .service-name {
-            color: #1e3a8a;
-          }
-          .service-sub {
-            font-size: 7px;
-            font-weight: 700;
-            color: #475569;
-            letter-spacing: 0.2px;
-          }
-          .header-right {
-            text-align: right;
-            font-size: 7.5px;
-            font-weight: 600;
-            color: #334155;
-            line-height: 1.2;
-          }
+          .header-left { display: flex; align-items: center; gap: 5px; }
+          .service-name { font-size: 12px; font-weight: 900; color: #b91c1c; }
+          .normal-post .service-name { color: #1e3a8a; }
+          .service-sub { font-size: 7px; font-weight: 700; color: #475569; }
+          .header-right { text-align: right; font-size: 7.5px; font-weight: 600; color: #334155; }
+          .barcode-band { text-align: center; padding: 2px 0; border-bottom: 1.5px solid #0f172a; }
+          .article-no-text { font-size: 11px; letter-spacing: 1.2px; font-family: monospace; }
+          .routing-band { display: flex; background: #0f172a; color: #fff; padding: 2px 4px; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #0f172a; }
+          .pin-title { font-size: 8px; color: #cbd5e1; }
+          .pin-number { font-size: 15px; font-weight: 900; color: #facc15; font-family: monospace; letter-spacing: 1.5px; }
+          .hub-block { font-size: 8px; font-weight: 800; }
+          .address-band { display: grid; grid-template-columns: 1.3fr 0.9fr; border-bottom: 1.5px solid #0f172a; padding: 2px 0; gap: 3px; }
+          .to-cell { padding-right: 3px; border-right: 1.5px solid #0f172a; }
+          .from-cell { padding-left: 3px; background: #f8fafc; }
+          .cell-label { font-size: 8px; font-weight: 900; text-decoration: underline; margin-bottom: 1px; }
+          .recipient-name { font-size: 11px; font-weight: 800; margin-bottom: 1px; }
+          .recipient-address { font-size: 8.5px; line-height: 1.2; margin-bottom: 2px; }
+          .pin-accent { font-size: 10px; font-weight: 900; }
+          .recipient-phone { font-size: 9px; font-weight: 700; background: #e2e8f0; padding: 1px 3px; border-radius: 2px; display: inline-block; }
+          .merchant-logo { max-width: 60px; max-height: 16px; object-fit: contain; display: block; margin-bottom: 1px; }
+          .sender-name { font-size: 9px; font-weight: 800; }
+          .sender-sub { font-size: 7.5px; font-weight: 600; color: #475569; }
+          .sender-address { font-size: 7.5px; line-height: 1.15; color: #334155; margin: 1px 0; }
+          .sender-contact, .sender-gst { font-size: 7px; color: #475569; }
+          .metrics-band { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid #cbd5e1; font-size: 8px; }
+          .ordered-items-band { border: 1px solid #cbd5e1; border-radius: 3px; background: #f8fafc; padding: 3px 4px; font-size: 8.5px; }
+          .items-header { font-size: 7.5px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1px dashed #cbd5e1; padding-bottom: 1px; margin-bottom: 2px; }
+          .items-content-text { font-size: 8.5px; line-height: 1.25; }
+          .return-band { font-size: 7px; color: #334155; line-height: 1.15; background: #f1f5f9; border: 1px dashed #94a3b8; padding: 2px 3px; }
+          .footer-band { font-size: 6.5px; font-weight: 700; text-align: center; color: #64748b; padding-top: 1px; }
 
-          /* Barcode */
-          .barcode-band {
-            text-align: center;
-            padding: 2px 0 1px 0;
-            border-bottom: 1.5px solid #0f172a;
-          }
-          .barcode-svg svg {
-            margin: 0 auto;
-            max-height: 38px;
-          }
-          .article-no-text {
-            font-size: 11px;
-            letter-spacing: 1.2px;
-            font-family: monospace;
-            margin-top: 1px;
-          }
-
-          /* Routing Banner */
-          .routing-band {
-            display: flex;
-            background: #0f172a;
-            color: #ffffff;
-            border-bottom: 1.5px solid #0f172a;
-            padding: 2px 4px;
-            align-items: center;
-            justify-content: space-between;
-          }
-          .pin-block {
-            display: flex;
-            align-items: baseline;
-            gap: 3px;
-          }
-          .pin-title {
-            font-size: 8px;
-            font-weight: 700;
-            color: #cbd5e1;
-          }
-          .pin-number {
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            color: #facc15;
-            font-family: monospace;
-          }
-          .hub-block {
-            font-size: 8px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            text-align: right;
-          }
-
-          /* Address Band */
-          .address-band {
-            display: grid;
-            grid-template-columns: 1.35fr 0.9fr;
-            border-bottom: 1.5px solid #0f172a;
-            padding: 2px 0;
-            gap: 3px;
-          }
-          .to-cell {
-            padding: 2px 4px 2px 0;
-            border-right: 1.5px solid #0f172a;
-          }
-          .from-cell {
-            padding: 2px 0 2px 3px;
-            background: #f8fafc;
-          }
-          .cell-label {
-            font-size: 8px;
-            font-weight: 900;
-            color: #0f172a;
-            text-decoration: underline;
-            margin-bottom: 1px;
-          }
-          .recipient-name {
-            font-size: 11px;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 1px;
-            line-height: 1.15;
-          }
-          .recipient-address {
-            font-size: 8.5px;
-            line-height: 1.2;
-            color: #1e293b;
-            margin-bottom: 2px;
-          }
-          .pin-accent {
-            font-size: 10.5px;
-            font-weight: 900;
-          }
-          .recipient-phone {
-            font-size: 9px;
-            font-weight: 700;
-            background: #e2e8f0;
-            padding: 1px 3px;
-            border-radius: 2px;
-            display: inline-block;
-          }
-          .merchant-logo {
-            max-width: 60px;
-            max-height: 16px;
-            object-fit: contain;
-            display: block;
-            margin-bottom: 1px;
-          }
-          .sender-name {
-            font-size: 9px;
-            font-weight: 800;
-            color: #0f172a;
-          }
-          .sender-sub {
-            font-size: 7.5px;
-            font-weight: 600;
-            color: #475569;
-          }
-          .sender-address {
-            font-size: 7.5px;
-            line-height: 1.15;
-            color: #334155;
-            margin: 1px 0;
-          }
-          .sender-contact, .sender-gst {
-            font-size: 7px;
-            color: #475569;
-          }
-
-          /* Metrics & Payment */
-          .metrics-band {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 2px 0;
-            border-bottom: 1px solid #cbd5e1;
-            gap: 4px;
-          }
-          .metrics-line {
-            display: flex;
-            gap: 6px;
-            font-size: 8px;
-            margin-bottom: 2px;
-          }
-          .payment-badge {
-            display: inline-block;
-            padding: 1.5px 5px;
-            font-weight: 800;
-            border-radius: 3px;
-            font-size: 8.5px;
-            letter-spacing: 0.3px;
-          }
-          .prepaid-badge {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-          }
-          .cod-badge {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-          }
-          .metrics-right {
-            text-align: right;
-            font-size: 8px;
-          }
-          .order-id-tag {
-            font-size: 8px;
-            font-weight: 700;
-          }
-          .order-barcode-wrapper svg {
-            max-height: 20px;
-            margin-left: auto;
-          }
-
-          /* Ordered Items List (Padding and line-height fixed!) */
-          .ordered-items-band {
-            border: 1px solid #cbd5e1;
-            border-radius: 3px;
-            background: #f8fafc;
-            padding: 3px 4px;
-            margin-top: 1px;
-          }
-          .items-header {
-            font-size: 7.5px;
-            font-weight: 800;
-            color: #475569;
-            text-transform: uppercase;
-            border-bottom: 1px dashed #cbd5e1;
-            padding-bottom: 1px;
-            margin-bottom: 2px;
-          }
-          .items-list-container {
+          /* Modern Thermal */
+          .sticker-container.design-modern-thermal {
+            box-sizing: border-box;
+            width: ${currentSize.width};
+            min-height: ${currentSize.height};
+            max-height: ${currentSize.height};
+            padding: 3.5mm;
+            border: 2px solid #000;
             display: flex;
             flex-direction: column;
-            gap: 2px;
-          }
-          .item-row {
-            display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            font-size: 8.5px;
-            line-height: 1.25;
           }
-          .item-left {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 4px;
-          }
-          .item-sku {
-            font-weight: 800;
-            color: #0f172a;
-            margin-right: 2px;
-          }
-          .item-name {
-            color: #1e293b;
-            font-weight: 500;
-          }
-          .item-right {
-            white-space: nowrap;
-          }
-          .item-qty-badge {
-            background: #e2e8f0;
-            color: #0f172a;
-            padding: 0.5px 3px;
-            border-radius: 2px;
-            font-size: 8px;
-          }
-
-          /* Return Notice */
-          .return-band {
-            font-size: 7px;
-            color: #334155;
-            line-height: 1.15;
-            background: #f1f5f9;
-            border: 1px dashed #94a3b8;
-            border-radius: 2px;
-            padding: 2px 3px;
-            margin-top: 1px;
-          }
-
-          /* Postal Warning Footer */
-          .footer-band {
-            font-size: 6px;
-            font-weight: 700;
-            text-align: center;
-            letter-spacing: 0.2px;
-            color: #64748b;
-            margin-top: auto;
-            padding-top: 1px;
-          }
-
-          /* --- DESIGN 2: MODERN THERMAL STYLES --- */
-          .design-modern-thermal .thermal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 3px;
-          }
-          .carrier-badge {
-            font-weight: 900;
-            font-size: 11px;
-            background: #000000;
-            color: #ffffff;
-            padding: 1px 5px;
-            border-radius: 2px;
-          }
-          .ship-date {
-            font-size: 8px;
-            margin-left: 4px;
-            color: #475569;
-          }
-          .thermal-order-ref {
-            font-size: 9px;
-            font-family: monospace;
-          }
-          .thermal-barcode-box {
-            text-align: center;
-            border-bottom: 2px solid #000000;
-            padding: 4px 0 2px 0;
-          }
-          .tracking-caption {
-            font-size: 11px;
-            font-family: monospace;
-            letter-spacing: 1px;
-            margin-top: 2px;
-          }
-          .thermal-dest-box {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #000000;
-            color: #ffffff;
-            padding: 3px 6px;
-          }
-          .dest-pin-large {
-            font-size: 17px;
-            font-weight: 900;
-            font-family: monospace;
-            letter-spacing: 1.5px;
-          }
-          .dest-hub-text {
-            font-size: 9px;
-            font-weight: 800;
-          }
-          .thermal-consignee-box {
-            border: 1.5px solid #000000;
-            padding: 4px;
-            margin: 2px 0;
-          }
-          .consignee-tag {
-            font-size: 7.5px;
-            font-weight: 800;
-            text-decoration: underline;
-          }
-          .consignee-name {
-            font-size: 12px;
-            font-weight: 900;
-          }
-          .consignee-addr {
-            font-size: 9px;
-            line-height: 1.25;
-            margin: 2px 0;
-          }
-          .consignee-mob {
-            font-size: 9.5px;
-            font-weight: 800;
-          }
-          .thermal-middle-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 2px 0;
-            border-bottom: 1px solid #000000;
-          }
-          .thermal-items-box {
-            border: 1px solid #cbd5e1;
-            padding: 3px;
-            border-radius: 2px;
-          }
-          .thermal-items-title {
-            font-size: 7.5px;
-            font-weight: 800;
-            margin-bottom: 2px;
-          }
-          .thermal-return-box {
-            font-size: 7px;
-            line-height: 1.15;
-            border-top: 1px dashed #64748b;
-            padding-top: 2px;
-            margin-top: auto;
-          }
-          .return-title {
-            font-weight: 800;
-          }
-
-          /* --- DESIGN 3: COMPACT COURIER STYLES --- */
-          .design-compact-courier .compact-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-            border-bottom: 1.5px solid #000;
-            padding-bottom: 1px;
-          }
-          .compact-barcode {
-            text-align: center;
-            border-bottom: 1.5px solid #000;
-            padding: 2px 0;
-          }
-          .compact-art-no {
-            font-size: 10px;
-            font-weight: 800;
-            font-family: monospace;
-          }
-          .compact-routing {
-            display: flex;
-            justify-content: space-between;
-            background: #000;
-            color: #fff;
-            padding: 1px 4px;
-            font-size: 10px;
-          }
-          .compact-to {
-            border: 1px solid #000;
-            padding: 2px 3px;
-            font-size: 8px;
-            margin: 1px 0;
-          }
-          .compact-payment-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 8px;
-            margin: 1px 0;
-          }
-          .compact-items {
-            font-size: 7.5px;
-            border-top: 1px dashed #94a3b8;
-            padding-top: 1px;
-          }
-          .compact-return {
-            font-size: 6.5px;
-            margin-top: auto;
-            border-top: 1px solid #000;
-            padding-top: 1px;
-          }
-
-          /* --- DESIGN 4: ALL-IN-ONE DISPATCH & PACKING SLIP --- */
-          .design-all-in-one {
-            height: auto;
-            max-height: none;
-            min-height: auto;
-          }
-          .tear-divider {
-            border-top: 2px dashed #0f172a;
-            margin: 6px 0;
-            text-align: center;
-            font-size: 7.5px;
-            font-weight: 800;
-            color: #64748b;
-            padding-top: 3px;
-          }
-          .packing-slip-title {
-            font-size: 10px;
-            font-weight: 900;
-            text-align: center;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-          }
-          .packing-items-table {
-            border: 1px solid #0f172a;
-            font-size: 8.5px;
-          }
-          .table-head {
-            display: flex;
-            background: #f1f5f9;
-            font-weight: 800;
-            padding: 2px 4px;
-            border-bottom: 1px solid #0f172a;
-          }
-          .table-row {
-            display: flex;
-            padding: 2px 4px;
-            border-bottom: 1px solid #e2e8f0;
-          }
-          .table-row:last-child {
-            border-bottom: none;
-          }
-          .col-sku { width: 22%; font-family: monospace; font-weight: 700; }
-          .col-title { flex: 1; padding-right: 4px; }
-          .col-qty { width: 14%; text-align: center; }
-          .col-price { width: 14%; text-align: right; }
-          .packing-footer-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 7.5px;
-            margin-top: 4px;
-            padding-top: 2px;
-            border-top: 1px solid #cbd5e1;
-          }
+          .thermal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 2px; }
+          .carrier-badge { font-weight: 900; font-size: 11px; background: #000; color: #fff; padding: 1px 4px; border-radius: 2px; }
+          .ship-date { font-size: 8px; margin-left: 4px; }
+          .thermal-order-ref { font-size: 9px; font-family: monospace; }
+          .thermal-barcode-box { text-align: center; border-bottom: 2px solid #000; padding: 3px 0 1px 0; }
+          .tracking-caption { font-size: 10px; font-family: monospace; margin-top: 1px; font-weight: bold; }
+          .thermal-dest-box { display: flex; justify-content: space-between; align-items: center; background: #000; color: #fff; padding: 2px 5px; }
+          .dest-pin-large { font-size: 16px; font-weight: 900; font-family: monospace; }
+          .dest-hub-text { font-size: 9px; font-weight: 800; }
+          .thermal-consignee-box { border: 1.5px solid #000; padding: 3px 4px; margin: 2px 0; }
+          .consignee-tag { font-size: 7.5px; font-weight: 800; text-decoration: underline; }
+          .consignee-name { font-size: 12px; font-weight: 900; }
+          .consignee-addr { font-size: 9px; line-height: 1.2; margin: 1px 0; }
+          .consignee-mob { font-size: 9.5px; font-weight: 800; }
+          .thermal-items-box { border: 1px solid #cbd5e1; padding: 3px; font-size: 8.5px; }
+          .thermal-items-title { font-size: 7.5px; font-weight: 800; margin-bottom: 1px; }
+          .thermal-middle-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid #000; font-size: 8px; }
+          .thermal-return-box { font-size: 7px; line-height: 1.15; border-top: 1px dashed #64748b; padding-top: 2px; }
+          .return-title { font-weight: 800; }
+          .thermal-footer-note { font-size: 7px; font-weight: 800; text-align: center; text-transform: uppercase; }
         </style>
       </head>
       <body>
@@ -1130,7 +841,7 @@ export function printSingleShippingSticker(order: any, options: ShippingLabelOpt
   }
 
   const cardHtml = `<div class="sticker-page-break">${generateSingleStickerCardHtml(order, options)}</div>`;
-  const docHtml = generatePrintDocumentHtml(cardHtml, options.size || '75x125');
+  const docHtml = generatePrintDocumentHtml(cardHtml, options.size || '100x150');
 
   printWindow.document.open();
   printWindow.document.write(docHtml);
@@ -1157,7 +868,7 @@ export function printBatchShippingStickers(orders: any[], options: ShippingLabel
   }
 
   const cardsHtml = orders.map((o) => `<div class="sticker-page-break">${generateSingleStickerCardHtml(o, options)}</div>`).join('\n');
-  const docHtml = generatePrintDocumentHtml(cardsHtml, options.size || '75x125');
+  const docHtml = generatePrintDocumentHtml(cardsHtml, options.size || '100x150');
 
   printWindow.document.open();
   printWindow.document.write(docHtml);
