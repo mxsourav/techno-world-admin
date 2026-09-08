@@ -420,12 +420,12 @@ export default function HeroBookCoverManager() {
                           src={currentCoverUrl}
                           alt=""
                           aria-hidden="true"
-                          className="h-full w-full object-cover scale-125 filter blur-[2px] brightness-75 contrast-120 saturate-110"
+                          className="h-full w-full object-cover scale-125 filter blur-[3px] brightness-70 contrast-110 saturate-105"
                         />
                         <div
                           className="absolute inset-0 pointer-events-none"
                           style={{
-                            background: 'linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(255,255,255,0.15) 35%, rgba(0,0,0,0.50) 100%)',
+                            background: 'linear-gradient(90deg, rgba(0,0,0,0.70) 0%, rgba(255,220,150,0.12) 30%, rgba(0,0,0,0.40) 85%, rgba(0,0,0,0.80) 100%)',
                           }}
                         />
                       </div>
@@ -449,14 +449,17 @@ export default function HeroBookCoverManager() {
                         src={currentCoverUrl}
                         alt=""
                         aria-hidden="true"
-                        className="absolute inset-0 h-full w-full object-cover scale-110 filter blur-md brightness-60 contrast-125 pointer-events-none select-none"
+                        className="absolute inset-0 h-full w-full object-cover scale-110 filter blur-sm brightness-60 pointer-events-none select-none"
                       />
 
-                      {/* Crisp Main Cover Artwork */}
+                      {/* Main Cover Artwork with realistic paper tone */}
                       <img
                         src={currentCoverUrl}
                         alt="3D Preview"
                         className="relative z-10 h-full w-full object-fill select-none block"
+                        style={{
+                          filter: 'brightness(0.96) saturate(0.95) contrast(0.98)',
+                        }}
                         onLoad={(e) => {
                           const img = e.currentTarget;
                           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -465,11 +468,20 @@ export default function HeroBookCoverManager() {
                         }}
                       />
 
-                      {/* Spine crease shadow: subtle seam on left edge */}
+                      {/* Ambient Warm Incandescent Room Lighting Overlay */}
                       <div
-                        className="absolute left-0 top-0 bottom-0 w-[4%] z-20 pointer-events-none"
+                        className="absolute inset-0 z-20 pointer-events-none"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, transparent 100%)',
+                          background: 'linear-gradient(145deg, rgba(255, 215, 125, 0.15) 0%, rgba(200, 140, 50, 0.07) 45%, rgba(15, 8, 3, 0.28) 100%)',
+                          mixBlendMode: 'soft-light',
+                        }}
+                      />
+
+                      {/* Physical Spine Crease & Page Seam Ambient Occlusion */}
+                      <div
+                        className="absolute inset-0 z-20 pointer-events-none"
+                        style={{
+                          background: 'linear-gradient(90deg, rgba(0,0,0,0.50) 0%, rgba(0,0,0,0.12) 3%, transparent 8%, transparent 92%, rgba(0,0,0,0.22) 100%)',
                         }}
                       />
                     </div>
