@@ -101,7 +101,24 @@ async function refreshAccessToken(): Promise<string | null> {
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers || {});
-  const token = localStorage.getItem('tw_admin_token');
+  const isAdminRoute = url.includes('/admin') || url.includes('/orders/admin') || url.includes('/promotions/');
+  
+  let token: string | null = null;
+  if (isAdminRoute) {
+    token = localStorage.getItem('tw_admin_token');
+    // Guard against customer tokens accidentally placed in tw_admin_token
+    if (token && token.includes('.')) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role !== 'ADMIN' && payload.role !== 'SUPER_ADMIN') {
+          token = null;
+        }
+      } catch {}
+    }
+  } else {
+    token = localStorage.getItem('tw_customer_token') || localStorage.getItem('tw_admin_token');
+  }
+
   if (token && token !== 'undefined' && token !== 'null' && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
@@ -114,6 +131,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
   };
 
   let response = await fetch(url, mergedOptions);
+
+  if (response.status === 403 && isAdminRoute) {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
+      localStorage.removeItem('tw_admin_token');
+      window.location.href = '/admin/login';
+    }
+  }
 
   if (response.status === 401) {
     if (!isRefreshing) {
