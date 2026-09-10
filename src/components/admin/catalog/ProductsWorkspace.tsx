@@ -147,25 +147,25 @@ export default function ProductsWorkspace() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          <button className="flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.06] hover:bg-white/[0.12] px-4 py-2 text-sm font-medium text-neutral-200 transition-all backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             <Download className="h-4 w-4" /> Export
           </button>
-          <button onClick={() => setEditingBook({})} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700">
+          <button onClick={() => setEditingBook({})} className="flex items-center gap-2 rounded-xl bg-white/[0.12] hover:bg-white/[0.18] border border-white/[0.16] px-4 py-2 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] transition-all backdrop-blur-md">
             <Plus className="h-4 w-4" /> Add Product
           </button>
         </div>
       </div>
 
       {/* Workspace Tabs & Table */}
-      <div className="flex-1 rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+      <div className="flex-1 rounded-2xl bg-[#121216]/85 backdrop-blur-xl shadow-2xl border border-white/[0.08] overflow-hidden flex flex-col">
         {/* Tabs */}
-        <div className="border-b border-slate-200 px-6 py-2">
+        <div className="border-b border-white/[0.08] px-6 py-2">
           <div className="flex gap-6 overflow-x-auto">
             {['all', 'published', 'draft', 'low_stock', 'out_of_stock', 'archived'].map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`border-b-2 py-3 text-sm font-semibold capitalize whitespace-nowrap ${activeTab === t ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                className={`border-b-2 py-3 text-sm font-medium capitalize whitespace-nowrap transition-colors ${activeTab === t ? 'border-white text-white font-semibold' : 'border-transparent text-neutral-400 hover:text-white hover:border-white/20'}`}
               >
                 {t === 'archived' ? 'Inactive' : t.replace('_', ' ')}
               </button>
