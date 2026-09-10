@@ -29,25 +29,43 @@ import {
   Sun,
   Moon,
   MessageSquare,
+  PanelLeft,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 
-const TABS = [
-  { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-  { id: 'products', name: 'Products', icon: Package },
-  { id: 'orders', name: 'Orders', icon: ShoppingCart },
-  { id: 'payments', name: 'Payments', icon: CreditCard },
-  { id: 'customers', name: 'Customers', icon: Users },
-  { id: 'coupons', name: 'Coupons', icon: Tag },
-  { id: 'reviews', name: 'Reviews', icon: Star },
-  { id: 'media', name: 'Media Library', icon: FolderOpen },
-  { id: 'cms', name: 'Homepage CMS', icon: FileEdit },
-  { id: 'blog', name: 'Blog & Social Posts', icon: BookOpen },
-  { id: 'analytics', name: 'Analytics & Trends', icon: BarChart3 },
-  { id: 'settings', name: 'Settings & Email', icon: Settings },
+export const TAB_SECTIONS = [
+  {
+    title: 'Favorites',
+    tabs: [
+      { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+      { id: 'orders', name: 'Orders', icon: ShoppingCart },
+      { id: 'products', name: 'Products', icon: Package },
+      { id: 'payments', name: 'Payments', icon: CreditCard },
+    ],
+  },
+  {
+    title: 'Store & Content',
+    tabs: [
+      { id: 'customers', name: 'Customers', icon: Users },
+      { id: 'coupons', name: 'Coupons', icon: Tag },
+      { id: 'reviews', name: 'Reviews', icon: Star },
+      { id: 'media', name: 'Media Library', icon: FolderOpen },
+      { id: 'cms', name: 'Homepage CMS', icon: FileEdit },
+      { id: 'blog', name: 'Blog & Social Feed', icon: BookOpen },
+    ],
+  },
+  {
+    title: 'System',
+    tabs: [
+      { id: 'analytics', name: 'Analytics & Trends', icon: BarChart3 },
+      { id: 'settings', name: 'Settings & Email', icon: Settings },
+    ],
+  },
 ];
+
+const TABS = TAB_SECTIONS.flatMap((section) => section.tabs);
 
 export default function AdminLayout() {
   const { logout } = useAuthStore();
@@ -110,18 +128,11 @@ export default function AdminLayout() {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
-  const [isProductsFlyoutOpen, setIsProductsFlyoutOpen] = useState<boolean>(false);
-  const [productsFlyoutPos, setProductsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [isOrdersFlyoutOpen, setIsOrdersFlyoutOpen] = useState<boolean>(false);
-  const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [isPaymentsFlyoutOpen, setIsPaymentsFlyoutOpen] = useState<boolean>(false);
-  const [paymentsFlyoutPos, setPaymentsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [isBlogFlyoutOpen, setIsBlogFlyoutOpen] = useState<boolean>(false);
-  const [blogFlyoutPos, setBlogFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [isCouponsFlyoutOpen, setIsCouponsFlyoutOpen] = useState<boolean>(false);
-  const [couponsFlyoutPos, setCouponsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [isReviewsFlyoutOpen, setIsReviewsFlyoutOpen] = useState<boolean>(false);
-  const [reviewsFlyoutPos, setReviewsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  type ActiveFlyout = 'products' | 'orders' | 'payments' | 'blog' | 'coupons' | 'reviews' | null;
+  const [activeFlyout, setActiveFlyout] = useState<ActiveFlyout>(null);
+  const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 252 });
+  const flyoutTimerRef = useRef<any>(null);
+
   const notifRef = useRef<HTMLDivElement>(null);
   const productsBtnRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
@@ -129,119 +140,41 @@ export default function AdminLayout() {
   const blogBtnRef = useRef<HTMLDivElement>(null);
   const couponsBtnRef = useRef<HTMLDivElement>(null);
   const reviewsBtnRef = useRef<HTMLDivElement>(null);
-  const productsTimeoutRef = useRef<any>(null);
-  const ordersTimeoutRef = useRef<any>(null);
-  const paymentsTimeoutRef = useRef<any>(null);
-  const blogTimeoutRef = useRef<any>(null);
-  const couponsTimeoutRef = useRef<any>(null);
-  const reviewsTimeoutRef = useRef<any>(null);
 
-  const handleProductsMouseEnter = () => {
-    if (productsTimeoutRef.current) {
-      clearTimeout(productsTimeoutRef.current);
-      productsTimeoutRef.current = null;
+  const openFlyout = (flyout: ActiveFlyout, btnRef: React.RefObject<HTMLDivElement | null>) => {
+    if (flyoutTimerRef.current) {
+      clearTimeout(flyoutTimerRef.current);
+      flyoutTimerRef.current = null;
     }
-    if (productsBtnRef.current) {
-      const rect = productsBtnRef.current.getBoundingClientRect();
-      setProductsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
-    }
-    setIsProductsFlyoutOpen(true);
-  };
-
-  const handleProductsMouseLeave = () => {
-    productsTimeoutRef.current = setTimeout(() => {
-      setIsProductsFlyoutOpen(false);
-    }, 300);
-  };
-
-  const handleOrdersMouseEnter = () => {
-    if (ordersTimeoutRef.current) {
-      clearTimeout(ordersTimeoutRef.current);
-      ordersTimeoutRef.current = null;
-    }
-    if (ordersBtnRef.current) {
-      const rect = ordersBtnRef.current.getBoundingClientRect();
+    if (btnRef && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
       setFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
     }
-    setIsOrdersFlyoutOpen(true);
+    setActiveFlyout(flyout);
   };
 
-  const handleOrdersMouseLeave = () => {
-    ordersTimeoutRef.current = setTimeout(() => {
-      setIsOrdersFlyoutOpen(false);
-    }, 300);
-  };
-
-  const handlePaymentsMouseEnter = () => {
-    if (paymentsTimeoutRef.current) {
-      clearTimeout(paymentsTimeoutRef.current);
-      paymentsTimeoutRef.current = null;
+  const closeFlyoutWithDelay = () => {
+    if (flyoutTimerRef.current) {
+      clearTimeout(flyoutTimerRef.current);
     }
-    if (paymentsBtnRef.current) {
-      const rect = paymentsBtnRef.current.getBoundingClientRect();
-      setPaymentsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
-    }
-    setIsPaymentsFlyoutOpen(true);
+    flyoutTimerRef.current = setTimeout(() => {
+      setActiveFlyout(null);
+    }, 160);
   };
 
-  const handlePaymentsMouseLeave = () => {
-    paymentsTimeoutRef.current = setTimeout(() => {
-      setIsPaymentsFlyoutOpen(false);
-    }, 300);
+  const keepFlyoutOpen = () => {
+    if (flyoutTimerRef.current) {
+      clearTimeout(flyoutTimerRef.current);
+      flyoutTimerRef.current = null;
+    }
   };
 
-  const handleBlogMouseEnter = () => {
-    if (blogTimeoutRef.current) {
-      clearTimeout(blogTimeoutRef.current);
-      blogTimeoutRef.current = null;
+  const closeFlyoutImmediately = () => {
+    if (flyoutTimerRef.current) {
+      clearTimeout(flyoutTimerRef.current);
+      flyoutTimerRef.current = null;
     }
-    if (blogBtnRef.current) {
-      const rect = blogBtnRef.current.getBoundingClientRect();
-      setBlogFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
-    }
-    setIsBlogFlyoutOpen(true);
-  };
-
-  const handleBlogMouseLeave = () => {
-    blogTimeoutRef.current = setTimeout(() => {
-      setIsBlogFlyoutOpen(false);
-    }, 300);
-  };
-
-  const handleCouponsMouseEnter = () => {
-    if (couponsTimeoutRef.current) {
-      clearTimeout(couponsTimeoutRef.current);
-      couponsTimeoutRef.current = null;
-    }
-    if (couponsBtnRef.current) {
-      const rect = couponsBtnRef.current.getBoundingClientRect();
-      setCouponsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
-    }
-    setIsCouponsFlyoutOpen(true);
-  };
-
-  const handleCouponsMouseLeave = () => {
-    couponsTimeoutRef.current = setTimeout(() => {
-      setIsCouponsFlyoutOpen(false);
-    }, 300);
-  };
-
-  const handleReviewsMouseEnter = () => {
-    if (reviewsTimeoutRef.current) {
-      clearTimeout(reviewsTimeoutRef.current);
-      reviewsTimeoutRef.current = null;
-    }
-    if (reviewsBtnRef.current) {
-      const rect = reviewsBtnRef.current.getBoundingClientRect();
-      setReviewsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
-    }
-    setIsReviewsFlyoutOpen(true);
-  };
-
-  const handleReviewsMouseLeave = () => {
-    reviewsTimeoutRef.current = setTimeout(() => {
-      setIsReviewsFlyoutOpen(false);
-    }, 300);
+    setActiveFlyout(null);
   };
 
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
@@ -279,199 +212,101 @@ export default function AdminLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const flyoutRefMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+    products: productsBtnRef,
+    orders: ordersBtnRef,
+    payments: paymentsBtnRef,
+    blog: blogBtnRef,
+    coupons: couponsBtnRef,
+    reviews: reviewsBtnRef,
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
-      {/* Sidebar - Apple Frosted Glass with Traffic Lights */}
-      <aside className="w-64 flex-shrink-0 bg-[#0d0d10]/90 backdrop-blur-2xl flex flex-col border-r border-white/[0.08] h-full relative z-30 overflow-x-hidden overflow-y-hidden shadow-2xl">
-        {/* macOS Traffic Lights */}
-        <div className="flex items-center gap-2 px-6 pt-5 pb-2">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
-          <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
-          <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
+      {/* Sidebar - Apple macOS Authentic Frosted Glass with Traffic Lights */}
+      <aside className={`w-64 flex-shrink-0 macos-sidebar flex flex-col h-full relative z-30 overflow-x-hidden overflow-y-hidden shadow-xs transition-colors duration-200 ${
+        isDarkMode ? 'dark-sidebar' : ''
+      }`}>
+        {/* macOS Traffic Lights + Sidebar Panel Toggle */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
+            <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
+            <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
+          </div>
+          <button
+            type="button"
+            title="Toggle Sidebar"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="px-6 py-4 flex items-center gap-3 border-b border-white/[0.08] flex-shrink-0">
-          <div className="w-8 h-8 bg-white/[0.08] border border-white/[0.12] rounded-xl flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
-            <Store className="h-4.5 w-4.5 text-white" />
+        {/* Store Info Banner */}
+        <div className="px-4 py-2.5 mx-2.5 flex items-center gap-3 border-b border-slate-200/60 dark:border-white/[0.06] flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 flex items-center justify-center shadow-xs shrink-0">
+            <Store className="h-4.5 w-4.5" />
           </div>
-          <div>
-            <h2 className="text-white font-semibold text-base leading-tight tracking-tight">Admin Portal</h2>
-            <p className="text-xs text-neutral-400 font-medium">Techno World Books</p>
+          <div className="min-w-0">
+            <h2 className="text-slate-900 dark:text-white font-bold text-sm leading-tight tracking-tight truncate">Admin Portal</h2>
+            <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium truncate">Techno World Books</p>
           </div>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-5 px-3 space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-2 px-3">Menu</div>
-          {TABS.map((t) => {
-            const isActive = currentTab === t.id || (t.id === 'analytics' && currentTab === 'reports');
-            const isProductsTab = t.id === 'products';
-            const isOrdersTab = t.id === 'orders';
-            const isPaymentsTab = t.id === 'payments';
-            const isBlogTab = t.id === 'blog';
-            const isCouponsTab = t.id === 'coupons';
-            const isReviewsTab = t.id === 'reviews';
 
-            const activeTabClasses = 'bg-emerald-500/[0.14] text-emerald-400 border border-emerald-500/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_12px_rgba(16,185,129,0.18)] backdrop-blur-xl font-semibold';
-            const inactiveTabClasses = 'text-neutral-400 hover:text-white hover:bg-white/[0.06] border border-transparent font-normal';
+        {/* Navigation Sections */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {TAB_SECTIONS.map((section) => (
+            <div key={section.title} className="space-y-0.5">
+              <div className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider px-3 pb-1 select-none">
+                {section.title}
+              </div>
+              {section.tabs.map((t) => {
+                const isActive = currentTab === t.id || (t.id === 'analytics' && currentTab === 'reports');
+                const hasFlyout = t.id in flyoutRefMap;
+                const btnRef = flyoutRefMap[t.id];
 
-            if (isProductsTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={productsBtnRef}
-                  className="relative"
-                  onMouseEnter={handleProductsMouseEnter}
-                  onMouseLeave={handleProductsMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=products`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
+                let linkTo = `/admin/dashboard?tab=${t.id}`;
+                if (t.id === 'orders') linkTo = `/admin/dashboard?tab=orders&stage=to_accept`;
+                if (t.id === 'payments') linkTo = `/admin/dashboard?tab=payments&sub=overview`;
+
+                return (
+                  <div
+                    key={t.id}
+                    ref={btnRef}
+                    className="relative"
+                    onMouseEnter={hasFlyout ? () => openFlyout(t.id as ActiveFlyout, btnRef) : closeFlyoutImmediately}
+                    onMouseLeave={hasFlyout ? closeFlyoutWithDelay : undefined}
                   >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                  </Link>
-                </div>
-              );
-            }
-
-            if (isOrdersTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={ordersBtnRef}
-                  className="relative"
-                  onMouseEnter={handleOrdersMouseEnter}
-                  onMouseLeave={handleOrdersMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=orders&stage=to_accept`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
-                  >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                    {pendingCount > 0 && (
-                      <span className="ml-auto rounded-full bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 shadow-sm animate-pulse">
-                        {pendingCount}
-                      </span>
-                    )}
-                  </Link>
-                </div>
-              );
-            }
-
-            if (isPaymentsTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={paymentsBtnRef}
-                  className="relative"
-                  onMouseEnter={handlePaymentsMouseEnter}
-                  onMouseLeave={handlePaymentsMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=payments&sub=overview`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
-                  >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                  </Link>
-                </div>
-              );
-            }
-
-            if (isBlogTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={blogBtnRef}
-                  className="relative"
-                  onMouseEnter={handleBlogMouseEnter}
-                  onMouseLeave={handleBlogMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=blog`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
-                  >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                  </Link>
-                </div>
-              );
-            }
-
-            if (isCouponsTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={couponsBtnRef}
-                  className="relative"
-                  onMouseEnter={handleCouponsMouseEnter}
-                  onMouseLeave={handleCouponsMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=coupons`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
-                  >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                  </Link>
-                </div>
-              );
-            }
-
-            if (isReviewsTab) {
-              return (
-                <div
-                  key={t.id}
-                  ref={reviewsBtnRef}
-                  className="relative"
-                  onMouseEnter={handleReviewsMouseEnter}
-                  onMouseLeave={handleReviewsMouseLeave}
-                >
-                  <Link
-                    to={`/admin/dashboard?tab=reviews`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      isActive ? activeTabClasses : inactiveTabClasses
-                    }`}
-                  >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-                  </Link>
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={t.id}
-                to={`/admin/dashboard?tab=${t.id}`}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                  isActive ? activeTabClasses : inactiveTabClasses
-                }`}
-              >
-                <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
-                <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
-              </Link>
-            );
-          })}
+                    <Link
+                      to={linkTo}
+                      onClick={closeFlyoutImmediately}
+                      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                        isActive ? 'macos-tab-active' : 'macos-tab-inactive'
+                      }`}
+                    >
+                      <t.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{t.name}</span>
+                      {t.id === 'orders' && pendingCount > 0 && (
+                        <span className="ml-auto rounded-full bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 shadow-xs animate-pulse">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
-        <div className="p-3 border-t border-white/[0.08] flex-shrink-0">
+        {/* Logout Button */}
+        <div className="p-3 border-t border-slate-200/70 dark:border-white/[0.08] flex-shrink-0">
           <button
             onClick={logout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm font-medium text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 dark:text-neutral-400 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors"
           >
-            <LogOut className="h-4.5 w-4.5" />
+            <LogOut className="h-4 w-4" />
             Logout
           </button>
         </div>
@@ -586,37 +421,30 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            {/* Dark / Light Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className={`relative p-2 rounded-full transition-all ${
-                isDarkMode
-                  ? 'bg-white/[0.10] text-amber-300 hover:bg-white/[0.16] border border-white/[0.12]'
-                  : 'bg-white/50 backdrop-blur-lg text-slate-500 hover:text-slate-700 hover:bg-white/70 border border-white/50 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]'
-              }`}
-              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
-            {/* Interactive Notification Bell */}
-            <div className="relative" ref={notifRef}>
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Apple macOS Segmented Group: Mode Toggle + Notifications */}
+            <div className="apple-segmented-group shrink-0">
               <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className={`relative p-2 rounded-full transition-all ${
-                  isDarkMode
-                    ? `border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ${isNotifOpen ? 'bg-white/[0.16] text-white' : 'text-neutral-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12]'}`
-                    : `${isNotifOpen ? 'bg-white/70 backdrop-blur-lg text-slate-900 border border-white/60' : 'text-slate-500 hover:text-slate-700 bg-white/50 hover:bg-white/70 backdrop-blur-lg border border-white/50'} shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]`
-                }`}
-                title="Orders requiring review">
-                <Bell className="h-4.5 w-4.5" />
-                {pendingCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow animate-pulse">
-                    {pendingCount}
-                  </span>
-                )}
+                type="button"
+                onClick={toggleDarkMode}
+                className="px-2.5 py-1.5"
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-600" />}
               </button>
+
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="relative px-2.5 py-1.5"
+                  title="Orders requiring review"
+                >
+                  <Bell className="h-4 w-4" />
+                  {pendingCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-rose-600 shadow animate-pulse" />
+                  )}
+                </button>
 
               {/* Notification Popover Dropdown */}
               {isNotifOpen && (
@@ -705,29 +533,22 @@ export default function AdminLayout() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             <a
               href="/"
               target="_blank"
               rel="noreferrer"
-              className={`glass-btn flex items-center gap-2 text-sm font-bold px-3.5 py-1.5 rounded-full transition-all ${
-                isDarkMode
-                  ? '!bg-white/[0.06] !border-white/[0.10] !text-neutral-200 hover:!text-white hover:!bg-white/[0.12]'
-                  : ''
-              }`}
+              className="apple-pill-btn px-3.5 py-1.5 text-xs font-bold gap-1.5"
             >
-              <Store className="h-4 w-4" />
+              <Store className="h-3.5 w-3.5" />
               View Store
             </a>
 
             <Link
               to="/admin/dashboard?tab=settings"
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                isDarkMode
-                  ? 'bg-white/[0.10] border border-white/[0.16] text-white hover:bg-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'bg-emerald-100 border border-emerald-300 text-emerald-800 hover:ring-2 hover:ring-emerald-500/20'
-              }`}
+              className="apple-pill-btn apple-pill-circle text-xs font-bold"
               title="Admin Profile & Outbound Email Settings"
             >
               AD
@@ -742,11 +563,11 @@ export default function AdminLayout() {
       </div>
 
       {/* Floating Orders Hover Flyout */}
-      {isOrdersFlyoutOpen && (
+      {activeFlyout === 'orders' && (
         <div
           style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
-          onMouseEnter={handleOrdersMouseEnter}
-          onMouseLeave={handleOrdersMouseLeave}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -755,13 +576,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Orders Pipeline</span>
-            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Live Flow</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Live Flow</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=orders&stage=to_accept"
-              onClick={() => setIsOrdersFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'orders' && (!currentStage || currentStage === 'to_accept' || currentStage === 'all')
                   ? 'glass-tab-active'
@@ -769,7 +590,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && (!currentStage || currentStage === 'to_accept' || currentStage === 'all') ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-blue-400' : 'text-blue-600')}`} />
+                <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && (!currentStage || currentStage === 'to_accept' || currentStage === 'all') ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-blue-400' : 'text-blue-600')}`} />
                 Active Orders
               </span>
               {pendingCount > 0 && (
@@ -783,7 +604,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=orders&stage=returns"
-              onClick={() => setIsOrdersFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'orders' && currentStage === 'returns'
                   ? 'glass-tab-active'
@@ -791,7 +612,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'returns' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-amber-400' : 'text-amber-600')}`} />
+                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'returns' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-amber-400' : 'text-amber-600')}`} />
                 Returns
               </span>
               <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-400' : 'text-slate-400'}`}>0</span>
@@ -799,7 +620,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=orders&stage=cancellations"
-              onClick={() => setIsOrdersFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'orders' && currentStage === 'cancellations'
                   ? 'glass-tab-active'
@@ -807,7 +628,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <LogOut className={`h-3.5 w-3.5 rotate-180 ${currentTab === 'orders' && currentStage === 'cancellations' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-rose-400' : 'text-rose-600')}`} />
+                <LogOut className={`h-3.5 w-3.5 rotate-180 ${currentTab === 'orders' && currentStage === 'cancellations' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-rose-400' : 'text-rose-600')}`} />
                 Cancellations
               </span>
               <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-400' : 'text-slate-400'}`}>0</span>
@@ -817,11 +638,11 @@ export default function AdminLayout() {
       )}
 
       {/* Floating Products Hover Flyout */}
-      {isProductsFlyoutOpen && (
+      {activeFlyout === 'products' && (
         <div
-          style={{ top: `${productsFlyoutPos.top}px`, left: `${productsFlyoutPos.left}px` }}
-          onMouseEnter={handleProductsMouseEnter}
-          onMouseLeave={handleProductsMouseLeave}
+          style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -830,13 +651,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Catalog & Inventory</span>
-            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Books Hub</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Books Hub</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=products&status=all"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'all' && !currentAction
                   ? 'glass-tab-active'
@@ -844,26 +665,26 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <Package className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'all' && !currentAction ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
+                <Package className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'all' && !currentAction ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
                 All Products (Catalog)
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=products&action=add"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentAction === 'add'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                <Plus className="h-3.5 w-3.5 text-[#007aff]" />
                 Add New Product
               </span>
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs ${
-                isDarkMode ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/35' : 'bg-emerald-600 text-white'
+                isDarkMode ? 'bg-blue-500/25 text-blue-300 border border-blue-500/35' : 'bg-[#007aff] text-white'
               }`}>
                 + Add
               </span>
@@ -871,7 +692,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=products&status=published"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'published'
                   ? 'glass-tab-active'
@@ -879,14 +700,14 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <CheckCircle2 className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'published' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-emerald-400' : 'text-blue-600')}`} />
+                <CheckCircle2 className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'published' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-emerald-400' : 'text-blue-600')}`} />
                 Published Books
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=products&status=low_stock"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'low_stock'
                   ? 'glass-tab-active'
@@ -894,14 +715,14 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'low_stock' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-amber-400' : 'text-amber-600')}`} />
+                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'low_stock' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-amber-400' : 'text-amber-600')}`} />
                 Low Stock Alerts
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=products&status=out_of_stock"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'out_of_stock'
                   ? 'glass-tab-active'
@@ -909,14 +730,14 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <XCircle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'out_of_stock' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-rose-400' : 'text-rose-600')}`} />
+                <XCircle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'out_of_stock' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-rose-400' : 'text-rose-600')}`} />
                 Out of Stock
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=products&status=draft"
-              onClick={() => setIsProductsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'draft'
                   ? 'glass-tab-active'
@@ -924,7 +745,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-purple-400' : 'text-purple-600')}`} />
+                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-purple-400' : 'text-purple-600')}`} />
                 Draft Listings
               </span>
             </Link>
@@ -933,11 +754,11 @@ export default function AdminLayout() {
       )}
 
       {/* Floating Payments Hover Flyout */}
-      {isPaymentsFlyoutOpen && (
+      {activeFlyout === 'payments' && (
         <div
-          style={{ top: `${paymentsFlyoutPos.top}px`, left: `${paymentsFlyoutPos.left}px` }}
-          onMouseEnter={handlePaymentsMouseEnter}
-          onMouseLeave={handlePaymentsMouseLeave}
+          style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-72 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -946,13 +767,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Payments & Settlements</span>
-            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Ledger</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Ledger</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=payments&sub=overview"
-              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'overview'
                   ? 'glass-tab-active'
@@ -964,7 +785,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=payments&sub=earnings"
-              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'earnings'
                   ? 'glass-tab-active'
@@ -981,7 +802,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=payments&sub=settlements"
-              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'settlements'
                   ? 'glass-tab-active'
@@ -993,7 +814,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=payments&sub=transactions"
-              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'transactions'
                   ? 'glass-tab-active'
@@ -1005,7 +826,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=payments&sub=spf"
-              onClick={() => setIsPaymentsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'spf'
                   ? 'glass-tab-active'
@@ -1019,11 +840,11 @@ export default function AdminLayout() {
       )}
 
       {/* Floating Blog Hover Flyout */}
-      {isBlogFlyoutOpen && (
+      {activeFlyout === 'blog' && (
         <div
-          style={{ top: `${blogFlyoutPos.top}px`, left: `${blogFlyoutPos.left}px` }}
-          onMouseEnter={handleBlogMouseEnter}
-          onMouseLeave={handleBlogMouseLeave}
+          style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -1032,13 +853,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Blog & Social Feed</span>
-            <span className={`font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Feed Manager</span>
+            <span className={`font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Feed Manager</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=blog&filter=all"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'all' && !currentAction
                   ? 'glass-tab-active'
@@ -1046,26 +867,26 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'blog' && currentFilter === 'all' && !currentAction ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'blog' && currentFilter === 'all' && !currentAction ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
                 All Posts & Social Feed
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=blog&action=new"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${
                 currentTab === 'blog' && currentAction === 'new'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                <Plus className="h-3.5 w-3.5 text-[#007aff]" />
                 Create New Post
               </span>
               <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
-                isDarkMode ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/35' : 'bg-emerald-600 text-white'
+                isDarkMode ? 'bg-blue-500/25 text-blue-300 border border-blue-500/35' : 'bg-[#007aff] text-white'
               }`}>
                 + New
               </span>
@@ -1073,7 +894,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=blog&filter=active"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'active'
                   ? 'glass-tab-active'
@@ -1088,7 +909,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=blog&filter=scheduled"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'scheduled'
                   ? 'glass-tab-active'
@@ -1103,7 +924,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=blog&filter=expired"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'expired'
                   ? 'glass-tab-active'
@@ -1118,7 +939,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=blog&filter=hidden"
-              onClick={() => setIsBlogFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'hidden'
                   ? 'glass-tab-active'
@@ -1135,11 +956,11 @@ export default function AdminLayout() {
       )}
 
       {/* Floating Coupons Hover Flyout */}
-      {isCouponsFlyoutOpen && (
+      {activeFlyout === 'coupons' && (
         <div
-          style={{ top: `${couponsFlyoutPos.top}px`, left: `${couponsFlyoutPos.left}px` }}
-          onMouseEnter={handleCouponsMouseEnter}
-          onMouseLeave={handleCouponsMouseLeave}
+          style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -1148,13 +969,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Promotions & Coupons</span>
-            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Discounts</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Discounts</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=coupons"
-              onClick={() => setIsCouponsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'coupons' && !currentAction
                   ? 'glass-tab-active'
@@ -1162,26 +983,26 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <Tag className={`h-3.5 w-3.5 ${currentTab === 'coupons' && !currentAction ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
+                <Tag className={`h-3.5 w-3.5 ${currentTab === 'coupons' && !currentAction ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
                 All Promotions & Codes
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=coupons&action=new"
-              onClick={() => setIsCouponsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${
                 currentTab === 'coupons' && currentAction === 'new'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-blue-50 hover:text-blue-800'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                <Plus className="h-3.5 w-3.5 text-[#007aff]" />
                 New Promotion Code
               </span>
               <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
-                isDarkMode ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/35' : 'bg-emerald-600 text-white'
+                isDarkMode ? 'bg-blue-500/25 text-blue-300 border border-blue-500/35' : 'bg-[#007aff] text-white'
               }`}>
                 + New
               </span>
@@ -1191,11 +1012,11 @@ export default function AdminLayout() {
       )}
 
       {/* Floating Reviews Hover Flyout */}
-      {isReviewsFlyoutOpen && (
+      {activeFlyout === 'reviews' && (
         <div
-          style={{ top: `${reviewsFlyoutPos.top}px`, left: `${reviewsFlyoutPos.left}px` }}
-          onMouseEnter={handleReviewsMouseEnter}
-          onMouseLeave={handleReviewsMouseLeave}
+          style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
+          onMouseEnter={keepFlyoutOpen}
+          onMouseLeave={closeFlyoutWithDelay}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
@@ -1204,13 +1025,13 @@ export default function AdminLayout() {
             isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Community & Feedback</span>
-            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Moderation</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]'}`}>Moderation</span>
           </div>
 
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=reviews&sub=reviews"
-              onClick={() => setIsReviewsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'reviews' && (!currentSub || currentSub === 'reviews')
                   ? 'glass-tab-active'
@@ -1218,14 +1039,14 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <Star className={`h-3.5 w-3.5 ${currentTab === 'reviews' && (!currentSub || currentSub === 'reviews') ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-amber-400' : 'text-amber-500')}`} />
+                <Star className={`h-3.5 w-3.5 ${currentTab === 'reviews' && (!currentSub || currentSub === 'reviews') ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-amber-400' : 'text-amber-500')}`} />
                 Customer Reviews
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=reviews&sub=questions"
-              onClick={() => setIsReviewsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'reviews' && currentSub === 'questions'
                   ? 'glass-tab-active'
@@ -1233,14 +1054,14 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <MessageSquare className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'questions' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-blue-400' : 'text-blue-500')}`} />
+                <MessageSquare className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'questions' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-blue-400' : 'text-blue-500')}`} />
                 Questions & Answers (Q&A)
               </span>
             </Link>
 
             <Link
               to="/admin/dashboard?tab=reviews&sub=requests"
-              onClick={() => setIsReviewsFlyoutOpen(false)}
+              onClick={closeFlyoutImmediately}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'reviews' && currentSub === 'requests'
                   ? 'glass-tab-active'
@@ -1248,7 +1069,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'requests' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-purple-400' : 'text-purple-500')}`} />
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'requests' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-purple-400' : 'text-purple-500')}`} />
                 Book Sourcing Requests
               </span>
             </Link>

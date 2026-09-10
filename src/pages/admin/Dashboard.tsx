@@ -5308,13 +5308,13 @@ admin@technoworld.com`
 {/* Settings & Outbound Email Workspace */}
         {tab === 'settings' && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-emerald-700" /> Admin Details & Outbound Email System
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-[#007aff]" /> Admin Details & Outbound Email System
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
                     Change your admin login credentials and configure the sender email ID (Gmail SMTP / Custom SMTP) for customer delay notices and order updates.
                   </p>
                 </div>
@@ -5323,67 +5323,67 @@ admin@technoworld.com`
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Card 1: Admin Account Credentials */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-base font-extrabold text-slate-900 mb-1 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-emerald-700" /> Admin Account Credentials
+              <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-[#007aff]" /> Admin Account Credentials
                 </h3>
-                <p className="text-xs text-slate-500 mb-5">Manage your display name, login email, and login password.</p>
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-5">Manage your display name, login email, and login password.</p>
 
                 <form onSubmit={handleSaveAdminProfile} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Admin Display Name</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Admin Display Name</label>
                     <input
                       type="text"
                       value={adminProfile.name}
                       onChange={(e) => setAdminProfile({ ...adminProfile, name: e.target.value })}
-                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                      className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Admin Login Email</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Admin Login Email</label>
                     <input
                       type="email"
                       value={adminProfile.email}
                       onChange={(e) => setAdminProfile({ ...adminProfile, email: e.target.value })}
-                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                      className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Phone Number (Optional)</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Phone Number (Optional)</label>
                     <input
                       type="text"
                       value={adminProfile.phone}
                       onChange={(e) => setAdminProfile({ ...adminProfile, phone: e.target.value })}
                       placeholder="9876543210"
-                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                      className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
 
-                  <div className="border-t border-slate-100 pt-3 space-y-3">
-                    <p className="text-xs font-bold text-slate-700">Change Admin Password (leave blank to keep current)</p>
+                  <div className="border-t border-slate-100 dark:border-white/10 pt-3 space-y-3">
+                    <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">Change Admin Password (leave blank to keep current)</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">New Password</label>
+                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">New Password</label>
                         <input
                           type="password"
                           value={adminPassword}
                           onChange={(e) => setAdminPassword(e.target.value)}
                           placeholder="Min 6 characters"
-                          className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold outline-none focus:border-emerald-500"
+                          className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">Confirm Password</label>
+                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">Confirm Password</label>
                         <input
                           type="password"
                           value={adminConfirmPassword}
                           onChange={(e) => setAdminConfirmPassword(e.target.value)}
                           placeholder="Repeat password"
-                          className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold outline-none focus:border-emerald-500"
+                          className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
                         />
                       </div>
                     </div>
@@ -5392,19 +5392,19 @@ admin@technoworld.com`
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 shadow transition-all disabled:opacity-50 mt-2"
+                    className="apple-pill-btn bg-[#007aff] hover:bg-blue-600 !text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50 mt-2"
                   >
-                    {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin !text-white" /> : <CheckCircle2 className="h-4 w-4 !text-white" />}
                     Update Admin Profile
                   </button>
                 </form>
               </div>
 
               {/* Card 2: Outbound Email & Gmail SMTP Configuration */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-emerald-700" /> Outbound Sender Email & SMTP
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-[#007aff]" /> Outbound Sender Email & SMTP
                   </h3>
                   <button
                     type="button"
@@ -5412,36 +5412,36 @@ admin@technoworld.com`
                       setTestEmailTo(adminProfile.email || 'customer@example.com');
                       setIsTestEmailModalOpen(true);
                     }}
-                    className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 shadow-sm"
+                    className="apple-pill-btn px-3.5 py-1.5 text-xs font-bold"
                   >
                     🚀 Test SMTP
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mb-5">
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-5">
                   Configure your email address so delay notifications and cancellation updates send from your real address.
                 </p>
 
                 <form onSubmit={handleSaveSmtp} className="space-y-3.5">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Sender Display Name</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender Display Name</label>
                       <input
                         type="text"
                         value={smtpForm.senderName}
                         onChange={(e) => setSmtpForm({ ...smtpForm, senderName: e.target.value })}
                         placeholder="Techno World Books"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Sender From Email</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender From Email</label>
                       <input
                         type="email"
                         value={smtpForm.senderEmail}
                         onChange={(e) => setSmtpForm({ ...smtpForm, senderEmail: e.target.value })}
                         placeholder="admin@technoworld.com"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
                     </div>
@@ -5449,24 +5449,24 @@ admin@technoworld.com`
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="col-span-2">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">SMTP Host (e.g. Gmail)</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Host (e.g. Gmail)</label>
                       <input
                         type="text"
                         value={smtpForm.host}
                         onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
                         placeholder="smtp.gmail.com"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Port</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Port</label>
                       <input
                         type="number"
                         value={smtpForm.port}
                         onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
                         placeholder="587"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
                     </div>
@@ -5474,33 +5474,33 @@ admin@technoworld.com`
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">SMTP Username / Email</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Username / Email</label>
                       <input
                         type="text"
                         value={smtpForm.user}
                         onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
                         placeholder="yourname@gmail.com"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">SMTP App Password</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP App Password</label>
                       <input
                         type="password"
                         value={smtpForm.pass}
                         onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
                         placeholder="16-character App Password"
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 font-mono"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono"
                       />
                     </div>
                   </div>
 
                   {/* Gmail Help Accordion / Box */}
-                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-xs text-slate-600 space-y-1.5">
-                    <p className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <div className="rounded-2xl bg-white/50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-1.5">
+                    <p className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
                       <span>💡 How to connect Gmail to send official emails:</span>
                     </p>
-                    <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-600">
+                    <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
                       <li>Open your <b>Google Account</b> &rarr; <b>Security</b> &rarr; enable <b>2-Step Verification</b>.</li>
                       <li>Search for <b>&quot;App Passwords&quot;</b> in Google Account settings.</li>
                       <li>Create an app password named <i>&quot;Techno World Bookstore&quot;</i> and copy the 16-character code.</li>
@@ -5511,9 +5511,9 @@ admin@technoworld.com`
                   <button
                     type="submit"
                     disabled={isSavingSmtp}
-                    className="flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 shadow transition-all disabled:opacity-50"
+                    className="apple-pill-btn bg-slate-900 dark:bg-white dark:!text-slate-950 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50"
                   >
-                    {isSavingSmtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {isSavingSmtp ? <Loader2 className="h-4 w-4 animate-spin !text-white dark:!text-slate-950" /> : <CheckCircle2 className="h-4 w-4 !text-white dark:!text-slate-950" />}
                     Save Outbound SMTP Settings
                   </button>
                 </form>

@@ -147,47 +147,163 @@
 }
 
 /* ==========================================================================
-   Apple macOS Glass Buttons (Light Mode)
-   Applies to normal/standard buttons (filters, exports, dates, dropdowns, etc.)
-   Excludes semantic action buttons (emerald accept, rose cancel, amber pending)
+/* ==========================================================================
+   Apple macOS Capsule Buttons & Universal Contrast Adaptation System
+   Light bg -> Deep Black text & icons (#0f172a)
+   Dark bg  -> Pure Crisp White text & icons (#ffffff)
    ========================================================================== */
 
+/* Universal Contrast Variables: Light Mode Default */
+:root {
+  --apple-btn-bg: rgba(255, 255, 255, 0.75);
+  --apple-btn-bg-hover: rgba(255, 255, 255, 0.96);
+  --apple-btn-border: rgba(0, 0, 0, 0.10);
+  --apple-btn-border-top: rgba(255, 255, 255, 0.95);
+  --apple-btn-divider: rgba(0, 0, 0, 0.08);
+  --apple-btn-shadow: 0 1.5px 4px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --apple-btn-text: #0f172a;
+  --apple-btn-icon: #0f172a;
+}
+
+/* Universal Contrast Variables: Dark Mode / Dark Surfaces */
+.dark,
+.dark-content,
+.dark-pill,
+.dark-sidebar,
+header.dark-header {
+  --apple-btn-bg: rgba(255, 255, 255, 0.12);
+  --apple-btn-bg-hover: rgba(255, 255, 255, 0.22);
+  --apple-btn-border: rgba(255, 255, 255, 0.16);
+  --apple-btn-border-top: rgba(255, 255, 255, 0.28);
+  --apple-btn-divider: rgba(255, 255, 255, 0.12);
+  --apple-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  --apple-btn-text: #ffffff;
+  --apple-btn-icon: #ffffff;
+}
+
+/* Apple Pill Capsule Button */
+.apple-pill-btn,
 .glass-btn,
-.glass-light button.glass-btn,
-.glass-light button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]) {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(246, 247, 252, 0.65) 100%) !important;
+.glass-light button.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px !important;
+  background: var(--apple-btn-bg) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.03) !important;
-  color: #000000 !important;
-  font-weight: 800 !important;
+  border: 1px solid var(--apple-btn-border) !important;
+  border-top: 1px solid var(--apple-btn-border-top) !important;
+  box-shadow: var(--apple-btn-shadow) !important;
+  color: var(--apple-btn-text) !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  user-select: none;
   transition: all 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.apple-pill-btn *,
+.glass-btn *,
+.glass-light button.glass-btn * {
+  color: var(--apple-btn-text) !important;
+}
+
+.apple-pill-btn svg:not([class*="text-"]):not([class*="fill-"]),
+.glass-btn svg:not([class*="text-"]):not([class*="fill-"]),
+.glass-light button.glass-btn svg:not([class*="text-"]):not([class*="fill-"]) {
+  stroke: var(--apple-btn-icon) !important;
+  stroke-width: 1.8px !important;
+}
+
+.apple-pill-btn:hover,
 .glass-btn:hover,
-.glass-light button.glass-btn:hover,
-.glass-light button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 242, 250, 0.85) 100%) !important;
-  border-color: rgba(0, 0, 0, 0.18) !important;
-  border-top-color: #ffffff !important;
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 #ffffff !important;
-  color: #000000 !important;
+.glass-light button.glass-btn:hover {
+  background: var(--apple-btn-bg-hover) !important;
+  color: var(--apple-btn-text) !important;
+  border-color: var(--apple-btn-border) !important;
   transform: translateY(-0.5px);
+}
+
+.apple-pill-btn:active,
+.glass-btn:active,
+.glass-light button.glass-btn:active {
+  transform: scale(0.965) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Apple Segmented Control Group (Pill Capsule with Hairline Dividers) */
+.apple-segmented-group {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px !important;
+  background: var(--apple-btn-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--apple-btn-border) !important;
+  border-top: 1px solid var(--apple-btn-border-top) !important;
+  box-shadow: var(--apple-btn-shadow) !important;
+  overflow: hidden;
+  user-select: none;
+}
+
+.apple-segmented-group > button,
+.apple-segmented-group > a,
+.apple-segmented-group > div {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--apple-btn-text) !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-segmented-group > button *,
+.apple-segmented-group > a * {
+  color: var(--apple-btn-text) !important;
+}
+
+.apple-segmented-group svg:not([class*="text-"]):not([class*="fill-"]) {
+  stroke: var(--apple-btn-icon) !important;
+  stroke-width: 1.8px !important;
+}
+
+.apple-segmented-group > button:hover,
+.apple-segmented-group > a:hover {
+  background: var(--apple-btn-bg-hover) !important;
+}
+
+.apple-segmented-group > button:active,
+.apple-segmented-group > a:active {
+  transform: scale(0.965);
+}
+
+/* Hairline dividers between adjacent buttons inside group */
+.apple-segmented-group > * + * {
+  border-left: 1px solid var(--apple-btn-divider) !important;
+}
+
+/* Circular Apple Action Pill */
+.apple-pill-circle {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px !important;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ==========================================================================
    Apple Signature Tactile Button Click Micro-Interactions
    ========================================================================== */
 button:not(:disabled),
+.apple-pill-btn,
 .glass-btn,
 .glass-tab-active,
 .glass-tab-inactive,
@@ -201,6 +317,7 @@ a[role="button"] {
 }
 
 button:not(:disabled):active,
+.apple-pill-btn:active,
 .glass-btn:active,
 .glass-tab-active:active,
 .glass-tab-inactive:active,
@@ -210,65 +327,98 @@ a[role="button"]:active {
 }
 
 /* ==========================================================================
-   Selected Tab Glass Pill (Emerald Green Accent — Apple UI)
+   Selected Tab Glass Pill (Apple macOS Neutral Active — No Green)
    ========================================================================== */
 
 .glass-tab-active {
-  background: rgba(16, 185, 129, 0.20) !important;
-  color: #047857 !important;
-  border: 1.5px solid rgba(16, 185, 129, 0.50) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 8px rgba(16, 185, 129, 0.18) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(16px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  font-weight: 900 !important;
+  font-weight: 600 !important;
+  border-radius: 9999px !important;
 }
 
 .glass-tab-active * {
-  color: #047857 !important;
-  font-weight: 900 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.glass-tab-active svg {
+  color: #007aff !important;
+  stroke: #007aff !important;
 }
 
 .glass-tab-inactive {
-  background: rgba(255, 255, 255, 0.65) !important;
-  color: #000000 !important;
-  font-weight: 800 !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  background: var(--apple-btn-bg) !important;
+  color: var(--apple-btn-text) !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--apple-btn-border) !important;
+  border-top: 1px solid var(--apple-btn-border-top) !important;
+  box-shadow: var(--apple-btn-shadow) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 9999px !important;
 }
 
 .glass-tab-inactive * {
-  color: #000000 !important;
-  font-weight: 800 !important;
+  color: var(--apple-btn-text) !important;
+  font-weight: 600 !important;
 }
 
 .glass-tab-inactive:hover {
-  background: rgba(255, 255, 255, 0.92) !important;
-  color: #000000 !important;
-  border-color: rgba(0, 0, 0, 0.22) !important;
+  background: var(--apple-btn-bg-hover) !important;
+  color: var(--apple-btn-text) !important;
+  border-color: var(--apple-btn-border) !important;
 }
 
 .glass-tab-inactive:hover * {
-  color: #000000 !important;
+  color: var(--apple-btn-text) !important;
 }
 
-.dark-content .glass-tab-active {
-  background: rgba(16, 185, 129, 0.22) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(16, 185, 129, 0.45) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 12px rgba(16, 185, 129, 0.25) !important;
+.dark-content .glass-tab-active,
+.dark .glass-tab-active {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 10px rgba(0, 0, 0, 0.35) !important;
 }
 
-.dark-content .glass-tab-inactive {
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: #94a3b8 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+.dark-content .glass-tab-active *,
+.dark .glass-tab-active * {
+  color: #ffffff !important;
 }
 
-.dark-content .glass-tab-inactive:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #f8fafc !important;
+.dark-content .glass-tab-active svg,
+.dark .glass-tab-active svg {
+  color: #3898ff !important;
+  stroke: #3898ff !important;
+}
+
+.dark-content .glass-tab-inactive,
+.dark .glass-tab-inactive {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.dark-content .glass-tab-inactive *,
+.dark .glass-tab-inactive * {
+  color: #ffffff !important;
+}
+
+.dark-content .glass-tab-inactive:hover,
+.dark .glass-tab-inactive:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.dark-content .glass-tab-inactive:hover *,
+.dark .glass-tab-inactive:hover * {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -309,33 +459,177 @@ a[role="button"]:active {
   background-color: rgba(0, 0, 0, 0.05) !important;
 }
 
-/* High-Visibility Emerald Frosted Active Item */
-.glass-flyout:not(.dark-flyout) .glass-tab-active {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.28) 100%) !important;
-  color: #065f46 !important;
-  border: 1.5px solid rgba(16, 185, 129, 0.65) !important;
+/* ==========================================================================
+   Apple macOS Mail / Safari Authentic Frosted Sidebar System
+   ========================================================================== */
+
+.macos-sidebar {
+  background: rgba(246, 246, 248, 0.86) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark .macos-sidebar,
+.dark-sidebar.macos-sidebar {
+  background: rgba(24, 24, 27, 0.88) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Authentic macOS Sidebar Items — Clean Neutral Pill (NO GREEN) */
+.macos-tab-active {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.macos-tab-active * {
+  color: #0f172a !important;
+}
+
+.macos-tab-active svg {
+  color: #007aff !important;
+  stroke: #007aff !important;
+}
+
+.dark .macos-tab-active,
+.dark-sidebar .macos-tab-active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.dark .macos-tab-active *,
+.dark-sidebar .macos-tab-active * {
+  color: #ffffff !important;
+}
+
+.dark .macos-tab-active svg,
+.dark-sidebar .macos-tab-active svg {
+  color: #3898ff !important;
+  stroke: #3898ff !important;
+}
+
+.macos-tab-inactive {
+  color: #475569 !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+}
+
+.macos-tab-inactive * {
+  color: #475569 !important;
+}
+
+.macos-tab-inactive svg {
+  color: #007aff !important;
+  opacity: 0.82;
+}
+
+.macos-tab-inactive:hover {
+  color: #0f172a !important;
+  background: rgba(0, 0, 0, 0.045) !important;
+}
+
+.macos-tab-inactive:hover * {
+  color: #0f172a !important;
+}
+
+.macos-tab-inactive:hover svg {
+  opacity: 1;
+}
+
+.dark .macos-tab-inactive,
+.dark-sidebar .macos-tab-inactive {
+  color: #94a3b8 !important;
+}
+
+.dark .macos-tab-inactive *,
+.dark-sidebar .macos-tab-inactive * {
+  color: #94a3b8 !important;
+}
+
+.dark .macos-tab-inactive svg,
+.dark-sidebar .macos-tab-inactive svg {
+  color: #3898ff !important;
+  opacity: 0.85;
+}
+
+.dark .macos-tab-inactive:hover,
+.dark-sidebar .macos-tab-inactive:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+.dark .macos-tab-inactive:hover *,
+.dark-sidebar .macos-tab-inactive:hover * {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Apple Frosted Glass Floating Flyouts (Light & Dark Translucent Glass)
+   ========================================================================== */
+
+/* Light Mode Flyout (when background is white / light mode) */
+.glass-flyout {
+  background: rgba(255, 255, 255, 0.40) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.90) !important;
   box-shadow:
-    0 4px 16px rgba(16, 185, 129, 0.28),
+    0 20px 40px -15px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03) !important;
+  color: #0f172a !important;
+}
+
+/* Refined Apple Typography (clean semibold, not heavy or chunky) */
+.glass-flyout:not(.dark-flyout) {
+  color: #0f172a !important;
+}
+
+.glass-flyout:not(.dark-flyout) a {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.glass-flyout:not(.dark-flyout) a span {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.glass-flyout:not(.dark-flyout) a:hover {
+  color: #000000 !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Clean macOS Active Item in Flyout (No green) */
+.glass-flyout:not(.dark-flyout) .glass-tab-active {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 .glass-flyout:not(.dark-flyout) .glass-tab-active * {
-  color: #065f46 !important;
-  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
 .glass-flyout:not(.dark-flyout) .glass-tab-active svg {
-  color: #059669 !important;
-  stroke-width: 2.2px !important;
+  color: #007aff !important;
+  stroke: #007aff !important;
 }
 
 .glass-flyout.dark-flyout,
 .dark-content .glass-flyout,
 .dark .glass-flyout {
-  background: rgba(18, 20, 28, 0.72) !important;
-  backdrop-filter: blur(16px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
+  background: rgba(18, 20, 28, 0.76) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.60),
@@ -348,17 +642,22 @@ a[role="button"]:active {
 .glass-flyout.dark-flyout .glass-tab-active,
 .dark-content .glass-flyout .glass-tab-active,
 .dark .glass-flyout .glass-tab-active {
-  background: rgba(16, 185, 129, 0.25) !important;
-  color: #34d399 !important;
-  border: 1.5px solid rgba(52, 211, 153, 0.60) !important;
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35) !important;
-  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  font-weight: 600 !important;
+}
+
+.glass-flyout.dark-flyout .glass-tab-active * {
+  color: #ffffff !important;
 }
 
 .glass-flyout.dark-flyout .glass-tab-active svg,
 .dark-content .glass-flyout .glass-tab-active svg,
 .dark .glass-flyout .glass-tab-active svg {
-  color: #34d399 !important;
+  color: #3898ff !important;
+  stroke: #3898ff !important;
 }
 
 /* ==========================================================================
