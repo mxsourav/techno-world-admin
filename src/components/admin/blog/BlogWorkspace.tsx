@@ -576,16 +576,16 @@ export default function BlogWorkspace() {
                 searchParams.set('filter', tab.id);
                 setSearchParams(searchParams);
               }}
-              className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all ${
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
                 filterParam === tab.id
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'glass-tab-active'
+                  : 'glass-tab-inactive'
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  filterParam === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                  filterParam === tab.id ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
                 }`}
               >
                 {tab.count}

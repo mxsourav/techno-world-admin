@@ -441,7 +441,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const activeMaxWidthRaw = selectedKey ? (content[`${selectedKey}__maxWidth`] || '') : '';
   const activeMaxWidthNum = parseInt(activeMaxWidthRaw, 10) || 0;
 
-  // Apple Liquid Glass Styling Tokens with Crisp High-Contrast Dark Mode
+  // Apple macOS Styling Tokens with Crisp High-Contrast Dark Mode
   const isDark = themeMode === 'macos-dark';
   const isIos = themeMode === 'ios-light';
 
@@ -481,10 +481,10 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       className={`flex flex-col transition-all duration-200 rounded-3xl overflow-hidden border shadow-2xl ${
         isFullscreen
           ? 'fixed inset-3 z-50 h-[calc(100vh-24px)] rounded-3xl'
-          : 'h-[calc(100vh-80px)] min-h-[660px]'
+          : 'h-[calc(100vh-210px)] min-h-[500px]'
       } ${themeClasses.root} ${themeClasses.frameBorder}`}
     >
-      {/* Apple Liquid Glass Titlebar & Toolbar */}
+      {/* Apple Titlebar & Toolbar */}
       <div className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3 ${themeClasses.header} select-none shrink-0`}>
         {/* Left: macOS Traffic Light Dots & Title */}
         <div className="flex items-center gap-4">
@@ -524,11 +524,11 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">Visual CMS Studio</span>
                 <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                  Liquid Glass 27
+                  Live Preview
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 dark:text-zinc-300 flex items-center gap-1">
-                Select element to auto-locate · Drag marks to resize
+                Select element to auto-locate · Drag handles to resize
               </span>
             </div>
           </div>
@@ -649,7 +649,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       <div className="flex-1 flex overflow-hidden relative">
         {/* Center / Left: Interactive Live Preview Canvas */}
         <div className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 flex flex-col items-center justify-start overflow-auto relative select-none`}>
-          {/* Instruction banner in Apple Liquid Glass pill */}
+          {/* Instruction banner in Apple frosted pill */}
           <div className="mb-3 px-4 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/90 backdrop-blur-xl border border-white/60 dark:border-zinc-700 text-[11px] font-medium text-slate-700 dark:text-zinc-200 shadow-sm flex items-center gap-2 shrink-0">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Select any element in the directory to auto-highlight and scroll to it · Drag handles to resize</span>

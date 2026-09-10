@@ -1441,8 +1441,8 @@ admin@technoworld.com`
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 py-6 sm:py-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className={`mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 ${tab === 'cms' ? 'py-1 sm:py-2' : 'py-6 sm:py-8'}`}>
+      <div className={`${tab === 'cms' ? 'mb-2' : 'mb-6'} flex items-center justify-between`}>
         <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
         {['dashboard', 'products', 'inventory'].includes(tab) && (
           <>
@@ -1880,14 +1880,14 @@ admin@technoworld.com`
                           setSelectedGroupKeys(new Set());
                           setSelectedOrderIds(new Set());
                         }}
-                        className={`flex flex-col items-start justify-between rounded-xl p-3 text-left transition-all border ${
+                        className={`flex flex-col items-start justify-between rounded-xl p-3 text-left transition-all ${
                           isActive
-                            ? 'bg-blue-50/70 border-blue-400 shadow-sm ring-2 ring-blue-500/20'
-                            : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                            ? 'glass-tab-active ring-2 ring-emerald-500/25'
+                            : 'glass-tab-inactive'
                         }`}
                       >
-                        <span className="text-xl font-black tracking-tight text-slate-900">{stg.count}</span>
-                        <span className={`mt-1 text-xs font-bold ${isActive ? 'text-blue-700' : 'text-slate-500'}`}>
+                        <span className={`text-xl font-black tracking-tight ${isActive ? 'text-emerald-800' : 'text-slate-900'}`}>{stg.count}</span>
+                        <span className={`mt-1 text-xs font-bold ${isActive ? 'text-emerald-700' : 'text-slate-500'}`}>
                           {stg.label}
                         </span>
                       </button>
@@ -1966,11 +1966,11 @@ admin@technoworld.com`
                         onClick={() => setOrderViewMode('smart_groups')}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
                           orderViewMode === 'smart_groups'
-                            ? 'bg-white text-blue-700 shadow-sm font-extrabold'
+                            ? 'glass-tab-active font-extrabold'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'fill-blue-600 text-blue-600' : 'text-slate-400'}`} />
+                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
                         <span>Smart Groups</span>
                       </button>
 
@@ -1978,11 +1978,11 @@ admin@technoworld.com`
                         onClick={() => setOrderViewMode('order_id')}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
                           orderViewMode === 'order_id'
-                            ? 'bg-white text-blue-700 shadow-sm font-extrabold'
+                            ? 'glass-tab-active font-extrabold'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <Box className="h-3.5 w-3.5 text-slate-500" />
+                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-emerald-600' : 'text-slate-500'}`} />
                         <span>Order ID</span>
                       </button>
                     </div>
@@ -3968,16 +3968,16 @@ admin@technoworld.com`
                 <button
                   type="button"
                   onClick={() => setReviewSubTab('reviews')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                     reviewSubTab === 'reviews'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'glass-tab-active'
+                      : 'glass-tab-inactive'
                   }`}
                 >
-                  <Star className="h-3.5 w-3.5 fill-current" />
+                  <Star className={`h-3.5 w-3.5 ${reviewSubTab === 'reviews' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
                   <span>Customer Reviews</span>
                   <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                    reviewSubTab === 'reviews' ? 'bg-white/20 text-white' : 'bg-white text-slate-700'
+                    reviewSubTab === 'reviews' ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
                   }`}>
                     {adminReviews.length}
                   </span>
@@ -3986,16 +3986,16 @@ admin@technoworld.com`
                 <button
                   type="button"
                   onClick={() => setReviewSubTab('questions')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                     reviewSubTab === 'questions'
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'glass-tab-active'
+                      : 'glass-tab-inactive'
                   }`}
                 >
-                  <HelpCircle className="h-3.5 w-3.5" />
+                  <HelpCircle className={`h-3.5 w-3.5 ${reviewSubTab === 'questions' ? 'text-emerald-600' : 'text-slate-400'}`} />
                   <span>Questions & Answers (Q&A)</span>
                   {adminQuestions.filter(q => q.status === 'PENDING').length > 0 && (
-                    <span className="ml-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950">
+                    <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
                       {adminQuestions.filter(q => q.status === 'PENDING').length} Pending
                     </span>
                   )}
@@ -4004,21 +4004,21 @@ admin@technoworld.com`
                 <button
                   type="button"
                   onClick={() => setReviewSubTab('requests')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                     reviewSubTab === 'requests'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'glass-tab-active'
+                      : 'glass-tab-inactive'
                   }`}
                 >
-                  <BookOpen className="h-3.5 w-3.5" />
+                  <BookOpen className={`h-3.5 w-3.5 ${reviewSubTab === 'requests' ? 'text-emerald-600' : 'text-slate-400'}`} />
                   <span>Book Sourcing Requests</span>
                   <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                    reviewSubTab === 'requests' ? 'bg-white/20 text-white' : 'bg-white text-slate-700'
+                    reviewSubTab === 'requests' ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
                   }`}>
                     {adminBookRequests.length}
                   </span>
                   {adminBookRequests.filter(r => r.status === 'PENDING').length > 0 && (
-                    <span className="ml-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950">
+                    <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
                       {adminBookRequests.filter(r => r.status === 'PENDING').length} New
                     </span>
                   )}
@@ -4858,27 +4858,27 @@ admin@technoworld.com`
         {tab === 'cms' && (
           <div className="space-y-5">
             {/* Sub-tab navigation */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/60 pb-3">
               <button
                 type="button"
                 onClick={() => setCmsSubTab('visual')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                   cmsSubTab === 'visual'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    ? 'glass-tab-active'
+                    : 'glass-tab-inactive'
                 }`}
               >
-                <Sparkles className="h-4 w-4" />
-                <span>🎨 Visual Live On-Page Editor</span>
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <span>Visual Live On-Page Editor</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCmsSubTab('hero_cover')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                   cmsSubTab === 'hero_cover'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    ? 'glass-tab-active'
+                    : 'glass-tab-inactive'
                 }`}
               >
                 <Box className="h-4 w-4" />
@@ -4888,10 +4888,10 @@ admin@technoworld.com`
               <button
                 type="button"
                 onClick={() => setCmsSubTab('legacy')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
                   cmsSubTab === 'legacy'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    ? 'glass-tab-active'
+                    : 'glass-tab-inactive'
                 }`}
               >
                 <SlidersHorizontal className="h-4 w-4" />

@@ -100,6 +100,11 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const currentTab = searchParams.get('tab') || 'dashboard';
+  const currentStage = searchParams.get('stage') || 'to_accept';
+  const currentStatus = searchParams.get('status') || 'all';
+  const currentAction = searchParams.get('action') || '';
+  const currentSub = searchParams.get('sub') || 'overview';
+  const currentFilter = searchParams.get('filter') || 'all';
 
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
@@ -259,7 +264,7 @@ export default function AdminLayout() {
             const isPaymentsTab = t.id === 'payments';
             const isBlogTab = t.id === 'blog';
 
-            const activeTabClasses = 'bg-white/[0.14] text-white border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-md font-medium';
+            const activeTabClasses = 'bg-emerald-500/[0.14] text-emerald-400 border border-emerald-500/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_12px_rgba(16,185,129,0.18)] backdrop-blur-xl font-semibold';
             const inactiveTabClasses = 'text-neutral-400 hover:text-white hover:bg-white/[0.06] border border-transparent font-normal';
 
             if (isProductsTab) {
@@ -277,8 +282,8 @@ export default function AdminLayout() {
                       isActive ? activeTabClasses : inactiveTabClasses
                     }`}
                   >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
-                    <span>{t.name}</span>
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
                   </Link>
                 </div>
               );
@@ -299,8 +304,8 @@ export default function AdminLayout() {
                       isActive ? activeTabClasses : inactiveTabClasses
                     }`}
                   >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
-                    <span>{t.name}</span>
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
                     {pendingCount > 0 && (
                       <span className="ml-auto rounded-full bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 shadow-sm animate-pulse">
                         {pendingCount}
@@ -326,8 +331,8 @@ export default function AdminLayout() {
                       isActive ? activeTabClasses : inactiveTabClasses
                     }`}
                   >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
-                    <span>{t.name}</span>
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
                   </Link>
                 </div>
               );
@@ -348,8 +353,8 @@ export default function AdminLayout() {
                       isActive ? activeTabClasses : inactiveTabClasses
                     }`}
                   >
-                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
-                    <span>{t.name}</span>
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
                   </Link>
                 </div>
               );
@@ -363,8 +368,8 @@ export default function AdminLayout() {
                   isActive ? activeTabClasses : inactiveTabClasses
                 }`}
               >
-                <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
-                <span>{t.name}</span>
+                <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
               </Link>
             );
           })}
@@ -571,11 +576,10 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-3 sm:p-5 lg:p-6">
+        <main className={`flex-1 overflow-auto ${currentTab === 'cms' ? 'p-2 sm:p-3' : 'p-3 sm:p-5 lg:p-6'}`}>
           <Outlet />
         </main>
-      </div>
-      {/* Floating Orders Hover Flyout */}
+      </div>      {/* Floating Orders Hover Flyout */}
       {isOrdersFlyoutOpen && (
         <div
           style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
@@ -583,12 +587,12 @@ export default function AdminLayout() {
           onMouseLeave={handleOrdersMouseLeave}
           className={`fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
             isDarkMode
-              ? 'border border-white/[0.12] bg-[#141418]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/50 bg-white/65 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] text-slate-800'
+              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
+              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
           }`}
         >
           <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-100'
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             Orders Pipeline
           </div>
@@ -596,12 +600,14 @@ export default function AdminLayout() {
           <Link
             to="/admin/dashboard?tab=orders&stage=to_accept"
             onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-              isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-800 hover:bg-blue-50 hover:text-blue-700'
+            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              currentTab === 'orders' && currentStage === 'to_accept'
+                ? 'glass-tab-active'
+                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
             }`}
           >
             <span className="flex items-center gap-2">
-              <ShoppingCart className={`h-3.5 w-3.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'to_accept' ? 'text-emerald-600' : isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
               Active Orders
             </span>
             {pendingCount > 0 && (
@@ -616,12 +622,14 @@ export default function AdminLayout() {
           <Link
             to="/admin/dashboard?tab=orders&stage=returns"
             onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-              isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-800 hover:bg-amber-50 hover:text-amber-800'
+            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              currentTab === 'orders' && currentStage === 'returns'
+                ? 'glass-tab-active'
+                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
             }`}
           >
             <span className="flex items-center gap-2">
-              <AlertTriangle className={`h-3.5 w-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+              <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'returns' ? 'text-emerald-600' : isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
               Returns
             </span>
             <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>0</span>
@@ -630,12 +638,14 @@ export default function AdminLayout() {
           <Link
             to="/admin/dashboard?tab=orders&stage=cancellations"
             onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
-              isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-800 hover:bg-rose-50 hover:text-rose-700'
+            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              currentTab === 'orders' && currentStage === 'cancellations'
+                ? 'glass-tab-active'
+                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
             }`}
           >
             <span className="flex items-center gap-2">
-              <LogOut className={`h-3.5 w-3.5 rotate-180 ${isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
+              <LogOut className={`h-3.5 w-3.5 rotate-180 ${currentTab === 'orders' && currentStage === 'cancellations' ? 'text-emerald-600' : isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
               Cancellations
             </span>
             <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>0</span>
@@ -651,12 +661,12 @@ export default function AdminLayout() {
           onMouseLeave={handleProductsMouseLeave}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
             isDarkMode
-              ? 'border border-white/[0.12] bg-[#141418]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/50 bg-white/65 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] text-slate-800'
+              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
+              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
           }`}
         >
           <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-100'
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             Catalog & Inventory
           </div>
@@ -665,12 +675,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&status=all"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentStatus === 'all' && !currentAction
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Package className={`h-3.5 w-3.5 ${isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
+                <Package className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'all' && !currentAction ? 'text-emerald-600' : isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
                 All Products (Catalog)
               </span>
             </Link>
@@ -678,12 +690,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&action=add"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentAction === 'add'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className={`h-3.5 w-3.5 ${isDarkMode ? 'text-white' : 'text-emerald-600'}`} />
+                <Plus className="h-3.5 w-3.5 text-emerald-600" />
                 Add New Product
               </span>
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs ${
@@ -696,12 +710,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&status=published"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentStatus === 'published'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <CheckCircle2 className={`h-3.5 w-3.5 ${isDarkMode ? 'text-emerald-400' : 'text-blue-600'}`} />
+                <CheckCircle2 className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'published' ? 'text-emerald-600' : isDarkMode ? 'text-emerald-400' : 'text-blue-600'}`} />
                 Published Books
               </span>
             </Link>
@@ -709,12 +725,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&status=low_stock"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentStatus === 'low_stock'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <AlertTriangle className={`h-3.5 w-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'low_stock' ? 'text-emerald-600' : isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
                 Low Stock Alerts
               </span>
             </Link>
@@ -722,12 +740,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&status=out_of_stock"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-rose-50 hover:text-rose-800'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentStatus === 'out_of_stock'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <XCircle className={`h-3.5 w-3.5 ${isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
+                <XCircle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'out_of_stock' ? 'text-emerald-600' : isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
                 Out of Stock
               </span>
             </Link>
@@ -735,12 +755,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=products&status=draft"
               onClick={() => setIsProductsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'products' && currentStatus === 'draft'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <FileEdit className={`h-3.5 w-3.5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? 'text-emerald-600' : isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
                 Draft Listings
               </span>
             </Link>
@@ -756,16 +778,24 @@ export default function AdminLayout() {
           onMouseLeave={handlePaymentsMouseLeave}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
             isDarkMode
-              ? 'border border-white/[0.12] bg-[#141418]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/50 bg-white/65 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] text-slate-800'
+              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
+              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
           }`}
         >
+          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
+          }`}>
+            Payments & Settlements
+          </div>
+
           <div className="space-y-0.5">
             <Link
               to="/admin/dashboard?tab=payments&sub=overview"
               onClick={() => setIsPaymentsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'payments' && currentSub === 'overview'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span>Payments Overview</span>
@@ -774,8 +804,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=payments&sub=earnings"
               onClick={() => setIsPaymentsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'payments' && currentSub === 'earnings'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span>Earnings Summary</span>
@@ -789,8 +821,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=payments&sub=settlements"
               onClick={() => setIsPaymentsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'payments' && currentSub === 'settlements'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span>Search Order-wise Settlements</span>
@@ -799,8 +833,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=payments&sub=transactions"
               onClick={() => setIsPaymentsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'payments' && currentSub === 'transactions'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span>Services Transaction History</span>
@@ -809,8 +845,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=payments&sub=spf"
               onClick={() => setIsPaymentsFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'payments' && currentSub === 'spf'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span>Seller Protection Fund (SPF)</span>
@@ -827,12 +865,12 @@ export default function AdminLayout() {
           onMouseLeave={handleBlogMouseLeave}
           className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
             isDarkMode
-              ? 'border border-white/[0.12] bg-[#141418]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/50 bg-white/65 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] text-slate-800'
+              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
+              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
           }`}
         >
           <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center justify-between ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-100'
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
           }`}>
             <span>Blog & Social Feed</span>
             <span className={`font-bold ${isDarkMode ? 'text-neutral-300' : 'text-emerald-700'}`}>Feed Manager</span>
@@ -842,12 +880,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&filter=all"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'blog' && currentFilter === 'all' && !currentAction
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <BookOpen className={`h-3.5 w-3.5 ${isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'blog' && currentFilter === 'all' && !currentAction ? 'text-emerald-600' : isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
                 All Posts & Social Feed
               </span>
             </Link>
@@ -855,12 +895,14 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&action=new"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
-                isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${
+                currentTab === 'blog' && currentAction === 'new'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className={`h-3.5 w-3.5 ${isDarkMode ? 'text-white' : 'text-emerald-700'}`} />
+                <Plus className="h-3.5 w-3.5 text-emerald-700" />
                 Create New Post
               </span>
               <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
@@ -873,8 +915,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&filter=active"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'blog' && currentFilter === 'active'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -886,8 +930,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&filter=scheduled"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'blog' && currentFilter === 'scheduled'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -899,8 +945,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&filter=expired"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'blog' && currentFilter === 'expired'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -912,8 +960,10 @@ export default function AdminLayout() {
             <Link
               to="/admin/dashboard?tab=blog&filter=hidden"
               onClick={() => setIsBlogFlyoutOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
-                isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'blog' && currentFilter === 'hidden'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">

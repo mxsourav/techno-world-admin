@@ -157,15 +157,19 @@ export default function ProductsWorkspace() {
       </div>
 
       {/* Workspace Tabs & Table */}
-      <div className="flex-1 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl overflow-hidden flex flex-col shadow-xs">
         {/* Tabs */}
-        <div className="border-b border-slate-200 px-6 py-2">
-          <div className="flex gap-6 overflow-x-auto">
+        <div className="border-b border-slate-200/60 px-6 py-3 bg-white/40 backdrop-blur-md">
+          <div className="flex gap-2 overflow-x-auto py-0.5">
             {['all', 'published', 'draft', 'low_stock', 'out_of_stock', 'archived'].map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
-                className={`border-b-2 py-3 text-sm font-semibold capitalize whitespace-nowrap ${activeTab === t ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all cursor-pointer ${
+                  activeTab === t
+                    ? 'glass-tab-active'
+                    : 'glass-tab-inactive'
+                }`}
               >
                 {t === 'archived' ? 'Inactive' : t.replace('_', ' ')}
               </button>
