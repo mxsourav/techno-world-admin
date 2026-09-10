@@ -282,8 +282,12 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [isInspectorCollapsed]);
 
-  // Determine storefront preview base URL
-  const previewOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  // Determine storefront preview base URL (points to storefront domain when running on admin subdomain)
+  const previewOrigin = typeof window !== 'undefined'
+    ? (window.location.hostname.includes('admin')
+        ? window.location.origin.replace('://admin.', '://')
+        : window.location.origin)
+    : 'https://technoworldbooks.in';
   const previewUrl = `${previewOrigin}${selectedPage}${selectedPage.includes('?') ? '&' : '?'}cms_edit=true&_preview=${iframeKey}`;
 
   // Broadcast current drafts and styles to iframe on load
