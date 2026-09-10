@@ -91,116 +91,6 @@ const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
   { key: 'footer.phone', label: 'Landline Phone Number', section: 'Contact & Storefront', defaultText: '033 2219 6115' },
 ];
 
-// Apple Digital Precision Roller (Horizontal Crown / Ruler)
-const DigitalRoller: React.FC<{
-  value: number;
-  min?: number;
-  max?: number;
-  onChange: (val: number) => void;
-  isDark: boolean;
-}> = ({ value, min = 12, max = 80, onChange, isDark }) => {
-  const rulerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const ticks: number[] = [];
-  for (let i = min; i <= max; i += 2) {
-    ticks.push(i);
-  }
-
-  const updateFromPointer = (clientX: number) => {
-    if (!rulerRef.current) return;
-    const rect = rulerRef.current.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const newVal = Math.round(min + ratio * (max - min));
-    onChange(newVal);
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    updateFromPointer(e.clientX);
-  };
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      updateFromPointer(e.clientX);
-    };
-
-    const handlePointerUp = () => {
-      setIsDragging(false);
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isDragging, min, max]);
-
-  const percent = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
-
-  return (
-    <div
-      ref={rulerRef}
-      onPointerDown={handlePointerDown}
-      onWheel={(e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        onChange(Math.max(min, Math.min(max, value + delta)));
-      }}
-      className={`relative h-11 rounded-xl overflow-hidden cursor-ew-resize select-none border transition-all ${
-        isDark
-          ? 'bg-zinc-950 border-zinc-700 shadow-inner'
-          : 'bg-gradient-to-b from-slate-200 via-slate-50 to-slate-200 border-black/10 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08)]'
-      }`}
-      title="Click and drag horizontally to roll font size smoothly, or scroll mouse wheel"
-    >
-      {/* 3D Cylindrical Edge Vignettes */}
-      <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black/40 dark:from-black/80 to-transparent pointer-events-none z-10" />
-      <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black/40 dark:from-black/80 to-transparent pointer-events-none z-10" />
-
-      {/* Graduation Marks */}
-      <div className="absolute inset-0 flex items-center justify-between px-3">
-        {ticks.map((t) => {
-          const isMajor = t % 8 === 0 || t === min || t === max;
-          const isMedium = t % 4 === 0 && !isMajor;
-          return (
-            <div key={t} className="flex flex-col items-center justify-end h-full py-1.5 pointer-events-none">
-              <div
-                className={`w-[1px] rounded-full transition-colors ${
-                  isMajor
-                    ? isDark ? 'h-5 bg-zinc-200' : 'h-5 bg-slate-700'
-                    : isMedium
-                    ? isDark ? 'h-3 bg-zinc-400' : 'h-3 bg-slate-400'
-                    : isDark ? 'h-1.5 bg-zinc-600' : 'h-1.5 bg-slate-300'
-                }`}
-              />
-              {isMajor && (
-                <span className={`text-[8px] font-mono mt-0.5 leading-none ${
-                  isDark ? 'text-zinc-300 font-bold' : 'text-slate-500'
-                }`}>
-                  {t}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Apple Center Sapphire Needle with Optical Glow */}
-      <div
-        className="absolute top-0 bottom-0 w-[2px] bg-blue-500 shadow-[0_0_10px_#3b82f6] z-20 pointer-events-none"
-        style={{ left: `${percent}%` }}
-      >
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md border border-white" />
-        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md border border-white" />
-      </div>
-    </div>
-  );
-};
 
 export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   // Theme state: Clean 2-way toggle: Apple iOS light (default) or macOS dark
@@ -282,11 +172,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [isInspectorCollapsed]);
 
-  // Determine storefront preview base URL (points to storefront domain when running on admin subdomain)
-  const previewOrigin = typeof window !== 'undefined'
-    ? (window.location.hostname.includes('admin')
-        ? window.location.origin.replace('://admin.', '://')
-        : window.location.origin)
+  // Determine storefront preview base URL (always points to live customer storefront)
+  const previewOrigin = typeof window !== 'undefined' && window.location.hostname.includes('localhost') && window.location.port === '5173'
+    ? 'http://localhost:5173'
     : 'https://technoworldbooks.in';
   const previewUrl = `${previewOrigin}${selectedPage}${selectedPage.includes('?') ? '&' : '?'}cms_edit=true&_preview=${iframeKey}`;
 
@@ -769,16 +657,21 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
           {/* Responsive Preview Device Window Frame (Resizable) */}
           <div
-            className={`flex flex-col rounded-2xl overflow-hidden transition-all duration-150 ${themeClasses.frameBorder} bg-white relative`}
+            className={`flex flex-col rounded-[24px] overflow-hidden transition-all duration-150 ${themeClasses.frameBorder} bg-white relative shadow-2xl`}
             style={{
               width: getCanvasWidthPx(),
               maxWidth: '100%',
               height: 'calc(100% - 40px)',
               minHeight: '480px',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              transform: 'translateZ(0)',
+              isolation: 'isolate',
+              WebkitMaskImage: '-webkit-radial-gradient(white, black)',
             }}
           >
             {/* Safari Mock Address Bar */}
-            <div className="bg-slate-100/90 dark:bg-zinc-800/90 border-b border-slate-200/80 dark:border-zinc-700/80 px-3.5 py-2 flex items-center justify-between shrink-0 select-none backdrop-blur-md">
+            <div className="bg-slate-100/90 dark:bg-zinc-800/90 border-b border-slate-200/80 dark:border-zinc-700/80 px-3.5 py-2 flex items-center justify-between shrink-0 select-none backdrop-blur-md rounded-t-[24px]">
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
@@ -814,7 +707,11 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               src={previewUrl}
               onLoad={handleIframeLoad}
               title="Live Storefront Preview"
-              className="w-full flex-1 border-0 bg-white"
+              className="w-full flex-1 border-0 bg-white rounded-b-[24px]"
+              style={{
+                borderBottomLeftRadius: '24px',
+                borderBottomRightRadius: '24px',
+              }}
             />
 
             {/* Canvas Right Edge Drag Handle for Custom Width Resizing */}
@@ -960,14 +857,6 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                       </div>
                     </div>
 
-                    {/* Apple Precision Digital Roller */}
-                    <DigitalRoller
-                      value={activeFontSizeNum}
-                      min={12}
-                      max={80}
-                      onChange={handleFontSizeChange}
-                      isDark={isDark}
-                    />
 
                     {/* Quick Preset Font Size Chips */}
                     <div className="flex flex-wrap gap-1">
