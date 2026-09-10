@@ -34,9 +34,9 @@ export default function HeroBookCoverManager() {
   const [cachedCoverUrl, setCachedCoverUrl] = useState<string | null>(() => {
     try {
       const cached = localStorage.getItem(CACHED_COVER_KEY);
-      if (cached) return cached;
+      if (cached && !cached.includes('techno-world-api-qw4j.onrender.com') && !cached.includes('404')) return cached;
     } catch {}
-    return '/uploads/hero/hero-book-cover-1788824544793.webp';
+    return '/hero-book-cover.webp';
   });
 
   const [selectedModel, setSelectedModel] = useState<'auto' | BookPresetId>(() => {
@@ -193,8 +193,8 @@ export default function HeroBookCoverManager() {
     : heroConfig?.hero_book_cover_url
     ? `${getImageUrl(heroConfig.hero_book_cover_url)}?v=${new Date(heroConfig.hero_book_cover_updated_at || Date.now()).getTime()}`
     : cachedCoverUrl
-    ? getImageUrl(cachedCoverUrl)
-    : null;
+    ? (cachedCoverUrl.startsWith('/') ? cachedCoverUrl : getImageUrl(cachedCoverUrl))
+    : '/hero-book-cover.webp';
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
@@ -421,6 +421,12 @@ export default function HeroBookCoverManager() {
                           alt=""
                           aria-hidden="true"
                           className="h-full w-full object-cover scale-125 filter blur-[3px] brightness-70 contrast-110 saturate-105"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.endsWith('/hero-book-cover.webp')) {
+                              target.src = '/hero-book-cover.webp';
+                            }
+                          }}
                         />
                         <div
                           className="absolute inset-0 pointer-events-none"
@@ -450,6 +456,12 @@ export default function HeroBookCoverManager() {
                         alt=""
                         aria-hidden="true"
                         className="absolute inset-0 h-full w-full object-cover scale-110 filter blur-sm brightness-60 pointer-events-none select-none"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.src.endsWith('/hero-book-cover.webp')) {
+                            target.src = '/hero-book-cover.webp';
+                          }
+                        }}
                       />
 
                       {/* Main Cover Artwork with realistic paper tone */}
@@ -459,6 +471,12 @@ export default function HeroBookCoverManager() {
                         className="relative z-10 h-full w-full object-fill select-none block"
                         style={{
                           filter: 'brightness(0.96) saturate(0.95) contrast(0.98)',
+                        }}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.src.endsWith('/hero-book-cover.webp')) {
+                            target.src = '/hero-book-cover.webp';
+                          }
                         }}
                         onLoad={(e) => {
                           const img = e.currentTarget;

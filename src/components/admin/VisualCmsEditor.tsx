@@ -172,9 +172,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [isInspectorCollapsed]);
 
-  // Determine storefront preview base URL (always points to live customer storefront)
-  const previewOrigin = typeof window !== 'undefined' && window.location.hostname.includes('localhost') && window.location.port === '5173'
-    ? 'http://localhost:5173'
+  // Determine storefront preview base URL (points to local storefront on port 3000 during dev, or live domain in production)
+  const previewOrigin = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3000'
     : 'https://technoworldbooks.in';
   const previewUrl = `${previewOrigin}${selectedPage}${selectedPage.includes('?') ? '&' : '?'}cms_edit=true&_preview=${iframeKey}`;
 
