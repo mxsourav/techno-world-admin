@@ -585,71 +585,66 @@ export default function AdminLayout() {
           style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
           onMouseEnter={handleOrdersMouseEnter}
           onMouseLeave={handleOrdersMouseLeave}
-          className={`fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
-            isDarkMode
-              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
-          }`}
+          className="fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout"
         >
-          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
-          }`}>
-            Orders Pipeline
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 text-neutral-400 border-b border-white/[0.08] flex items-center justify-between">
+            <span>Orders Pipeline</span>
+            <span className="text-[9px] text-emerald-400 font-bold">Live Flow</span>
           </div>
 
-          <Link
-            to="/admin/dashboard?tab=orders&stage=to_accept"
-            onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              currentTab === 'orders' && currentStage === 'to_accept'
-                ? 'glass-tab-active'
-                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'to_accept' ? 'text-emerald-600' : isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-              Active Orders
-            </span>
-            {pendingCount > 0 && (
-              <span className={`rounded-full text-[10px] font-extrabold px-1.5 py-0.5 ${
-                isDarkMode ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-blue-100 text-blue-800'
-              }`}>
-                {pendingCount}
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=orders&stage=to_accept"
+              onClick={() => setIsOrdersFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'orders' && currentStage === 'to_accept'
+                  ? 'glass-tab-active'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'to_accept' ? 'text-emerald-400' : 'text-blue-400'}`} />
+                Active Orders
               </span>
-            )}
-          </Link>
+              {pendingCount > 0 && (
+                <span className="rounded-full text-[10px] font-extrabold px-1.5 py-0.5 bg-rose-500/25 text-rose-300 border border-rose-500/35 animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
 
-          <Link
-            to="/admin/dashboard?tab=orders&stage=returns"
-            onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              currentTab === 'orders' && currentStage === 'returns'
-                ? 'glass-tab-active'
-                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'returns' ? 'text-emerald-600' : isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
-              Returns
-            </span>
-            <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>0</span>
-          </Link>
+            <Link
+              to="/admin/dashboard?tab=orders&stage=returns"
+              onClick={() => setIsOrdersFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'orders' && currentStage === 'returns'
+                  ? 'glass-tab-active'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'returns' ? 'text-emerald-400' : 'text-amber-400'}`} />
+                Returns
+              </span>
+              <span className="text-[10px] font-semibold text-neutral-400">0</span>
+            </Link>
 
-          <Link
-            to="/admin/dashboard?tab=orders&stage=cancellations"
-            onClick={() => setIsOrdersFlyoutOpen(false)}
-            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              currentTab === 'orders' && currentStage === 'cancellations'
-                ? 'glass-tab-active'
-                : isDarkMode ? 'text-neutral-200 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <LogOut className={`h-3.5 w-3.5 rotate-180 ${currentTab === 'orders' && currentStage === 'cancellations' ? 'text-emerald-600' : isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
-              Cancellations
-            </span>
-            <span className={`text-[10px] font-semibold ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>0</span>
-          </Link>
+            <Link
+              to="/admin/dashboard?tab=orders&stage=cancellations"
+              onClick={() => setIsOrdersFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'orders' && currentStage === 'cancellations'
+                  ? 'glass-tab-active'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <LogOut className={`h-3.5 w-3.5 rotate-180 ${currentTab === 'orders' && currentStage === 'cancellations' ? 'text-emerald-400' : 'text-rose-400'}`} />
+                Cancellations
+              </span>
+              <span className="text-[10px] font-semibold text-neutral-400">0</span>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -659,16 +654,11 @@ export default function AdminLayout() {
           style={{ top: `${productsFlyoutPos.top}px`, left: `${productsFlyoutPos.left}px` }}
           onMouseEnter={handleProductsMouseEnter}
           onMouseLeave={handleProductsMouseLeave}
-          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
-            isDarkMode
-              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
-          }`}
+          className="fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout"
         >
-          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
-          }`}>
-            Catalog & Inventory
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 text-neutral-400 border-b border-white/[0.08] flex items-center justify-between">
+            <span>Catalog & Inventory</span>
+            <span className="text-[9px] text-emerald-400 font-bold">Books Hub</span>
           </div>
 
           <div className="space-y-0.5">
@@ -678,11 +668,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'all' && !currentAction
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Package className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'all' && !currentAction ? 'text-emerald-600' : isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
+                <Package className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'all' && !currentAction ? 'text-emerald-400' : 'text-neutral-400'}`} />
                 All Products (Catalog)
               </span>
             </Link>
@@ -693,16 +683,14 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentAction === 'add'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                <Plus className="h-3.5 w-3.5 text-emerald-400" />
                 Add New Product
               </span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs ${
-                isDarkMode ? 'bg-white/[0.20] text-white' : 'bg-emerald-600 text-white'
-              }`}>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs bg-emerald-500/25 text-emerald-300 border border-emerald-500/35">
                 + Add
               </span>
             </Link>
@@ -713,11 +701,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'published'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <CheckCircle2 className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'published' ? 'text-emerald-600' : isDarkMode ? 'text-emerald-400' : 'text-blue-600'}`} />
+                <CheckCircle2 className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'published' ? 'text-emerald-400' : 'text-emerald-400'}`} />
                 Published Books
               </span>
             </Link>
@@ -728,11 +716,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'low_stock'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'low_stock' ? 'text-emerald-600' : isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                <AlertTriangle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'low_stock' ? 'text-emerald-400' : 'text-amber-400'}`} />
                 Low Stock Alerts
               </span>
             </Link>
@@ -743,11 +731,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'out_of_stock'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <XCircle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'out_of_stock' ? 'text-emerald-600' : isDarkMode ? 'text-rose-400' : 'text-rose-600'}`} />
+                <XCircle className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'out_of_stock' ? 'text-emerald-400' : 'text-rose-400'}`} />
                 Out of Stock
               </span>
             </Link>
@@ -758,11 +746,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'products' && currentStatus === 'draft'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? 'text-emerald-600' : isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? 'text-emerald-400' : 'text-purple-400'}`} />
                 Draft Listings
               </span>
             </Link>
@@ -776,16 +764,11 @@ export default function AdminLayout() {
           style={{ top: `${paymentsFlyoutPos.top}px`, left: `${paymentsFlyoutPos.left}px` }}
           onMouseEnter={handlePaymentsMouseEnter}
           onMouseLeave={handlePaymentsMouseLeave}
-          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
-            isDarkMode
-              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
-          }`}
+          className="fixed w-72 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout"
         >
-          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
-          }`}>
-            Payments & Settlements
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 text-neutral-400 border-b border-white/[0.08] flex items-center justify-between">
+            <span>Payments & Settlements</span>
+            <span className="text-[9px] text-emerald-400 font-bold">Ledger</span>
           </div>
 
           <div className="space-y-0.5">
@@ -795,7 +778,7 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'overview'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span>Payments Overview</span>
@@ -807,13 +790,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'earnings'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span>Earnings Summary</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded shadow-xs tracking-wide ${
-                isDarkMode ? 'bg-white/[0.15] text-white' : 'bg-[#c2185b] text-white'
-              }`}>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded shadow-xs tracking-wide bg-[#c2185b]/30 text-rose-300 border border-[#c2185b]/40">
                 New
               </span>
             </Link>
@@ -824,7 +805,7 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'settlements'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span>Search Order-wise Settlements</span>
@@ -836,7 +817,7 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'transactions'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span>Services Transaction History</span>
@@ -848,7 +829,7 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'payments' && currentSub === 'spf'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span>Seller Protection Fund (SPF)</span>
@@ -863,17 +844,11 @@ export default function AdminLayout() {
           style={{ top: `${blogFlyoutPos.top}px`, left: `${blogFlyoutPos.left}px` }}
           onMouseEnter={handleBlogMouseEnter}
           onMouseLeave={handleBlogMouseLeave}
-          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 ${
-            isDarkMode
-              ? 'border border-white/[0.14] bg-[#141418]/92 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-neutral-200'
-              : 'border border-white/85 bg-white/80 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15),0_4px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] text-slate-800'
-          }`}
+          className="fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout"
         >
-          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center justify-between ${
-            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
-          }`}>
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center justify-between text-neutral-400 border-b border-white/[0.08]">
             <span>Blog & Social Feed</span>
-            <span className={`font-bold ${isDarkMode ? 'text-neutral-300' : 'text-emerald-700'}`}>Feed Manager</span>
+            <span className="font-bold text-emerald-400">Feed Manager</span>
           </div>
 
           <div className="space-y-0.5">
@@ -883,11 +858,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'all' && !currentAction
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'blog' && currentFilter === 'all' && !currentAction ? 'text-emerald-600' : isDarkMode ? 'text-neutral-300' : 'text-emerald-600'}`} />
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'blog' && currentFilter === 'all' && !currentAction ? 'text-emerald-400' : 'text-neutral-400'}`} />
                 All Posts & Social Feed
               </span>
             </Link>
@@ -898,16 +873,14 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${
                 currentTab === 'blog' && currentAction === 'new'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10]' : 'text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-emerald-700" />
+                <Plus className="h-3.5 w-3.5 text-emerald-400" />
                 Create New Post
               </span>
-              <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
-                isDarkMode ? 'bg-white/[0.20] text-white' : 'bg-emerald-600 text-white'
-              }`}>
+              <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-300 border border-emerald-500/35">
                 + New
               </span>
             </Link>
@@ -918,11 +891,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'active'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${isDarkMode ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
                 Active / Published
               </span>
             </Link>
@@ -933,11 +906,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'scheduled'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${isDarkMode ? 'bg-blue-400' : 'bg-blue-500'}`} />
+                <span className="h-2 w-2 rounded-full bg-blue-400" />
                 Scheduled Posts
               </span>
             </Link>
@@ -948,11 +921,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'expired'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${isDarkMode ? 'bg-amber-400' : 'bg-amber-500'}`} />
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
                 Expired & Archived
               </span>
             </Link>
@@ -963,11 +936,11 @@ export default function AdminLayout() {
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
                 currentTab === 'blog' && currentFilter === 'hidden'
                   ? 'glass-tab-active'
-                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.08] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+                  : 'text-neutral-300 hover:bg-white/[0.10] hover:text-white'
               }`}
             >
               <span className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${isDarkMode ? 'bg-neutral-500' : 'bg-slate-400'}`} />
+                <span className="h-2 w-2 rounded-full bg-neutral-500" />
                 Hidden / Drafts
               </span>
             </Link>
