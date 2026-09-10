@@ -362,48 +362,94 @@ a[role="button"]:active {
 }
 
 /* ==========================================================================
-   Apple Signature Dynamic Ambient Aurora Keyframes
+   Fluid Iridescent Aura Keyframes (Slow Organic Mixing & Grain Texture)
    ========================================================================== */
-@keyframes aurora-drift-slow {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
+@keyframes fluid-aura-1 {
+  0% {
+    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1);
+    border-radius: 44% 56% 68% 32% / 46% 44% 56% 54%;
   }
   33% {
-    transform: translate(35px, -45px) scale(1.08);
+    transform: translate3d(8%, -12%, 0) rotate(115deg) scale(1.15);
+    border-radius: 56% 44% 34% 66% / 54% 64% 36% 46%;
   }
   66% {
-    transform: translate(-30px, 25px) scale(0.95);
+    transform: translate3d(-10%, 8%, 0) rotate(235deg) scale(0.92);
+    border-radius: 34% 66% 64% 36% / 44% 46% 54% 56%;
+  }
+  100% {
+    transform: translate3d(0%, 0%, 0) rotate(360deg) scale(1);
+    border-radius: 44% 56% 68% 32% / 46% 44% 56% 54%;
   }
 }
 
-@keyframes aurora-drift-medium {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  50% {
-    transform: translate(-40px, -35px) scale(1.1);
-  }
-}
-
-@keyframes aurora-drift-fast {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
+@keyframes fluid-aura-2 {
+  0% {
+    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1.1);
+    border-radius: 60% 40% 52% 48% / 38% 62% 38% 62%;
   }
   50% {
-    transform: translate(30px, 40px) scale(1.07);
+    transform: translate3d(-14%, -10%, 0) rotate(-180deg) scale(0.92);
+    border-radius: 42% 58% 36% 64% / 62% 38% 62% 38%;
+  }
+  100% {
+    transform: translate3d(0%, 0%, 0) rotate(-360deg) scale(1.1);
+    border-radius: 60% 40% 52% 48% / 38% 62% 38% 62%;
   }
 }
 
-.animate-aurora-slow {
-  animation: aurora-drift-slow 18s ease-in-out infinite;
+@keyframes fluid-aura-3 {
+  0% {
+    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(0.96);
+    border-radius: 50% 50% 42% 58% / 42% 58% 50% 50%;
+  }
+  50% {
+    transform: translate3d(12%, 14%, 0) rotate(165deg) scale(1.2);
+    border-radius: 66% 34% 56% 44% / 52% 44% 56% 48%;
+  }
+  100% {
+    transform: translate3d(0%, 0%, 0) rotate(360deg) scale(0.96);
+    border-radius: 50% 50% 42% 58% / 42% 58% 50% 50%;
+  }
 }
 
-.animate-aurora-medium {
-  animation: aurora-drift-medium 14s ease-in-out infinite;
+@keyframes fluid-aura-4 {
+  0% {
+    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1.02);
+  }
+  50% {
+    transform: translate3d(-12%, 14%, 0) rotate(-135deg) scale(1.15);
+  }
+  100% {
+    transform: translate3d(0%, 0%, 0) rotate(-360deg) scale(1.02);
+  }
 }
 
-.animate-aurora-fast {
-  animation: aurora-drift-fast 10s ease-in-out infinite;
+.animate-fluid-aura-1 {
+  animation: fluid-aura-1 32s ease-in-out infinite;
+  will-change: transform, border-radius;
+}
+
+.animate-fluid-aura-2 {
+  animation: fluid-aura-2 38s ease-in-out infinite;
+  will-change: transform, border-radius;
+}
+
+.animate-fluid-aura-3 {
+  animation: fluid-aura-3 46s ease-in-out infinite;
+  will-change: transform, border-radius;
+}
+
+.animate-fluid-aura-4 {
+  animation: fluid-aura-4 54s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Photographic Film Grain Texture Layer */
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
 }
 
 /* Glass Inputs (Light Mode) */

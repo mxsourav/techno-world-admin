@@ -122,7 +122,6 @@ export default function AdminLayout() {
   const [couponsFlyoutPos, setCouponsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const [isReviewsFlyoutOpen, setIsReviewsFlyoutOpen] = useState<boolean>(false);
   const [reviewsFlyoutPos, setReviewsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
-  const [mousePos, setMousePos] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
   const notifRef = useRef<HTMLDivElement>(null);
   const productsBtnRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
@@ -136,19 +135,6 @@ export default function AdminLayout() {
   const blogTimeoutRef = useRef<any>(null);
   const couponsTimeoutRef = useRef<any>(null);
   const reviewsTimeoutRef = useRef<any>(null);
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      visible: true,
-    });
-  };
-
-  const handleCanvasMouseLeave = () => {
-    setMousePos((prev) => ({ ...prev, visible: false }));
-  };
 
   const handleProductsMouseEnter = () => {
     if (productsTimeoutRef.current) {
@@ -493,41 +479,73 @@ export default function AdminLayout() {
 
       {/* Main Content Area */}
       <div
-        onMouseMove={handleCanvasMouseMove}
-        onMouseLeave={handleCanvasMouseLeave}
         className={`flex-1 flex flex-col min-w-0 h-full relative overflow-hidden ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}
       >
-        {/* Apple Dynamic Ambient Aurora Mesh Background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          {/* Aurora chromatic orbs */}
-          <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-emerald-200/35 to-teal-300/25 blur-3xl animate-aurora-slow opacity-75 dark:opacity-20" />
-          <div className="absolute top-[35%] -right-[15%] w-[550px] h-[550px] rounded-full bg-gradient-to-bl from-cyan-200/30 to-blue-200/20 blur-3xl animate-aurora-medium opacity-65 dark:opacity-15" />
-          <div className="absolute -bottom-[20%] left-[25%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-emerald-100/40 via-teal-100/30 to-slate-200/40 blur-3xl animate-aurora-fast opacity-60 dark:opacity-15" />
+        {/* Fluid Iridescent Aura UI Background with Film Grain Texture */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+          {/* Base Atmosphere Canvas */}
+          <div className={`absolute inset-0 transition-colors duration-500 ${
+            isDarkMode ? 'bg-[#020713]' : 'bg-[#f4f7fb]'
+          }`} />
 
-          {/* Interactive Mouse Hover Spotlight Glow */}
-          {mousePos.visible && (
-            <div
-              className="absolute pointer-events-none transition-opacity duration-300 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                left: `${mousePos.x}px`,
-                top: `${mousePos.y}px`,
-                width: '420px',
-                height: '420px',
-                background: isDarkMode
-                  ? 'radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, rgba(56, 189, 248, 0.04) 45%, transparent 70%)'
-                  : 'radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(14, 165, 233, 0.08) 40%, transparent 70%)',
-              }}
-            />
-          )}
-
-          {/* Micro-dot texture overlay */}
+          {/* Aura Wave 1: Deep Sapphire / Royal Blue Fold (Top-Right / Center) */}
           <div
-            className="absolute inset-0 opacity-[0.035] dark:opacity-[0.06]"
+            className={`absolute -top-[15%] -right-[10%] w-[850px] h-[850px] rounded-full filter blur-[90px] animate-fluid-aura-1 transition-opacity duration-700 ${
+              isDarkMode ? 'opacity-90' : 'opacity-45'
+            }`}
             style={{
-              backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
+              background: isDarkMode
+                ? 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.90) 0%, rgba(30, 27, 75, 0.75) 45%, rgba(2, 6, 23, 0) 75%)'
+                : 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.55) 0%, rgba(99, 102, 241, 0.35) 45%, rgba(255, 255, 255, 0) 75%)',
             }}
           />
+
+          {/* Aura Wave 2: Vibrant Electric Cobalt Blue Core (Bottom-Left / Center) */}
+          <div
+            className={`absolute -bottom-[20%] -left-[15%] w-[900px] h-[900px] rounded-full filter blur-[95px] animate-fluid-aura-2 transition-opacity duration-700 ${
+              isDarkMode ? 'opacity-95' : 'opacity-50'
+            }`}
+            style={{
+              background: isDarkMode
+                ? 'radial-gradient(ellipse at center, rgba(2, 132, 199, 0.95) 0%, rgba(37, 99, 235, 0.75) 40%, rgba(15, 23, 42, 0) 75%)'
+                : 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.55) 0%, rgba(37, 99, 235, 0.35) 45%, rgba(255, 255, 255, 0) 75%)',
+            }}
+          />
+
+          {/* Aura Wave 3: Luminous Cyan & Turquoise Glow (Top-Left / Center Fold) */}
+          <div
+            className={`absolute top-[10%] -left-[10%] w-[750px] h-[750px] rounded-full filter blur-[80px] animate-fluid-aura-3 transition-opacity duration-700 ${
+              isDarkMode ? 'opacity-80' : 'opacity-40'
+            }`}
+            style={{
+              background: isDarkMode
+                ? 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.85) 0%, rgba(14, 165, 233, 0.60) 40%, rgba(2, 6, 23, 0) 75%)'
+                : 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.45) 0%, rgba(45, 212, 191, 0.30) 40%, rgba(255, 255, 255, 0) 75%)',
+            }}
+          />
+
+          {/* Aura Wave 4: Deep Twilight Violet & Indigo Velvet Ribbon (Bottom-Right) */}
+          <div
+            className={`absolute bottom-[5%] right-[5%] w-[800px] h-[800px] rounded-full filter blur-[100px] animate-fluid-aura-4 transition-opacity duration-700 ${
+              isDarkMode ? 'opacity-85' : 'opacity-35'
+            }`}
+            style={{
+              background: isDarkMode
+                ? 'radial-gradient(ellipse at center, rgba(79, 70, 229, 0.70) 0%, rgba(30, 58, 138, 0.55) 50%, rgba(2, 6, 23, 0) 80%)'
+                : 'radial-gradient(ellipse at center, rgba(129, 140, 248, 0.45) 0%, rgba(99, 102, 241, 0.25) 50%, rgba(255, 255, 255, 0) 80%)',
+            }}
+          />
+
+          {/* Deep Velvet Shadows Contrast (Matches darker folds in user reference) */}
+          {isDarkMode && (
+            <>
+              <div className="absolute top-0 right-0 w-[55%] h-[55%] pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(2,6,23,0.85)_0%,transparent_70%)]" />
+              <div className="absolute bottom-0 left-0 w-[50%] h-[50%] pointer-events-none bg-[radial-gradient(ellipse_at_bottom_left,rgba(2,6,23,0.85)_0%,transparent_70%)]" />
+            </>
+          )}
+
+          {/* Fine Photographic Film Grain Texture Layer */}
+          <div className="absolute inset-0 grain-overlay pointer-events-none z-[3] opacity-35 dark:opacity-45 mix-blend-overlay" />
         </div>
 
         {/* Top Header — Frosted Glass */}
