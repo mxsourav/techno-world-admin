@@ -4858,43 +4858,43 @@ admin@technoworld.com`
         {tab === 'cms' && (
           <div className="space-y-5">
             {/* Sub-tab navigation */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] pb-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
               <button
                 type="button"
                 onClick={() => setCmsSubTab('visual')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
                   cmsSubTab === 'visual'
-                    ? 'bg-white/[0.16] text-white border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-md font-semibold'
-                    : 'bg-white/[0.05] text-neutral-300 hover:text-white hover:bg-white/[0.09] border border-white/[0.08] font-normal'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                <Sparkles className="h-4 w-4 text-white" />
+                <Sparkles className="h-4 w-4" />
                 <span>🎨 Visual Live On-Page Editor</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCmsSubTab('hero_cover')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
                   cmsSubTab === 'hero_cover'
-                    ? 'bg-white/[0.16] text-white border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-md font-semibold'
-                    : 'bg-white/[0.05] text-neutral-300 hover:text-white hover:bg-white/[0.09] border border-white/[0.08] font-normal'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                <Box className="h-4 w-4 text-white" />
+                <Box className="h-4 w-4" />
                 <span>3D Hero Book Cover</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCmsSubTab('legacy')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
                   cmsSubTab === 'legacy'
-                    ? 'bg-white/[0.16] text-white border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_8px_rgba(0,0,0,0.3)] backdrop-blur-md font-semibold'
-                    : 'bg-white/[0.05] text-neutral-300 hover:text-white hover:bg-white/[0.09] border border-white/[0.08] font-normal'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                <SlidersHorizontal className="h-4 w-4 text-white" />
+                <SlidersHorizontal className="h-4 w-4" />
                 <span>Section Toggles</span>
               </button>
             </div>

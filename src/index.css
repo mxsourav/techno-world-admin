@@ -74,151 +74,317 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.011em;
-    background-color: #000000;
-    color: #f5f5f7;
+    @apply bg-background text-foreground;
   }
 }
 
 /* ==========================================================================
-   Apple macOS Dark Admin Theme & Frosted Glass Styling
+   Light Glassmorphism (Default) — Apple macOS Style on Soft Canvas
+   Applied to right-side content via .glass-light
    ========================================================================== */
 
-.apple-admin-theme {
-  background-color: #000000;
-  color: #f5f5f7;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Main canvas background — soft ambient desktop gradient */
+.glass-light-canvas {
+  background: linear-gradient(145deg, #f2f2f7 0%, #e5e5ea 50%, #ececf2 100%) !important;
 }
 
-/* Frosted glass cards & panels */
-.apple-admin-theme .bg-white {
-  background-color: rgba(20, 20, 24, 0.82) !important;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+/* Frosted Glass Card Panels (containers only) */
+.glass-light div.bg-white,
+.glass-light section.bg-white,
+.glass-light article.bg-white,
+.glass-light .glass-card {
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(36px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Inner nested translucent containers */
+.glass-light div.bg-slate-50,
+.glass-light section.bg-slate-50 {
+  background: rgba(255, 255, 255, 0.40) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+.glass-light div.bg-slate-100,
+.glass-light section.bg-slate-100 {
+  background: rgba(255, 255, 255, 0.48) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+/* Translucent Dividers & Borders */
+.glass-light .border-slate-200,
+.glass-light .border-slate-100,
+.glass-light .border-slate-300 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.glass-light .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.glass-light .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ==========================================================================
+   Apple macOS Glass Buttons (Light Mode)
+   Applies to normal/standard buttons (filters, exports, dates, dropdowns, etc.)
+   Excludes semantic action buttons (emerald accept, rose cancel, amber pending)
+   ========================================================================== */
+
+.glass-btn,
+.glass-light button.glass-btn,
+.glass-light button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(246, 247, 252, 0.60) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.09) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03) !important;
+  color: #1d1d1f !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.glass-btn:hover,
+.glass-light button.glass-btn:hover,
+.glass-light button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 242, 250, 0.80) 100%) !important;
+  border-color: rgba(0, 0, 0, 0.14) !important;
+  border-top-color: #ffffff !important;
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 #ffffff !important;
+  transform: translateY(-0.5px);
+}
+
+.glass-btn:active,
+.glass-light button.glass-btn:active,
+.glass-light button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):active {
+  background: rgba(230, 232, 242, 0.75) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.10) !important;
+  transform: translateY(0.5px) scale(0.985);
+}
+
+/* Glass Inputs (Light Mode) */
+.glass-light input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+.glass-light select,
+.glass-light textarea {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.09) !important;
+  border-top-color: rgba(0, 0, 0, 0.14) !important;
+  border-radius: 10px !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  color: #1d1d1f !important;
+  transition: all 0.15s ease !important;
+}
+
+.glass-light input:focus,
+.glass-light select:focus,
+.glass-light textarea:focus {
+  background: rgba(255, 255, 255, 0.80) !important;
+  border-color: rgba(0, 122, 255, 0.40) !important;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.14), inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  outline: none !important;
+}
+
+.glass-light input::placeholder,
+.glass-light textarea::placeholder {
+  color: #86868b !important;
+}
+
+/* Glass Tables (Light Mode) */
+.glass-light table th {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  color: #6e6e73 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.glass-light table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  color: #1d1d1f !important;
+}
+
+.glass-light table tr:hover td {
+  background: rgba(255, 255, 255, 0.40) !important;
+}
+
+/* ==========================================================================
+   Dark Mode — Right-side content area (toggled via .dark-content)
+   ========================================================================== */
+
+.dark-content {
+  background: #000000 !important;
+}
+
+.dark-content div.bg-white,
+.dark-content section.bg-white,
+.dark-content article.bg-white,
+.dark-content .glass-card {
+  background: rgba(20, 20, 24, 0.85) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  color: #f5f5f7 !important;
+}
+
+.dark-content div.bg-slate-50,
+.dark-content section.bg-slate-50 {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.dark-content div.bg-slate-100,
+.dark-content section.bg-slate-100 {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-content .border-slate-200,
+.dark-content .border-slate-100,
+.dark-content .border-slate-300 {
   border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
-  color: #f5f5f7;
 }
 
-/* Nested section backgrounds */
-.apple-admin-theme .bg-slate-50 {
-  background-color: rgba(255, 255, 255, 0.035) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.apple-admin-theme .bg-slate-100 {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.apple-admin-theme .bg-slate-200 {
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.10) !important;
-}
-
-/* Subtle dark borders */
-.apple-admin-theme .border-slate-200,
-.apple-admin-theme .border-slate-100,
-.apple-admin-theme .border-slate-300,
-.apple-admin-theme .border-gray-200,
-.apple-admin-theme .border-gray-100 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.apple-admin-theme .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
-.apple-admin-theme .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+.dark-content .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark-content .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Typography Hierarchy */
-.apple-admin-theme .text-slate-900,
-.apple-admin-theme .text-slate-800,
-.apple-admin-theme .text-gray-900,
-.apple-admin-theme .text-gray-800 {
+.dark-content .text-slate-900,
+.dark-content .text-slate-800 {
   color: #ffffff !important;
 }
 
-.apple-admin-theme .text-slate-700,
-.apple-admin-theme .text-slate-600,
-.apple-admin-theme .text-gray-700,
-.apple-admin-theme .text-gray-600 {
+.dark-content .text-slate-700,
+.dark-content .text-slate-600 {
   color: #d1d1d6 !important;
 }
 
-.apple-admin-theme .text-slate-500,
-.apple-admin-theme .text-slate-400,
-.apple-admin-theme .text-gray-500,
-.apple-admin-theme .text-gray-400 {
+.dark-content .text-slate-500,
+.dark-content .text-slate-400 {
   color: #8e8e93 !important;
 }
 
-.apple-admin-theme .text-slate-300 {
-  color: #636366 !important;
+/* Glass Buttons (Dark Mode) */
+.dark-content .glass-btn,
+.dark-content button.glass-btn,
+.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  color: #f5f5f7 !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* Apple Frosted Inputs & Controls */
-.apple-admin-theme input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
-.apple-admin-theme select,
-.apple-admin-theme textarea {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+.dark-content .glass-btn:hover,
+.dark-content button.glass-btn:hover,
+.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.09) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-top-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  transform: translateY(-0.5px);
+}
+
+.dark-content .glass-btn:active,
+.dark-content button.glass-btn:active,
+.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):active {
+  background: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+  transform: translateY(0.5px) scale(0.985);
+}
+
+/* Glass Inputs (Dark Mode) */
+.dark-content input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+.dark-content select,
+.dark-content textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #ffffff !important;
   border-radius: 10px !important;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-  transition: all 0.15s ease !important;
 }
 
-.apple-admin-theme input:focus,
-.apple-admin-theme select:focus,
-.apple-admin-theme textarea:focus {
-  background-color: rgba(255, 255, 255, 0.09) !important;
+.dark-content input:focus,
+.dark-content select:focus,
+.dark-content textarea:focus {
+  background: rgba(255, 255, 255, 0.09) !important;
   border-color: rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.5) !important;
   outline: none !important;
 }
 
-.apple-admin-theme input::placeholder,
-.apple-admin-theme textarea::placeholder {
+.dark-content input::placeholder,
+.dark-content textarea::placeholder {
   color: #636366 !important;
 }
 
-.apple-admin-theme select option {
+.dark-content select option {
   background-color: #1a1a1e !important;
   color: #ffffff !important;
 }
 
-/* Tables in Apple Frosted Glass */
-.apple-admin-theme table th {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+/* Glass Tables (Dark Mode) */
+.dark-content table th {
+  background: rgba(255, 255, 255, 0.04) !important;
   color: #8e8e93 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.apple-admin-theme table td {
+.dark-content table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   color: #e5e5ea !important;
 }
 
-.apple-admin-theme table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.035) !important;
+.dark-content table tr:hover td {
+  background: rgba(255, 255, 255, 0.035) !important;
 }
 
-/* Custom macOS Slim Translucent Scrollbars */
-.apple-admin-theme ::-webkit-scrollbar {
+/* Slim Translucent Scrollbars */
+.dark-content ::-webkit-scrollbar,
+.glass-light ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
-
-.apple-admin-theme ::-webkit-scrollbar-track {
+.dark-content ::-webkit-scrollbar-track,
+.glass-light ::-webkit-scrollbar-track {
   background: transparent;
 }
-
-.apple-admin-theme ::-webkit-scrollbar-thumb {
+.glass-light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 9999px;
+}
+.glass-light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+.dark-content ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.16);
   border-radius: 9999px;
 }
-
-.apple-admin-theme ::-webkit-scrollbar-thumb:hover {
+.dark-content ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.28);
 }
