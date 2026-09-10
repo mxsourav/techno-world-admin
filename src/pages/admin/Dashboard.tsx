@@ -186,7 +186,10 @@ export default function Dashboard() {
   };
 
   // Reviews, Q&A, and Book Sourcing Requests Moderation State
-  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions' | 'requests'>('reviews');
+  const urlSub = searchParams.get('sub') as any;
+  const [reviewSubTab, setReviewSubTab] = useState<'reviews' | 'questions' | 'requests'>(
+    urlSub && ['reviews', 'questions', 'requests'].includes(urlSub) ? urlSub : 'reviews'
+  );
   const [adminReviews, setAdminReviews] = useState<any[]>([]);
   const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
   const [adminBookRequests, setAdminBookRequests] = useState<any[]>([]);
@@ -504,6 +507,18 @@ export default function Dashboard() {
       fetchReviewsAndQuestions();
     }
   }, [tab]);
+
+  useEffect(() => {
+    if (tab === 'reviews') {
+      const sub = searchParams.get('sub');
+      if (sub && ['reviews', 'questions', 'requests'].includes(sub)) {
+        setReviewSubTab(sub as any);
+      }
+    }
+    if (tab === 'coupons' && searchParams.get('action') === 'new') {
+      setEditingPromotion({});
+    }
+  }, [tab, location.search]);
 
   const loadAvailableBooks = () => {
     if (availableBooks.length === 0) {
@@ -1441,18 +1456,20 @@ admin@technoworld.com`
   };
 
   return (
-    <div className={`mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 ${tab === 'cms' ? 'py-1 sm:py-2' : 'py-6 sm:py-8'}`}>
-      <div className={`${tab === 'cms' ? 'mb-2' : 'mb-6'} flex items-center justify-between`}>
-        <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
-        {['dashboard', 'products', 'inventory'].includes(tab) && (
-          <>
-            <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx" onChange={handleFileUpload} />
-            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">
-              <Plus className="h-3.5 w-3.5" /> Bulk CSV Import
-            </button>
-          </>
-        )}
-      </div>
+    <div className={`mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 ${tab === 'cms' ? 'py-0' : 'py-6 sm:py-8'}`}>
+      {tab !== 'cms' && (
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
+          {['dashboard', 'products', 'inventory'].includes(tab) && (
+            <>
+              <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.xlsx" onChange={handleFileUpload} />
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">
+                <Plus className="h-3.5 w-3.5" /> Bulk CSV Import
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="min-w-0 flex-1">
         {tab === 'dashboard' && (
@@ -4856,45 +4873,45 @@ admin@technoworld.com`
         )}
 
         {tab === 'cms' && (
-          <div className="space-y-5">
+          <div className="space-y-1.5">
             {/* Sub-tab navigation */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/60 pb-3">
+            <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200/60 pb-1.5 pt-0 mb-1">
               <button
                 type="button"
                 onClick={() => setCmsSubTab('visual')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                   cmsSubTab === 'visual'
                     ? 'glass-tab-active'
                     : 'glass-tab-inactive'
                 }`}
               >
-                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Visual Live On-Page Editor</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCmsSubTab('hero_cover')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                   cmsSubTab === 'hero_cover'
                     ? 'glass-tab-active'
                     : 'glass-tab-inactive'
                 }`}
               >
-                <Box className="h-4 w-4" />
+                <Box className="h-3.5 w-3.5" />
                 <span>3D Hero Book Cover</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCmsSubTab('legacy')}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                   cmsSubTab === 'legacy'
                     ? 'glass-tab-active'
                     : 'glass-tab-inactive'
                 }`}
               >
-                <SlidersHorizontal className="h-4 w-4" />
+                <SlidersHorizontal className="h-3.5 w-3.5" />
                 <span>Section Toggles</span>
               </button>
             </div>

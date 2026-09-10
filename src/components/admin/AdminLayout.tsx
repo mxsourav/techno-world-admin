@@ -27,7 +27,8 @@ import {
   Search,
   Clock,
   Sun,
-  Moon
+  Moon,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
@@ -117,15 +118,37 @@ export default function AdminLayout() {
   const [paymentsFlyoutPos, setPaymentsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
   const [isBlogFlyoutOpen, setIsBlogFlyoutOpen] = useState<boolean>(false);
   const [blogFlyoutPos, setBlogFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  const [isCouponsFlyoutOpen, setIsCouponsFlyoutOpen] = useState<boolean>(false);
+  const [couponsFlyoutPos, setCouponsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  const [isReviewsFlyoutOpen, setIsReviewsFlyoutOpen] = useState<boolean>(false);
+  const [reviewsFlyoutPos, setReviewsFlyoutPos] = useState<{ top: number; left: number }>({ top: 0, left: 260 });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
   const notifRef = useRef<HTMLDivElement>(null);
   const productsBtnRef = useRef<HTMLDivElement>(null);
   const ordersBtnRef = useRef<HTMLDivElement>(null);
   const paymentsBtnRef = useRef<HTMLDivElement>(null);
   const blogBtnRef = useRef<HTMLDivElement>(null);
+  const couponsBtnRef = useRef<HTMLDivElement>(null);
+  const reviewsBtnRef = useRef<HTMLDivElement>(null);
   const productsTimeoutRef = useRef<any>(null);
   const ordersTimeoutRef = useRef<any>(null);
   const paymentsTimeoutRef = useRef<any>(null);
   const blogTimeoutRef = useRef<any>(null);
+  const couponsTimeoutRef = useRef<any>(null);
+  const reviewsTimeoutRef = useRef<any>(null);
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      visible: true,
+    });
+  };
+
+  const handleCanvasMouseLeave = () => {
+    setMousePos((prev) => ({ ...prev, visible: false }));
+  };
 
   const handleProductsMouseEnter = () => {
     if (productsTimeoutRef.current) {
@@ -199,6 +222,42 @@ export default function AdminLayout() {
     }, 300);
   };
 
+  const handleCouponsMouseEnter = () => {
+    if (couponsTimeoutRef.current) {
+      clearTimeout(couponsTimeoutRef.current);
+      couponsTimeoutRef.current = null;
+    }
+    if (couponsBtnRef.current) {
+      const rect = couponsBtnRef.current.getBoundingClientRect();
+      setCouponsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsCouponsFlyoutOpen(true);
+  };
+
+  const handleCouponsMouseLeave = () => {
+    couponsTimeoutRef.current = setTimeout(() => {
+      setIsCouponsFlyoutOpen(false);
+    }, 300);
+  };
+
+  const handleReviewsMouseEnter = () => {
+    if (reviewsTimeoutRef.current) {
+      clearTimeout(reviewsTimeoutRef.current);
+      reviewsTimeoutRef.current = null;
+    }
+    if (reviewsBtnRef.current) {
+      const rect = reviewsBtnRef.current.getBoundingClientRect();
+      setReviewsFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+    }
+    setIsReviewsFlyoutOpen(true);
+  };
+
+  const handleReviewsMouseLeave = () => {
+    reviewsTimeoutRef.current = setTimeout(() => {
+      setIsReviewsFlyoutOpen(false);
+    }, 300);
+  };
+
   const tabName = TABS.find(t => t.id === currentTab)?.name || 'Dashboard';
 
   const fetchNotifications = () => {
@@ -263,6 +322,8 @@ export default function AdminLayout() {
             const isOrdersTab = t.id === 'orders';
             const isPaymentsTab = t.id === 'payments';
             const isBlogTab = t.id === 'blog';
+            const isCouponsTab = t.id === 'coupons';
+            const isReviewsTab = t.id === 'reviews';
 
             const activeTabClasses = 'bg-emerald-500/[0.14] text-emerald-400 border border-emerald-500/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_12px_rgba(16,185,129,0.18)] backdrop-blur-xl font-semibold';
             const inactiveTabClasses = 'text-neutral-400 hover:text-white hover:bg-white/[0.06] border border-transparent font-normal';
@@ -360,6 +421,50 @@ export default function AdminLayout() {
               );
             }
 
+            if (isCouponsTab) {
+              return (
+                <div
+                  key={t.id}
+                  ref={couponsBtnRef}
+                  className="relative"
+                  onMouseEnter={handleCouponsMouseEnter}
+                  onMouseLeave={handleCouponsMouseLeave}
+                >
+                  <Link
+                    to={`/admin/dashboard?tab=coupons`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                      isActive ? activeTabClasses : inactiveTabClasses
+                    }`}
+                  >
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
+                  </Link>
+                </div>
+              );
+            }
+
+            if (isReviewsTab) {
+              return (
+                <div
+                  key={t.id}
+                  ref={reviewsBtnRef}
+                  className="relative"
+                  onMouseEnter={handleReviewsMouseEnter}
+                  onMouseLeave={handleReviewsMouseLeave}
+                >
+                  <Link
+                    to={`/admin/dashboard?tab=reviews`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                      isActive ? activeTabClasses : inactiveTabClasses
+                    }`}
+                  >
+                    <t.icon className={`h-4.5 w-4.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                    <span className={isActive ? 'text-emerald-400 font-semibold' : ''}>{t.name}</span>
+                  </Link>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={t.id}
@@ -387,7 +492,44 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 h-full ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}>
+      <div
+        onMouseMove={handleCanvasMouseMove}
+        onMouseLeave={handleCanvasMouseLeave}
+        className={`flex-1 flex flex-col min-w-0 h-full relative overflow-hidden ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}
+      >
+        {/* Apple Dynamic Ambient Aurora Mesh Background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {/* Aurora chromatic orbs */}
+          <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-emerald-200/35 to-teal-300/25 blur-3xl animate-aurora-slow opacity-75 dark:opacity-20" />
+          <div className="absolute top-[35%] -right-[15%] w-[550px] h-[550px] rounded-full bg-gradient-to-bl from-cyan-200/30 to-blue-200/20 blur-3xl animate-aurora-medium opacity-65 dark:opacity-15" />
+          <div className="absolute -bottom-[20%] left-[25%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-emerald-100/40 via-teal-100/30 to-slate-200/40 blur-3xl animate-aurora-fast opacity-60 dark:opacity-15" />
+
+          {/* Interactive Mouse Hover Spotlight Glow */}
+          {mousePos.visible && (
+            <div
+              className="absolute pointer-events-none transition-opacity duration-300 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                left: `${mousePos.x}px`,
+                top: `${mousePos.y}px`,
+                width: '420px',
+                height: '420px',
+                background: isDarkMode
+                  ? 'radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, rgba(56, 189, 248, 0.04) 45%, transparent 70%)'
+                  : 'radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(14, 165, 233, 0.08) 40%, transparent 70%)',
+              }}
+            />
+          )}
+
+          {/* Micro-dot texture overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.035] dark:opacity-[0.06]"
+            style={{
+              backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
+        </div>
+
         {/* Top Header — Frosted Glass */}
         <header className={`h-16 flex items-center justify-between px-6 sm:px-8 flex-shrink-0 z-20 relative ${
           isDarkMode
@@ -576,16 +718,18 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className={`flex-1 overflow-auto ${currentTab === 'cms' ? 'p-2 sm:p-3' : 'p-3 sm:p-5 lg:p-6'}`}>
+        <main className={`flex-1 overflow-auto relative z-10 ${currentTab === 'cms' ? 'p-1 sm:p-2' : 'p-3 sm:p-5 lg:p-6'}`}>
           <Outlet />
         </main>
-      </div>      {/* Floating Orders Hover Flyout */}
+      </div>
+
+      {/* Floating Orders Hover Flyout */}
       {isOrdersFlyoutOpen && (
         <div
           style={{ top: `${flyoutPos.top}px`, left: `${flyoutPos.left}px` }}
           onMouseEnter={handleOrdersMouseEnter}
           onMouseLeave={handleOrdersMouseLeave}
-          className={`fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+          className={`fixed w-56 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
         >
@@ -601,13 +745,13 @@ export default function AdminLayout() {
               to="/admin/dashboard?tab=orders&stage=to_accept"
               onClick={() => setIsOrdersFlyoutOpen(false)}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
-                currentTab === 'orders' && currentStage === 'to_accept'
+                currentTab === 'orders' && (!currentStage || currentStage === 'to_accept' || currentStage === 'all')
                   ? 'glass-tab-active'
                   : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
               }`}
             >
               <span className="flex items-center gap-2">
-                <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && currentStage === 'to_accept' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-blue-400' : 'text-blue-600')}`} />
+                <ShoppingCart className={`h-3.5 w-3.5 ${currentTab === 'orders' && (!currentStage || currentStage === 'to_accept' || currentStage === 'all') ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-blue-400' : 'text-blue-600')}`} />
                 Active Orders
               </span>
               {pendingCount > 0 && (
@@ -660,7 +804,7 @@ export default function AdminLayout() {
           style={{ top: `${productsFlyoutPos.top}px`, left: `${productsFlyoutPos.left}px` }}
           onMouseEnter={handleProductsMouseEnter}
           onMouseLeave={handleProductsMouseLeave}
-          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
         >
@@ -776,7 +920,7 @@ export default function AdminLayout() {
           style={{ top: `${paymentsFlyoutPos.top}px`, left: `${paymentsFlyoutPos.left}px` }}
           onMouseEnter={handlePaymentsMouseEnter}
           onMouseLeave={handlePaymentsMouseLeave}
-          className={`fixed w-72 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+          className={`fixed w-72 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
         >
@@ -862,7 +1006,7 @@ export default function AdminLayout() {
           style={{ top: `${blogFlyoutPos.top}px`, left: `${blogFlyoutPos.left}px` }}
           onMouseEnter={handleBlogMouseEnter}
           onMouseLeave={handleBlogMouseLeave}
-          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
             isDarkMode ? 'dark-flyout' : ''
           }`}
         >
@@ -966,6 +1110,128 @@ export default function AdminLayout() {
               <span className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${isDarkMode ? 'bg-neutral-500' : 'bg-slate-400'}`} />
                 Hidden / Drafts
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Coupons Hover Flyout */}
+      {isCouponsFlyoutOpen && (
+        <div
+          style={{ top: `${couponsFlyoutPos.top}px`, left: `${couponsFlyoutPos.left}px` }}
+          onMouseEnter={handleCouponsMouseEnter}
+          onMouseLeave={handleCouponsMouseLeave}
+          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+            isDarkMode ? 'dark-flyout' : ''
+          }`}
+        >
+          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center justify-between ${
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
+          }`}>
+            <span>Promotions & Coupons</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Discounts</span>
+          </div>
+
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=coupons"
+              onClick={() => setIsCouponsFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'coupons' && !currentAction
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Tag className={`h-3.5 w-3.5 ${currentTab === 'coupons' && !currentAction ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-neutral-400' : 'text-slate-500')}`} />
+                All Promotions & Codes
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=coupons&action=new"
+              onClick={() => setIsCouponsFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${
+                currentTab === 'coupons' && currentAction === 'new'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                New Promotion Code
+              </span>
+              <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
+                isDarkMode ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/35' : 'bg-emerald-600 text-white'
+              }`}>
+                + New
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Reviews Hover Flyout */}
+      {isReviewsFlyoutOpen && (
+        <div
+          style={{ top: `${reviewsFlyoutPos.top}px`, left: `${reviewsFlyoutPos.left}px` }}
+          onMouseEnter={handleReviewsMouseEnter}
+          onMouseLeave={handleReviewsMouseLeave}
+          className={`fixed w-64 rounded-2xl p-2 z-50 animate-in fade-in duration-100 before:absolute before:-left-6 before:top-0 before:bottom-0 before:w-6 glass-flyout ${
+            isDarkMode ? 'dark-flyout' : ''
+          }`}
+        >
+          <div className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider mb-1 flex items-center justify-between ${
+            isDarkMode ? 'text-neutral-400 border-b border-white/[0.08]' : 'text-slate-400 border-b border-slate-200/60'
+          }`}>
+            <span>Community & Feedback</span>
+            <span className={`text-[9px] font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>Moderation</span>
+          </div>
+
+          <div className="space-y-0.5">
+            <Link
+              to="/admin/dashboard?tab=reviews&sub=reviews"
+              onClick={() => setIsReviewsFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'reviews' && (!currentSub || currentSub === 'reviews')
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Star className={`h-3.5 w-3.5 ${currentTab === 'reviews' && (!currentSub || currentSub === 'reviews') ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-amber-400' : 'text-amber-500')}`} />
+                Customer Reviews
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=reviews&sub=questions"
+              onClick={() => setIsReviewsFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'reviews' && currentSub === 'questions'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <MessageSquare className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'questions' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-blue-400' : 'text-blue-500')}`} />
+                Questions & Answers (Q&A)
+              </span>
+            </Link>
+
+            <Link
+              to="/admin/dashboard?tab=reviews&sub=requests"
+              onClick={() => setIsReviewsFlyoutOpen(false)}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                currentTab === 'reviews' && currentSub === 'requests'
+                  ? 'glass-tab-active'
+                  : isDarkMode ? 'text-neutral-300 hover:bg-white/[0.10] hover:text-white' : 'text-slate-700 hover:bg-black/[0.04] hover:text-slate-950'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'requests' ? (isDarkMode ? 'text-emerald-400' : 'text-emerald-600') : (isDarkMode ? 'text-purple-400' : 'text-purple-500')}`} />
+                Book Sourcing Requests
               </span>
             </Link>
           </div>

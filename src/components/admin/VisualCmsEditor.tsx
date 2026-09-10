@@ -481,11 +481,11 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       className={`flex flex-col transition-all duration-200 rounded-3xl overflow-hidden border shadow-2xl ${
         isFullscreen
           ? 'fixed inset-3 z-50 h-[calc(100vh-24px)] rounded-3xl'
-          : 'h-[calc(100vh-210px)] min-h-[500px]'
+          : 'h-[calc(100vh-130px)] min-h-[560px]'
       } ${themeClasses.root} ${themeClasses.frameBorder}`}
     >
       {/* Apple Titlebar & Toolbar */}
-      <div className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3 ${themeClasses.header} select-none shrink-0`}>
+      <div className={`flex flex-wrap items-center justify-between gap-2 px-4 py-2 ${themeClasses.header} select-none shrink-0`}>
         {/* Left: macOS Traffic Light Dots & Title */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -648,21 +648,15 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       {/* Main Workbench Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Center / Left: Interactive Live Preview Canvas */}
-        <div className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 flex flex-col items-center justify-start overflow-auto relative select-none`}>
-          {/* Instruction banner in Apple frosted pill */}
-          <div className="mb-3 px-4 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/90 backdrop-blur-xl border border-white/60 dark:border-zinc-700 text-[11px] font-medium text-slate-700 dark:text-zinc-200 shadow-sm flex items-center gap-2 shrink-0">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Select any element in the directory to auto-highlight and scroll to it · Drag handles to resize</span>
-          </div>
-
+        <div className={`flex-1 ${themeClasses.canvasBg} p-2 sm:p-3 flex flex-col items-center justify-start overflow-auto relative select-none`}>
           {/* Responsive Preview Device Window Frame (Resizable) */}
           <div
             className={`flex flex-col rounded-[24px] overflow-hidden transition-all duration-150 ${themeClasses.frameBorder} bg-white relative shadow-2xl`}
             style={{
               width: getCanvasWidthPx(),
               maxWidth: '100%',
-              height: 'calc(100% - 40px)',
-              minHeight: '480px',
+              height: '100%',
+              minHeight: '520px',
               borderRadius: '24px',
               overflow: 'hidden',
               transform: 'translateZ(0)',
