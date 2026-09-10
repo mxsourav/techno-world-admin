@@ -1833,17 +1833,6 @@ admin@technoworld.com`
                         {autoAcceptEnabled ? 'ON' : 'OFF'}
                       </span>
                     </button>
-
-                    {/* Visual CMS Quick Launcher */}
-                    <button
-                      type="button"
-                      onClick={() => navigate('/admin/dashboard?tab=cms')}
-                      className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-800 hover:bg-purple-100 transition-all shadow-2xs cursor-pointer"
-                      title="Open Visual On-Page Live CMS to modify website text"
-                    >
-                      <Edit3 className="h-3.5 w-3.5 text-purple-600" />
-                      <span>Visual CMS</span>
-                    </button>
                   </div>
 
                   {/* Search bar */}

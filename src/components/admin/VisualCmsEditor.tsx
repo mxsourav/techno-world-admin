@@ -14,15 +14,15 @@ import {
   Layers,
   ChevronRight,
   Sliders,
-  Maximize2,
-  Minimize2,
   PanelRightClose,
-  PanelRight,
   Sun,
   Moon,
-  Terminal,
   Globe,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Type,
+  Minus,
+  Plus,
+  MoveHorizontal
 } from 'lucide-react';
 import { cmsService } from '@/services/api';
 import { toast } from 'sonner';
@@ -37,53 +37,181 @@ interface EditableKeyInfo {
   section: string;
   defaultText: string;
   multiline?: boolean;
+  page?: string;
 }
 
 const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
-  // Header
+  // Header (visible across all pages)
   { key: 'header.top_strip', label: 'Announcement Bar', section: 'Header & Navigation', defaultText: 'Delivering across India — 27,000+ pincodes' },
   { key: 'header.sub_tagline', label: 'Store Tagline', section: 'Header & Navigation', defaultText: 'India ka apna bookstore' },
   
-  // Homepage Hero
-  { key: 'home.hero_badge', label: 'Hero Sale Badge', section: 'Homepage Hero', defaultText: 'Grand Book Sale — Up to 60% off 10,000+ titles' },
-  { key: 'home.hero_title_1', label: 'Hero Headline Line 1', section: 'Homepage Hero', defaultText: 'Every book India reads,' },
-  { key: 'home.hero_title_2', label: 'Hero Headline Line 2', section: 'Homepage Hero', defaultText: 'one search away.' },
-  { key: 'home.hero_desc', label: 'Hero Subtitle Description', section: 'Homepage Hero', defaultText: 'From academic textbooks to bestselling fiction, get genuine books delivered straight to your doorstep with guaranteed lowest prices.', multiline: true },
+  // Homepage Hero (page '/')
+  { key: 'home.hero_badge', label: 'Hero Sale Badge', section: 'Homepage Hero', defaultText: 'Grand Book Sale — Up to 60% off 10,000+ titles', page: '/' },
+  { key: 'home.hero_title_1', label: 'Hero Headline Line 1', section: 'Homepage Hero', defaultText: 'Every book India reads,', page: '/' },
+  { key: 'home.hero_title_2', label: 'Hero Headline Line 2', section: 'Homepage Hero', defaultText: 'one search away.', page: '/' },
+  { key: 'home.hero_desc', label: 'Hero Subtitle Description', section: 'Homepage Hero', defaultText: 'From academic textbooks to bestselling fiction, get genuine books delivered straight to your doorstep with guaranteed lowest prices.', multiline: true, page: '/' },
 
-  // Homepage Offers
-  { key: 'home.offer_1_title', label: 'Offer 1 Title', section: 'Homepage Highlights', defaultText: 'STUDENT15 — 15% off' },
-  { key: 'home.offer_1_desc', label: 'Offer 1 Subtitle', section: 'Homepage Highlights', defaultText: 'For students on exam & academic books' },
-  { key: 'home.offer_2_title', label: 'Offer 2 Title', section: 'Homepage Highlights', defaultText: 'Free Delivery', multiline: false },
-  { key: 'home.offer_2_desc', label: 'Offer 2 Subtitle', section: 'Homepage Highlights', defaultText: 'On all orders above ₹999 across India' },
-  { key: 'home.offer_3_title', label: 'Offer 3 Title', section: 'Homepage Highlights', defaultText: 'Techno Rewards' },
-  { key: 'home.offer_3_desc', label: 'Offer 3 Subtitle', section: 'Homepage Highlights', defaultText: 'Earn 1 Techno Coin per ₹100 spent (excl. delivery)' },
-  { key: 'home.exam_zone_title', label: 'Exam Zone Heading', section: 'Homepage Highlights', defaultText: 'NEET · JEE · UPSC · GATE · SSC — all prep books in one place' },
-  { key: 'home.exam_zone_desc', label: 'Exam Zone Subtitle', section: 'Homepage Highlights', defaultText: "Previous year papers, toppers' booklists and combo packs at the best prices." },
+  // Homepage Offers (page '/')
+  { key: 'home.offer_1_title', label: 'Offer 1 Title', section: 'Homepage Highlights', defaultText: 'STUDENT15 — 15% off', page: '/' },
+  { key: 'home.offer_1_desc', label: 'Offer 1 Subtitle', section: 'Homepage Highlights', defaultText: 'For students on exam & academic books', page: '/' },
+  { key: 'home.offer_2_title', label: 'Offer 2 Title', section: 'Homepage Highlights', defaultText: 'Free Delivery', multiline: false, page: '/' },
+  { key: 'home.offer_2_desc', label: 'Offer 2 Subtitle', section: 'Homepage Highlights', defaultText: 'On all orders above ₹999 across India', page: '/' },
+  { key: 'home.offer_3_title', label: 'Offer 3 Title', section: 'Homepage Highlights', defaultText: 'Techno Rewards', page: '/' },
+  { key: 'home.offer_3_desc', label: 'Offer 3 Subtitle', section: 'Homepage Highlights', defaultText: 'Earn 1 Techno Coin per ₹100 spent (excl. delivery)', page: '/' },
+  { key: 'home.exam_zone_title', label: 'Exam Zone Heading', section: 'Homepage Highlights', defaultText: 'NEET · JEE · UPSC · GATE · SSC — all prep books in one place', page: '/' },
+  { key: 'home.exam_zone_desc', label: 'Exam Zone Subtitle', section: 'Homepage Highlights', defaultText: "Previous year papers, toppers' booklists and combo packs at the best prices.", page: '/' },
 
-  // About Page
-  { key: 'about.title', label: 'About Page Title', section: 'About Us Page', defaultText: 'About Techno World Books' },
-  { key: 'about.subtitle', label: 'About Page Subtitle', section: 'About Us Page', defaultText: 'Your Trusted Bookstore for Every Reader' },
-  { key: 'about.quote', label: 'Inspiring Heritage Quote', section: 'About Us Page', defaultText: '"Connecting generations of readers with the rich literary and academic heritage of College Street."', multiline: true },
-  { key: 'about.procurement_title', label: 'Procurement Heading', section: 'About Us Page', defaultText: "Can't Find a Book? Request It Here" },
-  { key: 'about.procurement_desc', label: 'Procurement Subtitle', section: 'About Us Page', defaultText: "Don't worry if the book you're looking for isn't currently displayed on our website. With our deep connections across College Street, national publishers, and academic distributors, our team can source rare, out-of-print, and foreign editions for you.", multiline: true },
+  // Homepage Book Sections (page '/')
+  { key: 'home.section_recommended', label: 'Recommended Section Title', section: 'Homepage Book Sections', defaultText: 'Recommended For You', page: '/' },
+  { key: 'home.section_competitive', label: 'Competitive Exam Section Title', section: 'Homepage Book Sections', defaultText: 'Competitive Exam Books', page: '/' },
+  { key: 'home.section_non_fiction', label: 'Non-Fiction Section Title', section: 'Homepage Book Sections', defaultText: 'Non-Fiction Books', page: '/' },
+  { key: 'home.section_medical', label: 'Medical Section Title', section: 'Homepage Book Sections', defaultText: 'Medical & Healthcare Books', page: '/' },
+  { key: 'home.section_engineering', label: 'Engineering Section Title', section: 'Homepage Book Sections', defaultText: 'Engineering & Technology Books', page: '/' },
+  { key: 'home.section_bengali', label: 'Bengali Story Section Title', section: 'Homepage Book Sections', defaultText: 'Bengali Story Books', page: '/' },
+  { key: 'home.section_fiction', label: 'Fiction Section Title', section: 'Homepage Book Sections', defaultText: 'Fiction & Novels', page: '/' },
+  { key: 'home.section_school', label: 'School Section Title', section: 'Homepage Book Sections', defaultText: 'School Books (NCERT / ICSE)', page: '/' },
+  { key: 'home.section_university', label: 'University Section Title', section: 'Homepage Book Sections', defaultText: 'University & College Books', page: '/' },
+  { key: 'home.section_bestsellers', label: 'Best Sellers Section Title', section: 'Homepage Book Sections', defaultText: 'Best Sellers', page: '/' },
+  { key: 'home.section_trending', label: 'Trending Section Title', section: 'Homepage Book Sections', defaultText: 'Trending Now', page: '/' },
+  { key: 'home.section_new_releases', label: 'New Releases Section Title', section: 'Homepage Book Sections', defaultText: 'New Releases', page: '/' },
 
-  // Contact & Footer
-  { key: 'contact.title', label: 'Contact Title', section: 'Contact & Storefront', defaultText: 'Contact Techno World Books' },
-  { key: 'contact.subtitle', label: 'Contact Subtitle', section: 'Contact & Storefront', defaultText: 'Visit our historic College Street bookshop or contact our digital customer service team' },
+  // About Page (page '/about')
+  { key: 'about.title', label: 'About Page Title', section: 'About Us Page', defaultText: 'About Techno World Books', page: '/about' },
+  { key: 'about.subtitle', label: 'About Page Subtitle', section: 'About Us Page', defaultText: 'Your Trusted Bookstore for Every Reader', page: '/about' },
+  { key: 'about.quote', label: 'Inspiring Heritage Quote', section: 'About Us Page', defaultText: '"Connecting generations of readers with the rich literary and academic heritage of College Street."', multiline: true, page: '/about' },
+  { key: 'about.procurement_title', label: 'Procurement Heading', section: 'About Us Page', defaultText: "Can't Find a Book? Request It Here", page: '/about' },
+  { key: 'about.procurement_desc', label: 'Procurement Subtitle', section: 'About Us Page', defaultText: "Don't worry if the book you're looking for isn't currently displayed on our website. With our deep connections across College Street, national publishers, and academic distributors, our team can source rare, out-of-print, and foreign editions for you.", multiline: true, page: '/about' },
+
+  // Contact Page (page '/contact')
+  { key: 'contact.title', label: 'Contact Title', section: 'Contact & Storefront', defaultText: 'Contact Techno World Books', page: '/contact' },
+  { key: 'contact.subtitle', label: 'Contact Subtitle', section: 'Contact & Storefront', defaultText: 'Visit our historic College Street bookshop or contact our digital customer service team', page: '/contact' },
+
+  // Footer (visible across all pages, at bottom)
   { key: 'footer.address', label: 'Store Physical Address', section: 'Contact & Storefront', defaultText: '90/6A, Mahatma Gandhi Rd, opp. Grace Cinema, Calcutta University, College Street, Kolkata, West Bengal 700007', multiline: true },
   { key: 'footer.phone', label: 'Landline Phone Number', section: 'Contact & Storefront', defaultText: '033 2219 6115' },
 ];
 
+// Apple Digital Precision Roller (Horizontal Crown / Ruler)
+const DigitalRoller: React.FC<{
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (val: number) => void;
+  isDark: boolean;
+}> = ({ value, min = 12, max = 80, onChange, isDark }) => {
+  const rulerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const ticks: number[] = [];
+  for (let i = min; i <= max; i += 2) {
+    ticks.push(i);
+  }
+
+  const updateFromPointer = (clientX: number) => {
+    if (!rulerRef.current) return;
+    const rect = rulerRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const newVal = Math.round(min + ratio * (max - min));
+    onChange(newVal);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    updateFromPointer(e.clientX);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      updateFromPointer(e.clientX);
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [isDragging, min, max]);
+
+  const percent = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+
+  return (
+    <div
+      ref={rulerRef}
+      onPointerDown={handlePointerDown}
+      onWheel={(e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 1 : -1;
+        onChange(Math.max(min, Math.min(max, value + delta)));
+      }}
+      className={`relative h-11 rounded-xl overflow-hidden cursor-ew-resize select-none border transition-all ${
+        isDark
+          ? 'bg-zinc-950 border-zinc-700 shadow-inner'
+          : 'bg-gradient-to-b from-slate-200 via-slate-50 to-slate-200 border-black/10 shadow-[inset_0_2px_5px_rgba(0,0,0,0.08)]'
+      }`}
+      title="Click and drag horizontally to roll font size smoothly, or scroll mouse wheel"
+    >
+      {/* 3D Cylindrical Edge Vignettes */}
+      <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-black/40 dark:from-black/80 to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-black/40 dark:from-black/80 to-transparent pointer-events-none z-10" />
+
+      {/* Graduation Marks */}
+      <div className="absolute inset-0 flex items-center justify-between px-3">
+        {ticks.map((t) => {
+          const isMajor = t % 8 === 0 || t === min || t === max;
+          const isMedium = t % 4 === 0 && !isMajor;
+          return (
+            <div key={t} className="flex flex-col items-center justify-end h-full py-1.5 pointer-events-none">
+              <div
+                className={`w-[1px] rounded-full transition-colors ${
+                  isMajor
+                    ? isDark ? 'h-5 bg-zinc-200' : 'h-5 bg-slate-700'
+                    : isMedium
+                    ? isDark ? 'h-3 bg-zinc-400' : 'h-3 bg-slate-400'
+                    : isDark ? 'h-1.5 bg-zinc-600' : 'h-1.5 bg-slate-300'
+                }`}
+              />
+              {isMajor && (
+                <span className={`text-[8px] font-mono mt-0.5 leading-none ${
+                  isDark ? 'text-zinc-300 font-bold' : 'text-slate-500'
+                }`}>
+                  {t}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Apple Center Sapphire Needle with Optical Glow */}
+      <div
+        className="absolute top-0 bottom-0 w-[2px] bg-blue-500 shadow-[0_0_10px_#3b82f6] z-20 pointer-events-none"
+        style={{ left: `${percent}%` }}
+      >
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md border border-white" />
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md border border-white" />
+      </div>
+    </div>
+  );
+};
+
 export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
-  // Theme state: iOS 27 glassmorphism light (default), macOS dark, or terminal retro
-  const [themeMode, setThemeMode] = useState<'ios-light' | 'macos-dark' | 'terminal'>('ios-light');
+  // Theme state: Clean 2-way toggle: Apple iOS light (default) or macOS dark
+  const [themeMode, setThemeMode] = useState<'ios-light' | 'macos-dark'>('ios-light');
 
   // Viewport Device Presets
   const [devicePreset, setDevicePreset] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [customWidth, setCustomWidth] = useState<number>(1120);
 
   // Inspector Panel Sizing (Resizable splitter)
-  const [inspectorWidth, setInspectorWidth] = useState<number>(380);
+  const [inspectorWidth, setInspectorWidth] = useState<number>(400);
   const [isInspectorCollapsed, setIsInspectorCollapsed] = useState<boolean>(false);
   const [isDraggingInspector, setIsDraggingInspector] = useState<boolean>(false);
 
@@ -119,7 +247,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       });
   }, []);
 
-  // Listen to postMessage from the iframe when user clicks an element in preview
+  // Listen to postMessage from the iframe when user clicks or drags an element
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const data = event.data;
@@ -130,24 +258,35 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         if (isInspectorCollapsed) {
           setIsInspectorCollapsed(false);
         }
-        if (content[data.key] === undefined) {
-          setContent((prev) => ({
-            ...prev,
-            [data.key]: data.value || data.defaultText || '',
-          }));
-        }
+        setContent((prev) => {
+          const next = { ...prev };
+          if (next[data.key] === undefined) {
+            next[data.key] = data.value || data.defaultText || '';
+          }
+          if (data.fontSize) next[`${data.key}__fontSize`] = data.fontSize;
+          if (data.maxWidth) next[`${data.key}__maxWidth`] = data.maxWidth;
+          return next;
+        });
+      } else if (data.type === 'TW_CMS_STYLE_UPDATE' && data.key) {
+        setContent((prev) => {
+          const next = { ...prev };
+          if (data.fontSize !== undefined) next[`${data.key}__fontSize`] = data.fontSize;
+          if (data.maxWidth !== undefined) next[`${data.key}__maxWidth`] = data.maxWidth;
+          if (data.textAlign !== undefined) next[`${data.key}__textAlign`] = data.textAlign;
+          return next;
+        });
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [content, isInspectorCollapsed]);
+  }, [isInspectorCollapsed]);
 
   // Determine storefront preview base URL
   const previewOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const previewUrl = `${previewOrigin}${selectedPage}${selectedPage.includes('?') ? '&' : '?'}cms_edit=true&_preview=${iframeKey}`;
 
-  // Broadcast current drafts to iframe on load
+  // Broadcast current drafts and styles to iframe on load
   const handleIframeLoad = () => {
     if (!iframeRef.current?.contentWindow) return;
     iframeRef.current.contentWindow.postMessage(
@@ -158,16 +297,38 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       '*'
     );
 
-    // Sync all existing draft keys into preview
+    // Sync all existing draft keys & styles into preview
     Object.entries(content).forEach(([k, v]) => {
-      iframeRef.current?.contentWindow?.postMessage(
-        {
-          type: 'TW_CMS_PREVIEW_UPDATE',
-          key: k,
-          value: v,
-        },
-        '*'
-      );
+      if (k.endsWith('__fontSize')) {
+        const baseKey = k.replace('__fontSize', '');
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'TW_CMS_STYLE_UPDATE',
+            key: baseKey,
+            fontSize: v,
+          },
+          '*'
+        );
+      } else if (k.endsWith('__maxWidth')) {
+        const baseKey = k.replace('__maxWidth', '');
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'TW_CMS_STYLE_UPDATE',
+            key: baseKey,
+            maxWidth: v,
+          },
+          '*'
+        );
+      } else {
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'TW_CMS_PREVIEW_UPDATE',
+            key: k,
+            value: v,
+          },
+          '*'
+        );
+      }
     });
 
     if (selectedKey) {
@@ -175,6 +336,24 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         {
           type: 'TW_CMS_SELECT_KEY',
           key: selectedKey,
+        },
+        '*'
+      );
+    }
+  };
+
+  // Selection from directory: auto-switches page if necessary and sends scroll & highlight command
+  const handleSelectKeyFromDirectory = (item: EditableKeyInfo) => {
+    setSelectedKey(item.key);
+
+    if (item.page && selectedPage !== item.page) {
+      setSelectedPage(item.page);
+      setIframeKey(Date.now());
+    } else {
+      iframeRef.current?.contentWindow?.postMessage(
+        {
+          type: 'TW_CMS_SELECT_KEY',
+          key: item.key,
         },
         '*'
       );
@@ -200,6 +379,48 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     );
   };
 
+  // Font Size change handler
+  const handleFontSizeChange = (sizePx: number) => {
+    if (!selectedKey) return;
+    const val = `${sizePx}px`;
+
+    setContent((prev) => ({
+      ...prev,
+      [`${selectedKey}__fontSize`]: val,
+    }));
+
+    iframeRef.current?.contentWindow?.postMessage(
+      {
+        type: 'TW_CMS_STYLE_UPDATE',
+        key: selectedKey,
+        fontSize: val,
+        maxWidth: content[`${selectedKey}__maxWidth`],
+      },
+      '*'
+    );
+  };
+
+  // Field Width (Max-Width) change handler
+  const handleMaxWidthChange = (widthVal: number | 'auto') => {
+    if (!selectedKey) return;
+    const val = widthVal === 'auto' ? '' : `${widthVal}px`;
+
+    setContent((prev) => ({
+      ...prev,
+      [`${selectedKey}__maxWidth`]: val,
+    }));
+
+    iframeRef.current?.contentWindow?.postMessage(
+      {
+        type: 'TW_CMS_STYLE_UPDATE',
+        key: selectedKey,
+        maxWidth: val,
+        fontSize: content[`${selectedKey}__fontSize`],
+      },
+      '*'
+    );
+  };
+
   // Reset a field to default
   const handleResetCurrentKey = () => {
     if (!selectedKey) return;
@@ -207,7 +428,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     const def = registered ? registered.defaultText : '';
 
     handleValueChange(def);
-    toast.info(`Reset "${selectedKey}" to default value.`);
+    handleFontSizeChange(16);
+    handleMaxWidthChange('auto');
+    toast.info(`Reset "${selectedKey}" text & styles to default.`);
   };
 
   // Publish to Database
@@ -218,7 +441,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
       if (res?.success) {
         setInitialContent({ ...content });
-        toast.success('🎉 Changes successfully published live to website!');
+        toast.success('Changes successfully published live to website.');
       } else {
         toast.error(res?.message || 'Failed to publish changes.');
       }
@@ -256,8 +479,8 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
   // Calculate actual pixel width of the preview canvas frame
   const getCanvasWidthPx = () => {
-    if (devicePreset === 'mobile') return 390; // iPhone 16 Pro
-    if (devicePreset === 'tablet') return 820; // iPad Air
+    if (devicePreset === 'mobile') return 390;
+    if (devicePreset === 'tablet') return 820;
     if (devicePreset === 'custom') return customWidth;
     return '100%';
   };
@@ -288,14 +511,13 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       if (isDraggingInspector && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
         const newWidth = containerRect.right - e.clientX;
-        if (newWidth >= 260 && newWidth <= 720) {
+        if (newWidth >= 280 && newWidth <= 760) {
           setInspectorWidth(newWidth);
         }
       }
 
       if (isDraggingCanvas && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
-        // Calculate width relative to canvas container center or left
         const newCanvasWidth = Math.max(320, Math.min(1600, (e.clientX - containerRect.left) * 1.05));
         setCustomWidth(Math.round(newCanvasWidth));
       }
@@ -321,56 +543,44 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     };
   }, [isDraggingInspector, isDraggingCanvas]);
 
-  // Styling theme classes according to themeMode
+  // Current selected styles
+  const activeFontSizeRaw = selectedKey ? (content[`${selectedKey}__fontSize`] || '') : '';
+  const activeFontSizeNum = parseInt(activeFontSizeRaw, 10) || 16;
+  const activeMaxWidthRaw = selectedKey ? (content[`${selectedKey}__maxWidth`] || '') : '';
+  const activeMaxWidthNum = parseInt(activeMaxWidthRaw, 10) || 0;
+
+  // Apple Liquid Glass Styling Tokens with Crisp High-Contrast Dark Mode
   const isDark = themeMode === 'macos-dark';
   const isIos = themeMode === 'ios-light';
 
   const themeClasses = {
     root: isIos
-      ? 'bg-[#F2F4F8] text-slate-800'
-      : isDark
-      ? 'bg-[#18181b] text-zinc-100'
-      : 'bg-[#0a0f0d] text-emerald-300 font-mono',
+      ? 'bg-gradient-to-br from-[#f8fafc]/95 via-[#f1f5f9]/95 to-[#e2e8f0]/95 text-slate-800 backdrop-blur-3xl'
+      : 'bg-zinc-950 text-zinc-100 backdrop-blur-3xl',
     header: isIos
-      ? 'bg-white/80 backdrop-blur-2xl border-b border-black/[0.08] shadow-xs'
-      : isDark
-      ? 'bg-[#222227]/90 backdrop-blur-2xl border-b border-white/[0.08] shadow-md'
-      : 'bg-[#060c08] border-b border-emerald-500/30 text-emerald-400 font-mono shadow-md',
+      ? 'bg-white/70 backdrop-blur-2xl border-b border-black/[0.08] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.8),0_4px_20px_rgba(0,0,0,0.03)]'
+      : 'bg-zinc-900/95 backdrop-blur-2xl border-b border-zinc-800 shadow-md text-white',
     canvasBg: isIos
-      ? 'bg-[#E5E9F0]'
-      : isDark
-      ? 'bg-[#0f0f12]'
-      : 'bg-[#020503]',
+      ? 'bg-[#E5E9F0]/90'
+      : 'bg-zinc-950',
     frameBorder: isIos
       ? 'border border-black/[0.12] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)]'
-      : isDark
-      ? 'border border-white/[0.12] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]'
-      : 'border-2 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+      : 'border border-zinc-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]',
     inspector: isIos
-      ? 'bg-white/90 backdrop-blur-xl border-l border-black/[0.08]'
-      : isDark
-      ? 'bg-[#1c1c20]/95 backdrop-blur-xl border-l border-white/[0.08]'
-      : 'bg-[#08120b] border-l border-emerald-500/30 font-mono',
+      ? 'bg-white/85 backdrop-blur-2xl border-l border-black/[0.08]'
+      : 'bg-zinc-900 border-l border-zinc-800',
     card: isIos
-      ? 'bg-white border border-slate-200/80 shadow-xs'
-      : isDark
-      ? 'bg-[#27272d] border border-white/[0.08] shadow-sm'
-      : 'bg-[#0d1f13] border border-emerald-500/30 text-emerald-300',
+      ? 'bg-white/80 backdrop-blur-xl border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9),0_8px_24px_-4px_rgba(0,0,0,0.06)]'
+      : 'bg-zinc-900/90 border border-zinc-700/70 shadow-md',
     input: isIos
-      ? 'bg-slate-50 border border-slate-200 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'
-      : isDark
-      ? 'bg-[#1e1e24] border border-white/10 text-white focus:bg-[#25252c] focus:border-blue-400 focus:ring-4 focus:ring-blue-400/15'
-      : 'bg-black border border-emerald-500 text-emerald-300 focus:ring-2 focus:ring-emerald-400/30 font-mono',
+      ? 'bg-white/90 border border-slate-200/80 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 shadow-2xs'
+      : 'bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 focus:bg-zinc-900 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20',
     pillActive: isIos
       ? 'bg-white text-slate-900 shadow-sm border border-black/[0.04]'
-      : isDark
-      ? 'bg-zinc-700 text-white shadow-sm'
-      : 'bg-emerald-500 text-black font-bold',
+      : 'bg-zinc-800 text-white shadow-sm border border-zinc-700',
     pillInactive: isIos
       ? 'text-slate-500 hover:text-slate-900'
-      : isDark
-      ? 'text-zinc-400 hover:text-white'
-      : 'text-emerald-600 hover:text-emerald-400 font-mono',
+      : 'text-zinc-400 hover:text-white',
   };
 
   return (
@@ -382,7 +592,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
           : 'h-[calc(100vh-80px)] min-h-[660px]'
       } ${themeClasses.root} ${themeClasses.frameBorder}`}
     >
-      {/* Apple macOS Ventura / iOS 27 Titlebar & Toolbar */}
+      {/* Apple Liquid Glass Titlebar & Toolbar */}
       <div className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3 ${themeClasses.header} select-none shrink-0`}>
         {/* Left: macOS Traffic Light Dots & Title */}
         <div className="flex items-center gap-4">
@@ -400,69 +610,45 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             </button>
             <button
               onClick={() => setIsInspectorCollapsed(!isInspectorCollapsed)}
-              title="Collapse / Expand Inspector (macOS Minimize)"
+              title="Toggle Inspector Drawer (macOS Minimize)"
               className="h-3.5 w-3.5 rounded-full bg-[#ffbd2e] hover:brightness-90 transition-transform active:scale-90 border border-black/15 shadow-2xs flex items-center justify-center group"
             >
-              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-black/70">–</span>
+              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-black/70">−</span>
             </button>
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              title="Toggle Fullscreen (macOS Zoom)"
+              title="Toggle Fullscreen Canvas (macOS Zoom)"
               className="h-3.5 w-3.5 rounded-full bg-[#27c93f] hover:brightness-90 transition-transform active:scale-90 border border-black/15 shadow-2xs flex items-center justify-center group"
             >
-              <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold text-black/70">+</span>
+              <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold text-black/70">⤢</span>
             </button>
           </div>
 
-          <div className="h-5 w-px bg-black/10 dark:bg-white/10 hidden sm:block" />
-
-          {/* Title & Cupertino Dynamic Pill */}
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Sparkles className="h-4 w-4" />
+            <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+              <Sparkles className="h-3.5 w-3.5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black tracking-tight">Visual Live Studio</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Sync
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">Visual CMS Studio</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                  Liquid Glass 27
                 </span>
               </div>
+              <span className="text-[10px] text-slate-500 dark:text-zinc-300 flex items-center gap-1">
+                Select element to auto-locate · Drag marks to resize
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Center: Device Selector, Page Chooser, and Canvas Size Display */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Page Picker */}
-          <div className={`flex items-center gap-1.5 rounded-2xl px-2.5 py-1 text-xs font-semibold ${
-            isIos ? 'bg-black/[0.05] border border-black/[0.06]' : 'bg-white/[0.06] border border-white/[0.08]'
-          }`}>
-            <Globe className="h-3.5 w-3.5 text-blue-500" />
-            <select
-              value={selectedPage}
-              onChange={(e) => {
-                setSelectedPage(e.target.value);
-                setIframeKey(Date.now());
-              }}
-              className="bg-transparent text-xs font-bold outline-none cursor-pointer py-0.5"
-            >
-              <option value="/" className="bg-slate-900 text-white">Homepage (/)</option>
-              <option value="/about" className="bg-slate-900 text-white">About Us (/about)</option>
-              <option value="/contact" className="bg-slate-900 text-white">Contact (/contact)</option>
-              <option value="/terms" className="bg-slate-900 text-white">Terms & Policy (/terms)</option>
-            </select>
-          </div>
-
-          {/* Apple Segmented Viewport Switcher */}
-          <div className={`flex items-center rounded-2xl p-1 text-xs font-semibold ${
-            isIos ? 'bg-black/[0.05] border border-black/[0.06]' : 'bg-white/[0.06] border border-white/[0.08]'
-          }`}>
+        {/* Center: Device Viewport Presets & Page Selector */}
+        <div className="flex items-center gap-2">
+          {/* Apple Segmented Device Pill */}
+          <div className="flex items-center p-1 rounded-xl bg-black/[0.05] dark:bg-zinc-800/80 border border-black/[0.04] dark:border-zinc-700/60 backdrop-blur-md">
             <button
               onClick={() => setDevicePreset('desktop')}
-              title="Mac Desktop (100% Fluid)"
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                 devicePreset === 'desktop' ? themeClasses.pillActive : themeClasses.pillInactive
               }`}
             >
@@ -471,139 +657,110 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             </button>
             <button
               onClick={() => setDevicePreset('tablet')}
-              title="iPad Air / Tablet (820px)"
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                 devicePreset === 'tablet' ? themeClasses.pillActive : themeClasses.pillInactive
               }`}
             >
               <Tablet className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Tablet</span>
+              <span className="hidden sm:inline">iPad</span>
             </button>
             <button
               onClick={() => setDevicePreset('mobile')}
-              title="iPhone 16 Pro (390px)"
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                 devicePreset === 'mobile' ? themeClasses.pillActive : themeClasses.pillInactive
               }`}
             >
               <Smartphone className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Mobile</span>
+              <span className="hidden sm:inline">iPhone</span>
             </button>
             <button
               onClick={() => setDevicePreset('custom')}
-              title="Resizable Canvas (Drag edges to resize)"
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all ${
                 devicePreset === 'custom' ? themeClasses.pillActive : themeClasses.pillInactive
               }`}
+              title="Fluid drag canvas right edge"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Custom</span>
+              <SlidersHorizontal className="h-3 w-3" />
+              <span className="text-[11px] font-mono">{typeof getCanvasWidthPx() === 'number' ? `${getCanvasWidthPx()}px` : 'Fluid'}</span>
             </button>
           </div>
 
-          {/* Current Canvas Dimensions Badge */}
-          <div className="hidden md:flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] text-slate-500 dark:text-zinc-400">
-            <span>{typeof getCanvasWidthPx() === 'number' ? `${getCanvasWidthPx()}px` : 'Fluid'}</span>
-            <span>× Auto</span>
+          {/* Page Picker Capsule */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/[0.05] dark:bg-zinc-800/80 border border-black/[0.04] dark:border-zinc-700/60 backdrop-blur-md text-xs font-medium">
+            <Globe className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-300" />
+            <select
+              value={selectedPage}
+              onChange={(e) => {
+                setSelectedPage(e.target.value);
+                setIframeKey(Date.now());
+              }}
+              className="bg-transparent border-0 text-xs font-semibold outline-none cursor-pointer pr-1 text-slate-700 dark:text-zinc-100"
+            >
+              <option value="/" className="text-black dark:bg-zinc-900 dark:text-white">🏠 Homepage</option>
+              <option value="/about" className="text-black dark:bg-zinc-900 dark:text-white">📖 About Us</option>
+              <option value="/contact" className="text-black dark:bg-zinc-900 dark:text-white">📞 Contact</option>
+              <option value="/terms" className="text-black dark:bg-zinc-900 dark:text-white">⚖️ Terms</option>
+            </select>
           </div>
-
-          {/* Refresh Frame */}
-          <button
-            onClick={() => setIframeKey(Date.now())}
-            title="Reload Preview Frame"
-            className="p-1.5 rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors"
-          >
-            <RotateCw className="h-3.5 w-3.5" />
-          </button>
         </div>
 
-        {/* Right: Theme Switcher & Publish Action */}
-        <div className="flex items-center gap-2.5">
-          {/* Theme Switcher Segment */}
-          <div className={`flex items-center rounded-xl p-0.5 text-xs ${
-            isIos ? 'bg-black/[0.05]' : 'bg-white/[0.06]'
-          }`}>
+        {/* Right: Clean 2-Way Light/Dark Toggle, Reload, and Publish Live Button */}
+        <div className="flex items-center gap-2">
+          {/* Apple 2-Way Theme Toggle: Light / Dark */}
+          <div className="flex items-center p-0.5 rounded-xl bg-black/[0.05] dark:bg-zinc-800 border border-black/[0.04] dark:border-zinc-700">
             <button
               onClick={() => setThemeMode('ios-light')}
-              title="Apple iOS / macOS Light Glassmorphism"
-              className={`p-1.5 rounded-lg transition-all ${themeMode === 'ios-light' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-400 hover:text-slate-800'}`}
+              title="Light Mode"
+              className={`p-1.5 rounded-lg transition-all ${
+                themeMode === 'ios-light' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'
+              }`}
             >
               <Sun className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setThemeMode('macos-dark')}
-              title="macOS Dark Titanium"
-              className={`p-1.5 rounded-lg transition-all ${themeMode === 'macos-dark' ? 'bg-zinc-700 text-white shadow-xs' : 'text-zinc-400 hover:text-zinc-200'}`}
+              title="Dark Mode"
+              className={`p-1.5 rounded-lg transition-all ${
+                themeMode === 'macos-dark' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+              }`}
             >
               <Moon className="h-3.5 w-3.5" />
             </button>
-            <button
-              onClick={() => setThemeMode('terminal')}
-              title="Terminal Hacker Mode"
-              className={`p-1.5 rounded-lg transition-all ${themeMode === 'terminal' ? 'bg-emerald-500 text-black shadow-xs font-bold' : 'text-slate-400 hover:text-emerald-400'}`}
-            >
-              <Terminal className="h-3.5 w-3.5" />
-            </button>
           </div>
 
-          {/* Toggle Inspector Drawer */}
           <button
-            onClick={() => setIsInspectorCollapsed(!isInspectorCollapsed)}
-            title={isInspectorCollapsed ? 'Open Inspector' : 'Hide Inspector'}
-            className={`p-1.5 rounded-xl transition-colors ${
-              isInspectorCollapsed
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'hover:bg-black/[0.06] dark:hover:bg-white/[0.08]'
-            }`}
+            onClick={() => setIframeKey(Date.now())}
+            title="Reload live preview frame"
+            className="p-2 rounded-xl bg-black/[0.05] dark:bg-zinc-800 hover:bg-black/[0.08] dark:hover:bg-zinc-700 transition-colors text-slate-500 dark:text-zinc-200"
           >
-            {isInspectorCollapsed ? <PanelRight className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+            <RotateCw className="h-3.5 w-3.5" />
           </button>
 
-          {/* Fullscreen Toggle */}
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-            className="p-1.5 rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors"
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
-
-          {/* Unsaved Changes Counter */}
-          {modifiedCount > 0 && (
-            <span className="hidden sm:inline-block text-[11px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-xl">
-              {modifiedCount} draft {modifiedCount === 1 ? 'edit' : 'edits'}
-            </span>
-          )}
-
-          {/* Cupertino Primary Action: Publish Live */}
+          {/* Clean Publish Button (No emoji) */}
           <button
             onClick={handlePublish}
             disabled={isPublishing}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:opacity-95 active:scale-95 text-white text-xs font-extrabold shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:brightness-110 active:scale-95 transition-all shadow-md shadow-blue-500/25 disabled:opacity-50"
           >
-            {isPublishing ? (
-              <>
-                <RotateCw className="h-3.5 w-3.5 animate-spin" />
-                <span>Publishing...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-3.5 w-3.5" />
-                <span>🚀 Publish Live</span>
-              </>
+            <Save className="h-3.5 w-3.5" />
+            <span>{isPublishing ? 'Publishing...' : 'Publish Live'}</span>
+            {modifiedCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-white/25 text-[10px] font-bold">
+                {modifiedCount}
+              </span>
             )}
           </button>
         </div>
       </div>
 
-      {/* Main Resizable Body: Preview Canvas + Draggable Splitter + Inspector Drawer */}
+      {/* Main Workbench Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Center / Left: Interactive Live Preview Canvas */}
         <div className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 flex flex-col items-center justify-start overflow-auto relative select-none`}>
-          {/* Instruction banner in iOS pill style */}
-          <div className="mb-3 px-4 py-1.5 rounded-full bg-white/70 dark:bg-black/40 backdrop-blur-md border border-black/5 dark:border-white/10 text-[11px] font-medium text-slate-600 dark:text-zinc-300 shadow-2xs flex items-center gap-2 shrink-0">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
-            <span>Hover over any dashed outline in the live view and click to edit, or resize by dragging handles.</span>
+          {/* Instruction banner in Apple Liquid Glass pill */}
+          <div className="mb-3 px-4 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/90 backdrop-blur-xl border border-white/60 dark:border-zinc-700 text-[11px] font-medium text-slate-700 dark:text-zinc-200 shadow-sm flex items-center gap-2 shrink-0">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Select any element in the directory to auto-highlight and scroll to it · Drag handles to resize</span>
           </div>
 
           {/* Responsive Preview Device Window Frame (Resizable) */}
@@ -616,7 +773,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               minHeight: '480px',
             }}
           >
-            {/* Safari / macOS Mock Address Bar */}
+            {/* Safari Mock Address Bar */}
             <div className="bg-slate-100/90 dark:bg-zinc-800/90 border-b border-slate-200/80 dark:border-zinc-700/80 px-3.5 py-2 flex items-center justify-between shrink-0 select-none backdrop-blur-md">
               <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
@@ -660,9 +817,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             <div
               onMouseDown={handleCanvasResizeMouseDown}
               title="Drag horizontally to resize preview width"
-              className="absolute top-0 right-0 w-2 h-full cursor-ew-resize hover:bg-blue-500/40 active:bg-blue-600 transition-colors z-30 flex items-center justify-center group"
+              className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-blue-500/40 active:bg-blue-600 transition-colors z-30 flex items-center justify-center group"
             >
-              <div className="w-1 h-8 rounded-full bg-slate-300 dark:bg-zinc-600 group-hover:bg-blue-500" />
+              <div className="w-1 h-8 rounded-full bg-slate-400/60 dark:bg-zinc-600 group-hover:bg-blue-500 shadow" />
             </div>
           </div>
         </div>
@@ -689,12 +846,12 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             className={`flex flex-col shrink-0 h-full overflow-hidden transition-[width] duration-75 ${themeClasses.inspector}`}
           >
             {/* Inspector Header */}
-            <div className="px-4 py-3.5 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between select-none">
+            <div className="px-4 py-3.5 border-b border-black/[0.08] dark:border-zinc-800 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   <Sliders className="h-3.5 w-3.5" />
                 </div>
-                <h3 className="text-xs font-black uppercase tracking-wider">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                   Inspector & Editor
                 </h3>
               </div>
@@ -703,7 +860,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                 {selectedKey && (
                   <button
                     onClick={() => setSelectedKey(null)}
-                    className="text-[10px] font-bold text-slate-400 hover:text-blue-500 underline"
+                    className="text-[10px] font-bold text-slate-400 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 underline"
                   >
                     Clear
                   </button>
@@ -711,7 +868,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                 <button
                   onClick={() => setIsInspectorCollapsed(true)}
                   title="Collapse Inspector"
-                  className="p-1 rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.05] text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                  className="p-1 rounded-lg hover:bg-black/[0.05] dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white"
                 >
                   <PanelRightClose className="h-3.5 w-3.5" />
                 </button>
@@ -721,38 +878,33 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
               {/* Active Selected Element Editor */}
               {selectedKey ? (
-                <div className={`rounded-2xl p-4 border transition-all ${
-                  isIos
-                    ? 'bg-blue-50/50 border-blue-200/80 shadow-xs'
-                    : isDark
-                    ? 'bg-[#24242b] border-blue-500/30 shadow-md'
-                    : 'bg-[#0f2416] border-emerald-500/50'
-                } space-y-3`}>
+                <div className={`rounded-2xl p-4.5 border transition-all ${themeClasses.card} space-y-4`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5">
                         <Edit3 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                        <span className="text-xs font-black">
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
                           {currentKeyInfo?.label || selectedKey}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 block mt-0.5">
+                      <span className="text-[10px] font-mono text-slate-500 dark:text-blue-400 block mt-0.5">
                         {selectedKey}
                       </span>
                     </div>
 
                     <button
                       onClick={handleResetCurrentKey}
-                      title="Reset to default text"
-                      className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors bg-black/[0.04] dark:bg-white/[0.06] px-2 py-1 rounded-lg"
+                      title="Reset text & styles to default"
+                      className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors bg-black/[0.04] dark:bg-zinc-800 px-2.5 py-1 rounded-lg border dark:border-zinc-700"
                     >
                       <Undo2 className="h-3 w-3" />
                       <span>Default</span>
                     </button>
                   </div>
 
+                  {/* Text Content Input */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-zinc-400 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-zinc-200 mb-1.5">
                       Content String (Live Preview)
                     </label>
                     {currentKeyInfo?.multiline ? (
@@ -774,21 +926,139 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                     )}
                   </div>
 
-                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 flex items-center gap-1.5 pt-1 border-t border-black/[0.05] dark:border-white/[0.05]">
+                  {/* Font Size & Precision Digital Roller Section */}
+                  <div className="pt-2.5 border-t border-black/[0.06] dark:border-zinc-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
+                        <Type className="h-3.5 w-3.5 text-blue-500" />
+                        <span>Font Size Adjuster</span>
+                      </label>
+
+                      {/* Font Size Direct Stepper Input */}
+                      <div className="flex items-center gap-1 bg-black/[0.05] dark:bg-zinc-800 rounded-xl p-0.5 border border-black/[0.05] dark:border-zinc-700">
+                        <button
+                          onClick={() => handleFontSizeChange(Math.max(12, activeFontSizeNum - 1))}
+                          className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-200 transition-colors"
+                          title="Decrease 1px"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="text-xs font-mono font-bold px-1.5 min-w-[38px] text-center text-blue-600 dark:text-blue-400">
+                          {activeFontSizeNum}px
+                        </span>
+                        <button
+                          onClick={() => handleFontSizeChange(Math.min(80, activeFontSizeNum + 1))}
+                          className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-200 transition-colors"
+                          title="Increase 1px"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Apple Precision Digital Roller */}
+                    <DigitalRoller
+                      value={activeFontSizeNum}
+                      min={12}
+                      max={80}
+                      onChange={handleFontSizeChange}
+                      isDark={isDark}
+                    />
+
+                    {/* Quick Preset Font Size Chips */}
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { label: 'XS', size: 12 },
+                        { label: 'SM', size: 14 },
+                        { label: 'MD', size: 16 },
+                        { label: 'LG', size: 20 },
+                        { label: 'XL', size: 28 },
+                        { label: '2XL', size: 36 },
+                        { label: '3XL', size: 48 },
+                        { label: 'Hero', size: 64 },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          onClick={() => handleFontSizeChange(chip.size)}
+                          className={`px-2 py-0.8 rounded-lg text-[10px] font-bold transition-all ${
+                            activeFontSizeNum === chip.size
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-black/[0.04] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-blue-500/10 hover:text-blue-600 dark:border dark:border-zinc-700'
+                          }`}
+                        >
+                          {chip.label} ({chip.size})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Text Field Size / Max-Width Section */}
+                  <div className="pt-2.5 border-t border-black/[0.06] dark:border-zinc-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-zinc-200 flex items-center gap-1.5">
+                        <MoveHorizontal className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>Field Width / Wrap Boundary</span>
+                      </label>
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                        {activeMaxWidthNum > 0 ? `${activeMaxWidthNum}px` : 'Auto (100%)'}
+                      </span>
+                    </div>
+
+                    {/* Field Width Slider */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-400">200</span>
+                      <input
+                        type="range"
+                        min="200"
+                        max="1200"
+                        step="10"
+                        value={activeMaxWidthNum > 0 ? activeMaxWidthNum : 1200}
+                        onChange={(e) => handleMaxWidthChange(parseInt(e.target.value, 10))}
+                        className="flex-1 accent-emerald-500 cursor-ew-resize h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-lg"
+                      />
+                      <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-400">1200</span>
+                    </div>
+
+                    {/* Quick Preset Width Chips */}
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { label: 'Auto (100%)', width: 'auto' as const },
+                        { label: '360px', width: 360 },
+                        { label: '520px', width: 520 },
+                        { label: '720px', width: 720 },
+                        { label: '960px', width: 960 },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={() => handleMaxWidthChange(item.width)}
+                          className={`px-2 py-0.8 rounded-lg text-[10px] font-bold transition-all ${
+                            (item.width === 'auto' && activeMaxWidthNum === 0) ||
+                            (typeof item.width === 'number' && activeMaxWidthNum === item.width)
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-black/[0.04] dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-600 dark:border dark:border-zinc-700'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 dark:text-zinc-300 flex items-center gap-1.5 pt-1 border-t border-black/[0.05] dark:border-zinc-800">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                    <span>Real-time instant preview without reloading.</span>
+                    <span>Real-time instant preview with live drag & auto-scroll.</span>
                   </div>
                 </div>
               ) : (
-                <div className={`rounded-2xl border-2 border-dashed p-5 text-center ${
-                  isIos ? 'border-slate-300 bg-white/50' : 'border-zinc-700 bg-zinc-900/40'
+                <div className={`rounded-2xl border-2 border-dashed p-6 text-center ${
+                  isIos ? 'border-slate-300/80 bg-white/50' : 'border-zinc-700 bg-zinc-900/50'
                 }`}>
-                  <div className="h-9 w-9 rounded-2xl bg-blue-500/10 text-blue-500 mx-auto flex items-center justify-center mb-2">
-                    <Edit3 className="h-4 w-4" />
+                  <div className="h-10 w-10 rounded-2xl bg-blue-500/10 text-blue-500 mx-auto flex items-center justify-center mb-2 shadow-inner">
+                    <Edit3 className="h-5 w-5" />
                   </div>
-                  <p className="text-xs font-bold">No element selected</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-white">No element selected</p>
                   <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
-                    Click any highlighted dashed text in the preview to edit it, or select from the directory below.
+                    Click any element from the directory below to auto-highlight and scroll to it in the live preview.
                   </p>
                 </div>
               )}
@@ -796,17 +1066,17 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               {/* Editable Elements Directory */}
               <div className="space-y-2.5 pt-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-zinc-200 flex items-center gap-1.5">
                     <Layers className="h-3.5 w-3.5" /> All Registered Elements
                   </h4>
-                  <span className="text-[10px] font-mono text-slate-400 bg-black/[0.04] dark:bg-white/[0.06] px-1.5 py-0.5 rounded-md">
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-300 bg-black/[0.04] dark:bg-zinc-800 px-2 py-0.5 rounded-md border dark:border-zinc-700">
                     {filteredKeys.length} keys
                   </span>
                 </div>
 
                 {/* Filter / Search Bar */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-400" />
                   <input
                     type="text"
                     value={searchTerm}
@@ -817,7 +1087,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                   {searchTerm && (
                     <button
                       onClick={() => setSearchTerm('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white text-xs font-bold"
                     >
                       ×
                     </button>
@@ -834,66 +1104,37 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                     return (
                       <button
                         key={item.key}
-                        onClick={() => {
-                          setSelectedKey(item.key);
-                          iframeRef.current?.contentWindow?.postMessage(
-                            {
-                              type: 'TW_CMS_SELECT_KEY',
-                              key: item.key,
-                            },
-                            '*'
-                          );
-                        }}
+                        onClick={() => handleSelectKeyFromDirectory(item)}
                         className={`w-full text-left p-3 rounded-xl border transition-all flex items-start justify-between gap-2.5 ${
                           isCurrent
-                            ? 'bg-blue-500/10 border-blue-500 shadow-xs'
-                            : `${themeClasses.card} hover:border-blue-400/60`
+                            ? 'bg-blue-500/15 border-blue-500 shadow-md ring-1 ring-blue-500/30'
+                            : isDark
+                            ? 'bg-zinc-900/80 border-zinc-800 hover:bg-zinc-800/90 hover:border-zinc-700'
+                            : 'bg-white border-slate-200/80 hover:border-blue-400/60 shadow-2xs'
                         }`}
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold truncate">
+                            <span className="text-xs font-bold truncate text-slate-900 dark:text-white">
                               {item.label}
                             </span>
                             {isModified && (
-                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" title="Modified" />
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                             )}
                           </div>
-                          <span className="text-[10px] text-slate-400 dark:text-zinc-500 block truncate font-mono mt-0.5">
+                          <span className="text-[10px] text-slate-400 dark:text-zinc-400 block truncate font-mono">
                             {item.section} · {item.key}
                           </span>
-                          <p className="text-[11px] text-slate-600 dark:text-zinc-400 mt-1 line-clamp-1 italic">
+                          <p className="text-[11px] text-slate-600 dark:text-zinc-300 line-clamp-1 mt-0.5">
                             "{currentVal}"
                           </p>
                         </div>
-
-                        <ChevronRight className={`h-4 w-4 shrink-0 mt-1 ${isCurrent ? 'text-blue-500' : 'text-slate-400'}`} />
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-400 shrink-0 mt-1" />
                       </button>
                     );
                   })}
                 </div>
               </div>
-            </div>
-
-            {/* Bottom Drawer Publish Bar */}
-            <div className="p-3.5 border-t border-black/[0.08] dark:border-white/[0.08] shrink-0 bg-white/50 dark:bg-black/20 backdrop-blur-md">
-              <button
-                onClick={handlePublish}
-                disabled={isPublishing}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 active:scale-95 text-white text-xs font-extrabold shadow-md shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {isPublishing ? (
-                  <>
-                    <RotateCw className="h-4 w-4 animate-spin" />
-                    <span>Publishing Live...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    <span>Publish All Changes Live</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         )}

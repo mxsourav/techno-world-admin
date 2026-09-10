@@ -5,6 +5,7 @@ import type { Book } from '@/types';
 import { discountPct, formatINR } from '@/utils/helpers';
 import { useStore } from '@/store/StoreContext';
 import { BookCover } from './BookCover';
+import { CmsText } from './common/CmsText';
 
 export function RatingStars({ rating, size = 3.5 }: { rating: number; size?: number }) {
   return (
@@ -98,7 +99,21 @@ export function BookCardSkeleton() {
   );
 }
 
-export function BookRow({ title, icon, books, viewAllLink, loading }: { title: string; icon?: React.ReactNode; books: Book[]; viewAllLink?: string; loading?: boolean }) {
+export function BookRow({ 
+  title, 
+  icon, 
+  books, 
+  viewAllLink, 
+  loading,
+  contentKey,
+}: { 
+  title: string; 
+  icon?: React.ReactNode; 
+  books: Book[]; 
+  viewAllLink?: string; 
+  loading?: boolean;
+  contentKey?: string;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -106,7 +121,7 @@ export function BookRow({ title, icon, books, viewAllLink, loading }: { title: s
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
-      // If user is already scrolling horizontally, let native behavior handle it
+      // If user is already scrolling horizontally (trackpad swipe with large deltaX), let native behavior handle it
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
 
       const maxScroll = el.scrollWidth - el.clientWidth;
@@ -136,7 +151,12 @@ export function BookRow({ title, icon, books, viewAllLink, loading }: { title: s
     <section className="mx-auto max-w-7xl px-3 py-5 sm:px-6">
       <div className="mb-4 flex items-end justify-between">
         <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 sm:text-xl">
-          {icon} {title}
+          {icon}
+          {contentKey ? (
+            <CmsText contentKey={contentKey} defaultText={title} label={title} />
+          ) : (
+            title
+          )}
         </h2>
         {viewAllLink && (
           <Link to={viewAllLink} className="text-sm font-semibold text-emerald-600 hover:text-emerald-500">
