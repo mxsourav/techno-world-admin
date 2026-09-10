@@ -7,6 +7,7 @@ import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import Dashboard from '@/pages/admin/Dashboard';
 import { AuthProvider, useAuthStore } from '@/store/AuthStore';
+import { CmsProvider } from '@/context/CmsContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // This is the main App component that sets up the routing and context providers for the application. It includes a scroll-to-top feature, a keep-alive ping to the server, and error handling.
@@ -95,12 +96,14 @@ export default function App() {
   return (
     <StoreProvider>
       <AuthProvider>
-        <ScrollToTop />
-        <KeepAlivePing />
-        <Toaster position="top-center" richColors />
-        <ErrorBoundary>
-          <AdminPortal />
-        </ErrorBoundary>
+        <CmsProvider>
+          <ScrollToTop />
+          <KeepAlivePing />
+          <Toaster position="top-center" richColors />
+          <ErrorBoundary>
+            <AdminPortal />
+          </ErrorBoundary>
+        </CmsProvider>
       </AuthProvider>
     </StoreProvider>
   );

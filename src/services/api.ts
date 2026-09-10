@@ -341,6 +341,8 @@ export const adminService = {
   getCustomers: (params?: { search?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
   getSearchTrends: (params?: { period?: string; startDate?: string; endDate?: string }) =>
     api.get<any>('/admin/analytics/search-trends', params),
+  getAutoAcceptSetting: () => api.get<{ enabled: boolean }>('/admin/settings/auto-accept'),
+  updateAutoAcceptSetting: (enabled: boolean) => api.post<{ enabled: boolean }>('/admin/settings/auto-accept', { enabled }),
 };
 
 export const searchService = {
@@ -413,6 +415,8 @@ export const cmsService = {
   getSections: () => api.get<any[]>('/cms/sections'),
   updateSection: (key: string, data: any) => api.put<any>(`/cms/sections/${key}`, data),
   toggleSection: (key: string) => api.patch<any>(`/cms/sections/${key}/toggle`),
+  getUiContent: () => api.get<Record<string, string>>('/cms/ui-content'),
+  publishUiContent: (content: Record<string, string>) => api.put<Record<string, string>>('/cms/ui-content', { content }),
 };
 
 export const promotionService = {
@@ -432,14 +436,28 @@ export const campaignService = {
 };
 
 export const pricingService = {
-  calculate: (data: { items: { bookId: string; quantity: number }[]; couponCode?: string | null; userId?: string | null }) =>
-    api.post<any>('/pricing/calculate', data),
+  calculate: (data: {
+    items: { bookId: string; quantity: number }[];
+    couponCode?: string | null;
+    userId?: string | null;
+    email?: string;
+    userEmail?: string;
+    phone?: string;
+    pincode?: string;
+    addressId?: string;
+    address?: any;
+    shippingMethod?: string;
+    paymentMethod?: string;
+    pointsUsed?: number;
+    walletUsed?: number;
+  }) => api.post<any>('/pricing/calculate', data),
 };
 
 export const authService = {
   login: (data: { email: string; password: string }) => api.post<any>('/auth/login', data),
   logout: () => api.post<any>('/auth/logout'),
   me: () => api.get<any>('/auth/me'),
+  googleAuth: (data: { credential: string }) => api.post<any>('/auth/google', data),
   devGoogleBypass: (data?: { email?: string; name?: string; googleId?: string; avatarUrl?: string }) =>
     api.post<any>('/auth/google/dev-bypass', data || {}),
 };

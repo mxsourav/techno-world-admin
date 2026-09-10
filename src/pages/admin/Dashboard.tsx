@@ -63,6 +63,7 @@ import SearchAnalyticsWorkspace from '@/components/admin/analytics/SearchAnalyti
 import PaymentsWorkspace from '@/components/admin/payments/PaymentsWorkspace';
 import BlogWorkspace from '@/components/admin/blog/BlogWorkspace';
 import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
+import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -211,6 +212,43 @@ export default function Dashboard() {
     isVerified: true,
     date: new Date().toISOString().split('T')[0],
   });
+
+  // Auto-Accept Orders Setting State (Default: ON)
+  const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(true);
+  const [isLoadingAutoAccept, setIsLoadingAutoAccept] = useState<boolean>(false);
+  const [cmsSubTab, setCmsSubTab] = useState<'visual' | 'hero_cover' | 'legacy'>('visual');
+
+  useEffect(() => {
+    adminService.getAutoAcceptSetting()
+      .then((res: any) => {
+        if (res?.success && typeof res.data?.enabled === 'boolean') {
+          setAutoAcceptEnabled(res.data.enabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleToggleAutoAccept = async () => {
+    const nextVal = !autoAcceptEnabled;
+    setIsLoadingAutoAccept(true);
+    try {
+      const res: any = await adminService.updateAutoAcceptSetting(nextVal);
+      if (res?.success) {
+        setAutoAcceptEnabled(nextVal);
+        if (nextVal) {
+          toast.success('⚡ Auto-Accept Orders ENABLED (Default). New orders will automatically confirm for packing.');
+        } else {
+          toast.info('Auto-Accept Orders DISABLED. New orders will wait in "To Accept" for manual approval.');
+        }
+      } else {
+        toast.error(res?.message || 'Failed to update Auto-Accept setting');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Error updating Auto-Accept setting');
+    } finally {
+      setIsLoadingAutoAccept(false);
+    }
+  };
 
 
   const [emailModalOrder, setEmailModalOrder] = useState<any | null>(null);
@@ -1760,8 +1798,52 @@ admin@technoworld.com`
               {/* Flipkart Seller Hub Header */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-black tracking-tight text-slate-900">Forward Orders</h2>
+
+                    {/* Auto-Accept Toggle Switch Button */}
+                    <button
+                      type="button"
+                      onClick={handleToggleAutoAccept}
+                      disabled={isLoadingAutoAccept}
+                      title="Auto-Accept Orders: When ON (Default), newly placed orders automatically move to 'To Pack'. India Post shipment booking remains manual."
+                      className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs border cursor-pointer ${
+                        autoAcceptEnabled
+                          ? 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400'
+                          : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      {isLoadingAutoAccept ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full transition-all ${
+                            autoAcceptEnabled
+                              ? 'bg-emerald-500 shadow-sm shadow-emerald-500 ring-2 ring-emerald-300 animate-pulse'
+                              : 'bg-slate-400'
+                          }`}
+                        />
+                      )}
+                      <span>Auto-Accept:</span>
+                      <span
+                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                          autoAcceptEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700'
+                        }`}
+                      >
+                        {autoAcceptEnabled ? 'ON' : 'OFF'}
+                      </span>
+                    </button>
+
+                    {/* Visual CMS Quick Launcher */}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/admin/dashboard?tab=cms')}
+                      className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-800 hover:bg-purple-100 transition-all shadow-2xs cursor-pointer"
+                      title="Open Visual On-Page Live CMS to modify website text"
+                    >
+                      <Edit3 className="h-3.5 w-3.5 text-purple-600" />
+                      <span>Visual CMS</span>
+                    </button>
                   </div>
 
                   {/* Search bar */}
@@ -4786,15 +4868,61 @@ admin@technoworld.com`
 
         {tab === 'cms' && (
           <div className="space-y-5">
-            <HeroBookCoverManager />
+            {/* Sub-tab navigation */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+              <button
+                type="button"
+                onClick={() => setCmsSubTab('visual')}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                  cmsSubTab === 'visual'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>🎨 Visual Live On-Page Editor</span>
+              </button>
 
-            <p className="text-sm text-slate-500">Edit homepage sections without touching code. Toggle sections on/off, update text, and save.</p>
-            {cmsSections.length === 0 ? (
-              <div className="py-12 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">No CMS sections found. Run the seed script first.</div>
-            ) : (
-              cmsSections.map(section => {
-                const cfg = cmsEditing[section.sectionKey] || {};
-                const updateField = (field: string, value: any) => {
+              <button
+                type="button"
+                onClick={() => setCmsSubTab('hero_cover')}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                  cmsSubTab === 'hero_cover'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <Box className="h-4 w-4" />
+                <span>3D Hero Book Cover</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCmsSubTab('legacy')}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition-all cursor-pointer ${
+                  cmsSubTab === 'legacy'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span>Section Toggles</span>
+              </button>
+            </div>
+
+            {cmsSubTab === 'visual' && <VisualCmsEditor />}
+
+            {cmsSubTab === 'hero_cover' && <HeroBookCoverManager />}
+
+            {cmsSubTab === 'legacy' && (
+              <div className="space-y-5">
+                <p className="text-sm text-slate-500">Edit homepage sections without touching code. Toggle sections on/off, update text, and save.</p>
+                {cmsSections.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">No CMS sections found. Run the seed script first.</div>
+                ) : (
+                  cmsSections.map(section => {
+                    const cfg = cmsEditing[section.sectionKey] || {};
+                    const updateField = (field: string, value: any) => {
                   setCmsEditing(prev => ({
                     ...prev,
                     [section.sectionKey]: { ...prev[section.sectionKey], [field]: value },
@@ -5023,6 +5151,8 @@ admin@technoworld.com`
             )}
           </div>
         )}
+      </div>
+    )}
 
         {tab === 'coupons' && (
           <div className="space-y-6">
@@ -6537,4 +6667,3 @@ admin@technoworld.com`
     </div>
   );
 }
-

@@ -43,6 +43,8 @@ export function generateAndPrintInvoice(order: any) {
   const paymentMethod = (order.paymentMethod || 'PREPAID').toUpperCase();
 
   const items = Array.isArray(order.items) ? order.items : [];
+  let totalConsignmentWeightGrams = 0;
+
   const itemsHtml = items.map((it: any, idx: number) => {
     const bk = it.book || {};
     const title = bk.title || it.title || 'Academic Title';
@@ -51,6 +53,26 @@ export function generateAndPrintInvoice(order: any) {
     const qty = it.quantity || it.qty || 1;
     const price = it.priceAtPurchase || it.unitPrice || it.price || 0;
     const total = qty * price;
+
+    // Automatic Book Weight Calculation (grams):
+    // 1) Explicit book weight (if defined in grams or converted from kg)
+    // 2) Page count paper density (~1.25g per page + 50g binding)
+    // 3) Standard textbook baseline (450g)
+    let unitWeightGrams = 450;
+    if (bk.weight && typeof bk.weight === 'number' && bk.weight > 0) {
+      unitWeightGrams = bk.weight < 10 ? Math.round(bk.weight * 1000) : Math.round(bk.weight);
+    } else if (bk.pages && typeof bk.pages === 'number' && bk.pages > 0) {
+      unitWeightGrams = Math.round(bk.pages * 1.25 + 50);
+    } else if (it.weight && typeof it.weight === 'number' && it.weight > 0) {
+      unitWeightGrams = it.weight < 10 ? Math.round(it.weight * 1000) : Math.round(it.weight);
+    }
+
+    const itemTotalWeightGrams = unitWeightGrams * qty;
+    totalConsignmentWeightGrams += itemTotalWeightGrams;
+
+    const weightDisplay = unitWeightGrams >= 1000
+      ? `${(unitWeightGrams / 1000).toFixed(2)} kg`
+      : `${unitWeightGrams}g`;
 
     return `
       <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -61,12 +83,16 @@ export function generateAndPrintInvoice(order: any) {
         </td>
         <td style="padding: 10px 8px; text-align: center; font-size: 12px; color: #475569; font-family: monospace;">${sku}</td>
         <td style="padding: 10px 8px; text-align: center; font-size: 12px; color: #64748b;">4901</td>
+        <td style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 600; color: #475569;">${weightDisplay}</td>
         <td style="padding: 10px 8px; text-align: center; font-weight: 600; font-size: 13px;">${qty}</td>
         <td style="padding: 10px 8px; text-align: right; font-weight: 600; font-size: 13px;">${formatINR(price)}</td>
         <td style="padding: 10px 8px; text-align: right; font-weight: 700; color: #0f172a; font-size: 13px;">${formatINR(total)}</td>
       </tr>
     `;
   }).join('');
+
+  const totalWeightKg = (totalConsignmentWeightGrams / 1000).toFixed(2);
+  const totalWeightDisplay = `${totalWeightKg} kg (${totalConsignmentWeightGrams}g)`;
 
   const html = `
     <!DOCTYPE html>
@@ -129,8 +155,9 @@ export function generateAndPrintInvoice(order: any) {
           <!-- Pickup / Delivery Info Banner -->
           <div style="margin-top: 20px; padding: 14px; border-radius: 8px; background: ${isPickup ? '#f0fdf4' : '#f8fafc'}; border: 1px solid ${isPickup ? '#bbf7d0' : '#e2e8f0'};">
             ${isPickup ? `
-              <div style="font-size: 12px; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px;">
-                🏪 STORE SELF-PICKUP (TAKEAWAY DESK)
+              <div style="font-size: 12px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between;">
+                <span>🏪 STORE SELF-PICKUP (TAKEAWAY DESK)</span>
+                <span style="font-size: 11px; font-weight: 700; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px;">Weight: ${totalWeightDisplay}</span>
               </div>
               <div style="margin-top: 6px; font-size: 12px; color: #14532d; line-height: 1.4;">
                 <b>Appointed Collection Slot:</b> ${pickupSlot}<br/>
@@ -138,8 +165,9 @@ export function generateAndPrintInvoice(order: any) {
                 <b>Collector:</b> ${customerName} &bull; +91 ${customerPhone} &bull; ${customerEmail}
               </div>
             ` : `
-              <div style="font-size: 12px; font-weight: 800; color: #1e293b;">
-                🚚 POSTAL DELIVERY (${order.shippingMethod === 'SPEED_POST' ? 'SPEED POST' : order.shippingMethod === 'EXPRESS_LOCAL' ? 'EXPRESS LOCAL' : 'INDIA POST / COURIER'})
+              <div style="font-size: 12px; font-weight: 800; color: #1e293b; display: flex; align-items: center; justify-content: space-between;">
+                <span>🚚 POSTAL DELIVERY (${order.shippingMethod === 'SPEED_POST' ? 'SPEED POST' : order.shippingMethod === 'EXPRESS_LOCAL' ? 'EXPRESS LOCAL' : 'INDIA POST / COURIER'})</span>
+                <span style="font-size: 11px; font-weight: 700; background: #e2e8f0; color: #334155; padding: 2px 6px; border-radius: 4px;">Weight: ${totalWeightDisplay}</span>
               </div>
               <div style="margin-top: 6px; font-size: 12px; color: #475569; line-height: 1.4;">
                 <b>Deliver to:</b> ${customerName}<br/>
@@ -155,11 +183,12 @@ export function generateAndPrintInvoice(order: any) {
               <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
                 <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 35px;">#</th>
                 <th style="padding: 10px 8px; text-align: left; font-size: 11px; font-weight: 800; color: #475569;">ITEM DESCRIPTION</th>
-                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 90px;">SKU</th>
-                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 60px;">HSN</th>
-                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 50px;">QTY</th>
+                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 85px;">SKU</th>
+                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 50px;">HSN</th>
+                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 65px;">WEIGHT</th>
+                <th style="padding: 10px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #475569; width: 45px;">QTY</th>
                 <th style="padding: 10px 8px; text-align: right; font-size: 11px; font-weight: 800; color: #475569; width: 80px;">RATE</th>
-                <th style="padding: 10px 8px; text-align: right; font-size: 11px; font-weight: 800; color: #475569; width: 90px;">TOTAL</th>
+                <th style="padding: 10px 8px; text-align: right; font-weight: 700; color: #0f172a; font-size: 13px; width: 90px;">TOTAL</th>
               </tr>
             </thead>
             <tbody>
@@ -168,7 +197,13 @@ export function generateAndPrintInvoice(order: any) {
           </table>
 
           <!-- Totals -->
-          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+          <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="font-size: 12px; color: #64748b; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 320px;">
+              <div style="font-weight: 800; color: #334155; margin-bottom: 2px;">Consignment Parcel Metric:</div>
+              <div>Total Books: <b>${items.reduce((s: number, it: any) => s + (it.quantity || it.qty || 1), 0)} items</b></div>
+              <div>Total Weight: <b>${totalWeightDisplay}</b></div>
+            </div>
+
             <div style="width: 280px; font-size: 13px;">
               <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
                 <span>Subtotal:</span>
