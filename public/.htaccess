@@ -1,11 +1,42 @@
+# ------------------------------------------------------------------------------
+# | Single Page Application (SPA) URL Rewriting for Apache & LiteSpeed        |
+# ------------------------------------------------------------------------------
+
 <IfModule mod_rewrite.c>
-    RewriteEngine On
+  RewriteEngine On
 
-    RewriteRule ^index\.html$ - [L]
+  # If the requested file or directory exists, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
 
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-l
-
-    RewriteRule . /index.html [L]
+  # Route all other URLs to index.html for client-side routing
+  RewriteRule ^ index.html [L]
 </IfModule>
+
+# Fallback for Apache 2.4+ / LiteSpeed if mod_rewrite is disabled
+<IfModule !mod_rewrite.c>
+  FallbackResource index.html
+</IfModule>
+
+# Disable Directory Browsing
+Options -Indexes
+
+# Proper MIME types for modern web assets
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType image/svg+xml .svg
+  AddType application/json .json
+  AddType font/woff .woff
+  AddType font/woff2 .woff2
+</IfModule>
+
+# Prevent caching of index.html so updates are immediate
+<Files "index.html">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </IfModule>
+</Files>
