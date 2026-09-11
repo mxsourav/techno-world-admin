@@ -35,7 +35,7 @@ import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 
-export const TAB_SECTIONS = [
+const TAB_SECTIONS = [
   {
     title: 'Favorites',
     tabs: [
@@ -76,13 +76,28 @@ export default function AdminLayout() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try { return localStorage.getItem('tw_admin_dark_mode') === 'true'; } catch { return false; }
   });
+
+  // Instantaneous theme toggle - All 3 parts flip colors simultaneously at once
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => {
-      const next = !prev;
-      try { localStorage.setItem('tw_admin_dark_mode', String(next)); } catch {}
-      return next;
-    });
+    const nextMode = !isDarkMode;
+    if (nextMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    setIsDarkMode(nextMode);
+    try {
+      localStorage.setItem('tw_admin_dark_mode', String(nextMode));
+    } catch {}
   };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     const handleAuthExpired = () => {
@@ -148,7 +163,7 @@ export default function AdminLayout() {
     }
     if (btnRef && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setFlyoutPos({ top: Math.max(8, rect.top - 8), left: 252 });
+      setFlyoutPos({ top: Math.max(8, rect.top - 8), left: Math.round(rect.right + 10) });
     }
     setActiveFlyout(flyout);
   };
@@ -222,43 +237,130 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
+    <div className={`flex h-screen overflow-hidden font-sans relative ${
+      isDarkMode ? 'dark bg-[#020713] text-white' : 'bg-[#f4f7fb] text-slate-900'
+    }`}>
+      {/* Fluid Iridescent Aura UI Background (Full Window - spans both Sidebar & Main Content) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+        {/* Base Atmosphere Canvas */}
+        <div className={`absolute inset-0 ${
+          isDarkMode ? 'bg-[#030712]' : 'bg-[#f4f7fb]'
+        }`} />
+
+        {/* Aura Wave 1: Sapphire & Royal Blue watercolor fold (Top-Right across main dashboard) */}
+        <div
+          className={`absolute -top-[10%] right-[5%] w-[900px] h-[900px] rounded-full filter blur-[140px] animate-fluid-aura-1 ${
+            isDarkMode ? 'opacity-90' : 'opacity-45'
+          }`}
+          style={{
+            background: isDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.65) 0%, rgba(67, 56, 202, 0.45) 40%, rgba(30, 27, 75, 0.20) 65%, transparent 80%)'
+              : 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.40) 0%, rgba(99, 102, 241, 0.22) 45%, transparent 75%)',
+          }}
+        />
+
+        {/* Aura Wave 2: Vibrant Electric Azure & Cobalt Core (Bottom-Left behind Sidebar) */}
+        <div
+          className={`absolute -bottom-[15%] -left-[10%] w-[950px] h-[950px] rounded-full filter blur-[150px] animate-fluid-aura-2 ${
+            isDarkMode ? 'opacity-95' : 'opacity-50'
+          }`}
+          style={{
+            background: isDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(2, 132, 199, 0.65) 0%, rgba(14, 165, 233, 0.45) 40%, rgba(30, 58, 138, 0.20) 65%, transparent 80%)'
+              : 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.38) 0%, rgba(37, 99, 235, 0.20) 45%, transparent 75%)',
+          }}
+        />
+
+        {/* Aura Wave 3: Soft Aquamarine & Cyan Mist Glow (Center / Top-Left) */}
+        <div
+          className={`absolute top-[10%] left-[20%] w-[850px] h-[850px] rounded-full filter blur-[130px] animate-fluid-aura-3 ${
+            isDarkMode ? 'opacity-85' : 'opacity-40'
+          }`}
+          style={{
+            background: isDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.55) 0%, rgba(20, 184, 166, 0.35) 40%, rgba(14, 116, 144, 0.15) 65%, transparent 80%)'
+              : 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.32) 0%, rgba(45, 212, 191, 0.18) 40%, transparent 75%)',
+          }}
+        />
+
+        {/* Aura Wave 4: Deep Twilight Violet & Indigo Ribbon (Bottom-Right across main dashboard) */}
+        <div
+          className={`absolute -bottom-[10%] right-[10%] w-[900px] h-[900px] rounded-full filter blur-[160px] animate-fluid-aura-4 ${
+            isDarkMode ? 'opacity-90' : 'opacity-40'
+          }`}
+          style={{
+            background: isDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.60) 0%, rgba(124, 58, 237, 0.35) 40%, rgba(49, 46, 129, 0.15) 65%, transparent 80%)'
+              : 'radial-gradient(ellipse at center, rgba(129, 140, 248, 0.30) 0%, rgba(99, 102, 241, 0.16) 50%, transparent 80%)',
+          }}
+        />
+
+        {/* Aura Wave 5: Ambient Cerulean & Deep Sky Ocean (Directly beneath main workspace content) */}
+        <div
+          className={`absolute top-[35%] right-[25%] w-[850px] h-[850px] rounded-full filter blur-[150px] animate-fluid-aura-2 ${
+            isDarkMode ? 'opacity-85' : 'opacity-35'
+          }`}
+          style={{
+            background: isDarkMode
+              ? 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.50) 0%, rgba(37, 99, 235, 0.30) 45%, rgba(2, 6, 23, 0.10) 70%, transparent 85%)'
+              : 'radial-gradient(ellipse at center, rgba(56, 189, 248, 0.30) 0%, rgba(99, 102, 241, 0.15) 45%, transparent 80%)',
+          }}
+        />
+
+        {/* Photographic Tactile Film Grain Depth Layer (Hardcoded: Opacity 100%, Speed 27 [0.044s], Size 40px, Density 0.10) */}
+        <div
+          className="absolute -inset-[30%] w-[160%] h-[160%] pointer-events-none z-[3] mix-blend-overlay animate-grain-movement"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.10' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.7'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '40px 40px',
+            opacity: 1,
+            animationDuration: '0.044s',
+          }}
+        />
+      </div>
+
       {/* Sidebar - Apple macOS Authentic Frosted Glass with Traffic Lights */}
-      <aside className={`w-64 flex-shrink-0 macos-sidebar flex flex-col h-full relative z-30 overflow-x-hidden overflow-y-hidden shadow-xs transition-colors duration-200 ${
+      <aside className={`w-72 flex-shrink-0 macos-sidebar flex flex-col h-full relative z-20 overflow-x-hidden overflow-y-hidden shadow-xs ${
         isDarkMode ? 'dark-sidebar' : ''
       }`}>
         {/* macOS Traffic Lights + Sidebar Panel Toggle */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2.5">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
-            <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
-            <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
+        <div className="flex items-center justify-between px-6 pt-5 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
+            <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
+            <span className="w-3.5 h-3.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
           </div>
           <button
             type="button"
             title="Toggle Sidebar"
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
           >
-            <PanelLeft className="w-4 h-4" />
+            <PanelLeft className="w-4.5 h-4.5" />
           </button>
         </div>
 
-        {/* Store Info Banner */}
-        <div className="px-4 py-2.5 mx-2.5 flex items-center gap-3 border-b border-slate-200/60 dark:border-white/[0.06] flex-shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 flex items-center justify-center shadow-xs shrink-0">
-            <Store className="h-4.5 w-4.5" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-slate-900 dark:text-white font-bold text-sm leading-tight tracking-tight truncate">Admin Portal</h2>
-            <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium truncate">Techno World Books</p>
-          </div>
-        </div>
+        {/* Store Info Banner with Techno World Black Logo & Bold Super Admin Label */}
+        <Link
+          to="/admin/dashboard"
+          className="px-5 py-3.5 mx-3 flex flex-col items-start gap-1 border-b border-slate-200/60 dark:border-white/[0.06] flex-shrink-0 group hover:opacity-90 transition-opacity"
+          title="Go to Admin Dashboard"
+        >
+          <img
+            src="/techno_world_black.png"
+            alt="Techno World"
+            className="h-8 w-auto max-w-[195px] object-contain object-left dark:brightness-0 dark:invert transition-transform group-hover:scale-[1.01]"
+          />
+          <span className="text-[13px] font-bold text-black dark:text-white tracking-tight leading-none mt-1">
+            Super Admin
+          </span>
+        </Link>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3.5 px-3 space-y-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {TAB_SECTIONS.map((section) => (
-            <div key={section.title} className="space-y-0.5">
-              <div className="text-[11px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider px-3 pb-1 select-none">
+            <div key={section.title} className="space-y-1">
+              <div className="text-[11.5px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider px-3.5 pt-1.5 pb-1 select-none">
                 {section.title}
               </div>
               {section.tabs.map((t) => {
@@ -268,29 +370,43 @@ export default function AdminLayout() {
 
                 let linkTo = `/admin/dashboard?tab=${t.id}`;
                 if (t.id === 'orders') linkTo = `/admin/dashboard?tab=orders&stage=to_accept`;
-                if (t.id === 'payments') linkTo = `/admin/dashboard?tab=payments&sub=overview`;
 
                 return (
                   <div
                     key={t.id}
                     ref={btnRef}
+                    onMouseEnter={() => {
+                      if (hasFlyout) {
+                        openFlyout(t.id as ActiveFlyout, btnRef);
+                      } else {
+                        if (flyoutTimerRef.current) {
+                          clearTimeout(flyoutTimerRef.current);
+                          flyoutTimerRef.current = null;
+                        }
+                        setActiveFlyout(null);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (hasFlyout) {
+                        closeFlyoutWithDelay();
+                      }
+                    }}
                     className="relative"
-                    onMouseEnter={hasFlyout ? () => openFlyout(t.id as ActiveFlyout, btnRef) : closeFlyoutImmediately}
-                    onMouseLeave={hasFlyout ? closeFlyoutWithDelay : undefined}
                   >
                     <Link
                       to={linkTo}
-                      onClick={closeFlyoutImmediately}
-                      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
-                        isActive ? 'macos-tab-active' : 'macos-tab-inactive'
+                      className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 outline-none focus:outline-none focus:ring-0 ${
+                        isActive
+                          ? 'macos-tab-active font-semibold'
+                          : 'macos-tab-inactive'
                       }`}
                     >
-                      <t.icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{t.name}</span>
-                      {t.id === 'orders' && pendingCount > 0 && (
-                        <span className="ml-auto rounded-full bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 shadow-xs animate-pulse">
-                          {pendingCount}
-                        </span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <t.icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+                        <span className="truncate">{t.name}</span>
+                      </div>
+                      {hasFlyout && (
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-40" />
                       )}
                     </Link>
                   </div>
@@ -301,12 +417,12 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-3 border-t border-slate-200/70 dark:border-white/[0.08] flex-shrink-0">
+        <div className="p-3.5 border-t border-slate-200/70 dark:border-white/[0.08] flex-shrink-0">
           <button
             onClick={logout}
-            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 dark:text-neutral-400 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors"
+            className="flex items-center gap-3.5 w-full px-3.5 py-2.5 rounded-xl text-[14px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 dark:text-neutral-400 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors outline-none focus:outline-none focus:ring-0"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} />
             Logout
           </button>
         </div>
@@ -314,80 +430,13 @@ export default function AdminLayout() {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col min-w-0 h-full relative overflow-hidden ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}
+        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}
       >
-        {/* Fluid Iridescent Aura UI Background with Film Grain Texture */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
-          {/* Base Atmosphere Canvas */}
-          <div className={`absolute inset-0 transition-colors duration-500 ${
-            isDarkMode ? 'bg-[#020713]' : 'bg-[#f4f7fb]'
-          }`} />
-
-          {/* Aura Wave 1: Deep Sapphire / Royal Blue Fold (Top-Right / Center) */}
-          <div
-            className={`absolute -top-[15%] -right-[10%] w-[850px] h-[850px] rounded-full filter blur-[90px] animate-fluid-aura-1 transition-opacity duration-700 ${
-              isDarkMode ? 'opacity-90' : 'opacity-45'
-            }`}
-            style={{
-              background: isDarkMode
-                ? 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.90) 0%, rgba(30, 27, 75, 0.75) 45%, rgba(2, 6, 23, 0) 75%)'
-                : 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.55) 0%, rgba(99, 102, 241, 0.35) 45%, rgba(255, 255, 255, 0) 75%)',
-            }}
-          />
-
-          {/* Aura Wave 2: Vibrant Electric Cobalt Blue Core (Bottom-Left / Center) */}
-          <div
-            className={`absolute -bottom-[20%] -left-[15%] w-[900px] h-[900px] rounded-full filter blur-[95px] animate-fluid-aura-2 transition-opacity duration-700 ${
-              isDarkMode ? 'opacity-95' : 'opacity-50'
-            }`}
-            style={{
-              background: isDarkMode
-                ? 'radial-gradient(ellipse at center, rgba(2, 132, 199, 0.95) 0%, rgba(37, 99, 235, 0.75) 40%, rgba(15, 23, 42, 0) 75%)'
-                : 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.55) 0%, rgba(37, 99, 235, 0.35) 45%, rgba(255, 255, 255, 0) 75%)',
-            }}
-          />
-
-          {/* Aura Wave 3: Luminous Cyan & Turquoise Glow (Top-Left / Center Fold) */}
-          <div
-            className={`absolute top-[10%] -left-[10%] w-[750px] h-[750px] rounded-full filter blur-[80px] animate-fluid-aura-3 transition-opacity duration-700 ${
-              isDarkMode ? 'opacity-80' : 'opacity-40'
-            }`}
-            style={{
-              background: isDarkMode
-                ? 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.85) 0%, rgba(14, 165, 233, 0.60) 40%, rgba(2, 6, 23, 0) 75%)'
-                : 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.45) 0%, rgba(45, 212, 191, 0.30) 40%, rgba(255, 255, 255, 0) 75%)',
-            }}
-          />
-
-          {/* Aura Wave 4: Deep Twilight Violet & Indigo Velvet Ribbon (Bottom-Right) */}
-          <div
-            className={`absolute bottom-[5%] right-[5%] w-[800px] h-[800px] rounded-full filter blur-[100px] animate-fluid-aura-4 transition-opacity duration-700 ${
-              isDarkMode ? 'opacity-85' : 'opacity-35'
-            }`}
-            style={{
-              background: isDarkMode
-                ? 'radial-gradient(ellipse at center, rgba(79, 70, 229, 0.70) 0%, rgba(30, 58, 138, 0.55) 50%, rgba(2, 6, 23, 0) 80%)'
-                : 'radial-gradient(ellipse at center, rgba(129, 140, 248, 0.45) 0%, rgba(99, 102, 241, 0.25) 50%, rgba(255, 255, 255, 0) 80%)',
-            }}
-          />
-
-          {/* Deep Velvet Shadows Contrast (Matches darker folds in user reference) */}
-          {isDarkMode && (
-            <>
-              <div className="absolute top-0 right-0 w-[55%] h-[55%] pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(2,6,23,0.85)_0%,transparent_70%)]" />
-              <div className="absolute bottom-0 left-0 w-[50%] h-[50%] pointer-events-none bg-[radial-gradient(ellipse_at_bottom_left,rgba(2,6,23,0.85)_0%,transparent_70%)]" />
-            </>
-          )}
-
-          {/* Fine Photographic Film Grain Texture Layer */}
-          <div className="absolute inset-0 grain-overlay pointer-events-none z-[3] opacity-35 dark:opacity-45 mix-blend-overlay" />
-        </div>
-
         {/* Top Header — Frosted Glass */}
         <header className={`h-16 flex items-center justify-between px-6 sm:px-8 flex-shrink-0 z-20 relative ${
           isDarkMode
-            ? 'bg-[#0a0a0c]/85 backdrop-blur-2xl border-b border-white/[0.08]'
-            : 'bg-white/60 backdrop-blur-2xl border-b border-white/40 shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]'
+            ? 'bg-[#0a0a0c]/65 backdrop-blur-2xl border-b border-white/[0.08]'
+            : 'bg-white/50 backdrop-blur-2xl border-b border-white/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
         }`}>
           {/* Breadcrumbs */}
           <div className="flex items-center text-sm font-medium min-w-0 pr-4">
@@ -421,30 +470,49 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Apple macOS Segmented Group: Mode Toggle + Notifications */}
-            <div className="apple-segmented-group shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Sun <-> Moon Animated Toggle Pill (Moon in Blue, Sun in Amber-Orange) */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              className="apple-pill-btn apple-pill-circle w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 outline-none focus:outline-none focus:ring-0 cursor-pointer overflow-hidden relative"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <div className={`relative w-4.5 h-4.5 flex items-center justify-center transition-transform duration-500 ${isDarkMode ? 'rotate-[360deg]' : 'rotate-0'}`}>
+                {/* Sun icon: Warm Amber-Orange (between yellow and orange) */}
+                <Sun
+                  className={`h-4.5 w-4.5 absolute transition-all duration-300 transform ${
+                    isDarkMode
+                      ? 'rotate-90 scale-0 opacity-0'
+                      : 'rotate-0 scale-100 opacity-100 text-[#f59e0b] drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                  }`}
+                  strokeWidth={2.2}
+                />
+                {/* Moon icon: Blue */}
+                <Moon
+                  className={`h-4.5 w-4.5 absolute transition-all duration-300 transform ${
+                    isDarkMode
+                      ? 'rotate-0 scale-100 opacity-100 text-[#38bdf8] drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]'
+                      : '-rotate-90 scale-0 opacity-0'
+                  }`}
+                  strokeWidth={2.2}
+                />
+              </div>
+            </button>
+
+            {/* Notification Bell Circle */}
+            <div className="relative" ref={notifRef}>
               <button
                 type="button"
-                onClick={toggleDarkMode}
-                className="px-2.5 py-1.5"
-                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="apple-pill-btn apple-pill-circle w-9 h-9 rounded-full flex items-center justify-center relative outline-none focus:outline-none focus:ring-0 cursor-pointer"
+                title="Orders requiring review"
               >
-                {isDarkMode ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4 text-slate-600" />}
+                <Bell className={`h-4 w-4 ${isDarkMode ? 'text-neutral-300' : 'text-slate-600'}`} strokeWidth={1.8} />
+                {pendingCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-rose-600 shadow animate-pulse" />
+                )}
               </button>
-
-              <div className="relative" ref={notifRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="relative px-2.5 py-1.5"
-                  title="Orders requiring review"
-                >
-                  <Bell className="h-4 w-4" />
-                  {pendingCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-rose-600 shadow animate-pulse" />
-                  )}
-                </button>
 
               {/* Notification Popover Dropdown */}
               {isNotifOpen && (
@@ -533,7 +601,6 @@ export default function AdminLayout() {
                   </div>
                 </div>
               )}
-              </div>
             </div>
 
             <a
@@ -557,7 +624,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className={`flex-1 overflow-auto relative z-10 ${currentTab === 'cms' ? 'p-1 sm:p-2' : 'p-3 sm:p-5 lg:p-6'}`}>
+        <main className={`flex-1 overflow-auto ${currentTab === 'cms' ? 'p-1 sm:p-2' : 'p-3 sm:p-5 lg:p-6'}`}>
           <Outlet />
         </main>
       </div>

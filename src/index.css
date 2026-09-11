@@ -247,20 +247,34 @@ header.dark-header {
   user-select: none;
 }
 
-.apple-segmented-group > button,
-.apple-segmented-group > a,
-.apple-segmented-group > div {
+.apple-segmented-group button,
+.apple-segmented-group a,
+.apple-segmented-group div,
+.dark-content .apple-segmented-group button,
+.dark .apple-segmented-group button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 0.8rem;
+  padding: 0.4rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--apple-btn-text) !important;
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
   cursor: pointer;
+  border-radius: 0 !important;
   transition: all 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-segmented-group button:focus,
+.apple-segmented-group button:focus-visible,
+.dark-content .apple-segmented-group button:focus,
+.dark-content .apple-segmented-group button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .apple-segmented-group > button *,
@@ -273,14 +287,16 @@ header.dark-header {
   stroke-width: 1.8px !important;
 }
 
-.apple-segmented-group > button:hover,
-.apple-segmented-group > a:hover {
+.apple-segmented-group button:hover,
+.apple-segmented-group a:hover,
+.dark-content .apple-segmented-group button:hover {
   background: var(--apple-btn-bg-hover) !important;
+  color: #ffffff !important;
 }
 
-.apple-segmented-group > button:active,
-.apple-segmented-group > a:active {
-  transform: scale(0.965);
+.apple-segmented-group button:active,
+.apple-segmented-group a:active {
+  transform: scale(0.95);
 }
 
 /* Hairline dividers between adjacent buttons inside group */
@@ -339,7 +355,7 @@ a[role="button"]:active {
   backdrop-filter: blur(16px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   font-weight: 600 !important;
-  border-radius: 9999px !important;
+  border-radius: 12px !important;
 }
 
 .glass-tab-active * {
@@ -361,7 +377,7 @@ a[role="button"]:active {
   box-shadow: var(--apple-btn-shadow) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-radius: 9999px !important;
+  border-radius: 12px !important;
 }
 
 .glass-tab-inactive * {
@@ -464,24 +480,36 @@ a[role="button"]:active {
    ========================================================================== */
 
 .macos-sidebar {
-  background: rgba(246, 246, 248, 0.86) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  background: rgba(246, 246, 248, 0.70) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
   border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 .dark .macos-sidebar,
 .dark-sidebar.macos-sidebar {
-  background: rgba(24, 24, 27, 0.88) !important;
+  background: rgba(13, 19, 36, 0.70) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset -1px 0 0 rgba(255, 255, 255, 0.05), 4px 0 30px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Authentic macOS Sidebar Items — Clean Neutral Pill (NO GREEN) */
+.macos-tab-active,
+.macos-tab-inactive,
+.macos-tab-active:focus,
+.macos-tab-inactive:focus,
+.macos-tab-active:focus-visible,
+.macos-tab-inactive:focus-visible {
+  outline: none !important;
+}
+
 .macos-tab-active {
-  background: rgba(0, 0, 0, 0.08) !important;
+  background: rgba(0, 0, 0, 0.075) !important;
   color: #0f172a !important;
   font-weight: 600 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
 }
 
 .macos-tab-active * {
@@ -495,8 +523,9 @@ a[role="button"]:active {
 
 .dark .macos-tab-active,
 .dark-sidebar .macos-tab-active {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.13) !important;
   color: #ffffff !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .dark .macos-tab-active *,
@@ -661,54 +690,54 @@ a[role="button"]:active {
 }
 
 /* ==========================================================================
-   Fluid Iridescent Aura Keyframes (Slow Organic Mixing & Grain Texture)
+   Fluid Iridescent Aura Keyframes (Slow, Organic Watercolor Mixing in Fluid)
    ========================================================================== */
 @keyframes fluid-aura-1 {
   0% {
     transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1);
-    border-radius: 44% 56% 68% 32% / 46% 44% 56% 54%;
+    border-radius: 46% 54% 62% 38% / 48% 46% 54% 52%;
   }
   33% {
-    transform: translate3d(8%, -12%, 0) rotate(115deg) scale(1.15);
-    border-radius: 56% 44% 34% 66% / 54% 64% 36% 46%;
+    transform: translate3d(6%, -8%, 0) rotate(115deg) scale(1.12);
+    border-radius: 56% 44% 40% 60% / 54% 60% 40% 46%;
   }
   66% {
-    transform: translate3d(-10%, 8%, 0) rotate(235deg) scale(0.92);
-    border-radius: 34% 66% 64% 36% / 44% 46% 54% 56%;
+    transform: translate3d(-8%, 6%, 0) rotate(235deg) scale(0.94);
+    border-radius: 38% 62% 58% 42% / 46% 48% 52% 54%;
   }
   100% {
     transform: translate3d(0%, 0%, 0) rotate(360deg) scale(1);
-    border-radius: 44% 56% 68% 32% / 46% 44% 56% 54%;
+    border-radius: 46% 54% 62% 38% / 48% 46% 54% 52%;
   }
 }
 
 @keyframes fluid-aura-2 {
   0% {
-    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1.1);
-    border-radius: 60% 40% 52% 48% / 38% 62% 38% 62%;
+    transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1.05);
+    border-radius: 58% 42% 50% 50% / 42% 58% 42% 58%;
   }
   50% {
-    transform: translate3d(-14%, -10%, 0) rotate(-180deg) scale(0.92);
-    border-radius: 42% 58% 36% 64% / 62% 38% 62% 38%;
+    transform: translate3d(-10%, -8%, 0) rotate(-180deg) scale(0.95);
+    border-radius: 44% 56% 40% 60% / 58% 42% 58% 42%;
   }
   100% {
-    transform: translate3d(0%, 0%, 0) rotate(-360deg) scale(1.1);
-    border-radius: 60% 40% 52% 48% / 38% 62% 38% 62%;
+    transform: translate3d(0%, 0%, 0) rotate(-360deg) scale(1.05);
+    border-radius: 58% 42% 50% 50% / 42% 58% 42% 58%;
   }
 }
 
 @keyframes fluid-aura-3 {
   0% {
     transform: translate3d(0%, 0%, 0) rotate(0deg) scale(0.96);
-    border-radius: 50% 50% 42% 58% / 42% 58% 50% 50%;
+    border-radius: 50% 50% 45% 55% / 45% 55% 50% 50%;
   }
   50% {
-    transform: translate3d(12%, 14%, 0) rotate(165deg) scale(1.2);
-    border-radius: 66% 34% 56% 44% / 52% 44% 56% 48%;
+    transform: translate3d(10%, 10%, 0) rotate(165deg) scale(1.15);
+    border-radius: 62% 38% 54% 46% / 50% 46% 54% 50%;
   }
   100% {
     transform: translate3d(0%, 0%, 0) rotate(360deg) scale(0.96);
-    border-radius: 50% 50% 42% 58% / 42% 58% 50% 50%;
+    border-radius: 50% 50% 45% 55% / 45% 55% 50% 50%;
   }
 }
 
@@ -717,7 +746,7 @@ a[role="button"]:active {
     transform: translate3d(0%, 0%, 0) rotate(0deg) scale(1.02);
   }
   50% {
-    transform: translate3d(-12%, 14%, 0) rotate(-135deg) scale(1.15);
+    transform: translate3d(-8%, 10%, 0) rotate(-135deg) scale(1.12);
   }
   100% {
     transform: translate3d(0%, 0%, 0) rotate(-360deg) scale(1.02);
@@ -725,30 +754,55 @@ a[role="button"]:active {
 }
 
 .animate-fluid-aura-1 {
-  animation: fluid-aura-1 32s ease-in-out infinite;
+  animation: fluid-aura-1 36s ease-in-out infinite;
   will-change: transform, border-radius;
 }
 
 .animate-fluid-aura-2 {
-  animation: fluid-aura-2 38s ease-in-out infinite;
+  animation: fluid-aura-2 44s ease-in-out infinite;
   will-change: transform, border-radius;
 }
 
 .animate-fluid-aura-3 {
-  animation: fluid-aura-3 46s ease-in-out infinite;
+  animation: fluid-aura-3 52s ease-in-out infinite;
   will-change: transform, border-radius;
 }
 
 .animate-fluid-aura-4 {
-  animation: fluid-aura-4 54s ease-in-out infinite;
+  animation: fluid-aura-4 60s ease-in-out infinite;
   will-change: transform;
 }
 
-/* Photographic Film Grain Texture Layer */
+/* Hardcoded Tactile Film Grain: Density 0.10, Size 40px, Flutter 0.044s (Speed 27), Opacity 100% */
 .grain-overlay {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.10' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.7'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 160px 160px;
+  background-size: 40px 40px;
+}
+
+/* ==========================================================================
+   Tactile Film Grain Random Movement Flutter Animation (Speed: 27 / 0.044s)
+   ========================================================================== */
+@keyframes grain-particle-flutter {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-3%, -2%); }
+  20% { transform: translate(2%, 3%); }
+  30% { transform: translate(-2%, 2%); }
+  40% { transform: translate(3%, -1%); }
+  50% { transform: translate(-1%, 3%); }
+  60% { transform: translate(2%, -3%); }
+  70% { transform: translate(-3%, -1%); }
+  80% { transform: translate(1%, 2%); }
+  90% { transform: translate(-2%, -2%); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-grain-movement {
+  animation-name: grain-particle-flutter;
+  animation-duration: 0.044s;
+  animation-timing-function: steps(1);
+  animation-iteration-count: infinite;
+  will-change: transform;
 }
 
 /* Glass Inputs (Light Mode) */
@@ -803,42 +857,94 @@ a[role="button"]:active {
    ========================================================================== */
 
 .dark-content {
-  background: #000000 !important;
+  background: transparent !important;
 }
 
+/* Primary Card Backgrounds & Semi-transparent Containers */
 .dark-content div.bg-white,
 .dark-content section.bg-white,
 .dark-content article.bg-white,
+.dark-content div[class*="bg-white/"],
+.dark-content section[class*="bg-white/"],
+.dark-content article[class*="bg-white/"],
+.dark-content div[class*="to-white"],
+.dark-content div[class*="from-white"],
+.dark-content section[class*="from-white"],
 .dark-content .glass-card {
-  background: rgba(20, 20, 24, 0.85) !important;
-  backdrop-filter: blur(40px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  background: rgba(13, 19, 36, 0.72) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   color: #f5f5f7 !important;
 }
 
-.dark-content div.bg-slate-50,
-.dark-content section.bg-slate-50 {
-  background: rgba(255, 255, 255, 0.035) !important;
+/* Universal Dossier Lookup & Gradient Accent Cards (Screenshot 1) */
+.dark-content div[class*="from-blue-50"],
+.dark-content div[class*="from-blue-100"] {
+  background: linear-gradient(135deg, rgba(23, 37, 84, 0.50) 0%, rgba(30, 27, 75, 0.35) 50%, rgba(15, 23, 42, 0.60) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.20) !important;
+  color: #f1f5f9 !important;
 }
 
-.dark-content div.bg-slate-100,
-.dark-content section.bg-slate-100 {
-  background: rgba(255, 255, 255, 0.05) !important;
+.dark-content div[class*="bg-blue-50"],
+.dark-content section[class*="bg-blue-50"] {
+  background: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(96, 165, 250, 0.30) !important;
+  color: #bfdbfe !important;
 }
 
+.dark-content div[class*="bg-blue-50"] p,
+.dark-content div[class*="bg-blue-50"] span {
+  color: #bfdbfe !important;
+}
+
+/* Sub-panels, Filter Bars & Slate Insets (Screenshot 2, 3) */
+.dark-content div[class*="bg-slate-50"],
+.dark-content section[class*="bg-slate-50"],
+.dark-content div[class*="bg-slate-100"],
+.dark-content section[class*="bg-slate-100"],
+.dark-content div[class*="bg-slate-200"],
+.dark-content div[class*="bg-gray-50"],
+.dark-content div[class*="bg-gray-100"] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
+}
+
+/* Low Stock Alerts (Rose Accent) */
+.dark-content div[class*="bg-rose-50"],
+.dark-content .bg-rose-50 {
+  background: rgba(88, 28, 45, 0.35) !important;
+  border-color: rgba(244, 63, 94, 0.25) !important;
+  color: #fecdd3 !important;
+}
+
+.dark-content div[class*="bg-rose-50"] * {
+  color: #fecdd3 !important;
+}
+
+.dark-content div[class*="bg-rose-50"] button {
+  background: rgba(225, 29, 72, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.35) !important;
+  color: #ffffff !important;
+}
+
+/* Translucent Dividers & Borders */
 .dark-content .border-slate-200,
 .dark-content .border-slate-100,
-.dark-content .border-slate-300 {
+.dark-content .border-slate-300,
+.dark-content [class*="border-slate-"] {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .dark-content .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
-.dark-content .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+.dark-content .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+.dark-content [class*="divide-slate"] > :not([hidden]) ~ :not([hidden]) {
   border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
+/* High-Contrast Crisp Typography */
 .dark-content .text-slate-900,
 .dark-content .text-slate-800 {
   color: #ffffff !important;
@@ -854,10 +960,16 @@ a[role="button"]:active {
   color: #8e8e93 !important;
 }
 
-/* Glass Buttons (Dark Mode) */
+/* Frosted Dark Buttons (Screenshot 1, 2, 4) */
 .dark-content .glass-btn,
 .dark-content button.glass-btn,
-.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]) {
+.dark-content button.bg-white,
+.dark-content button[class*="bg-white"],
+.dark-content button[class*="bg-slate-50"],
+.dark-content button[class*="bg-slate-100"],
+.dark-content button[class*="bg-blue-100"],
+.dark-content a[class*="bg-white"],
+.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose-6"]):not([class*="bg-red-6"]):not([class*="bg-amber-6"]):not([class*="bg-blue-6"]):not([class*="bg-purple-6"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not(.apple-segmented-group button):not(.apple-segmented-group *) {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -873,7 +985,12 @@ a[role="button"]:active {
 
 .dark-content .glass-btn:hover,
 .dark-content button.glass-btn:hover,
-.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):hover {
+.dark-content button.bg-white:hover,
+.dark-content button[class*="bg-white"]:hover,
+.dark-content button[class*="bg-slate-50"]:hover,
+.dark-content button[class*="bg-slate-100"]:hover,
+.dark-content button[class*="bg-blue-100"]:hover,
+.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose-6"]):not([class*="bg-red-6"]):not([class*="bg-amber-6"]):not([class*="bg-blue-6"]):not([class*="bg-purple-6"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not(.apple-segmented-group button):not(.apple-segmented-group *):hover {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.09) 100%) !important;
   border-color: rgba(255, 255, 255, 0.22) !important;
   border-top-color: rgba(255, 255, 255, 0.35) !important;
@@ -885,8 +1002,7 @@ a[role="button"]:active {
 }
 
 .dark-content .glass-btn:active,
-.dark-content button.glass-btn:active,
-.dark-content button:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-blue-6"]):not([class*="bg-blue-7"]):not([class*="bg-purple-6"]):not([class*="bg-purple-7"]):not([class*="bg-transparent"]):not([class*="hover:bg-transparent"]):not([class*="text-rose"]):not([class*="text-emerald"]):active {
+.dark-content button.glass-btn:active {
   background: rgba(255, 255, 255, 0.06) !important;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
   transform: translateY(0.5px) scale(0.985);
@@ -924,10 +1040,21 @@ a[role="button"]:active {
   color: #ffffff !important;
 }
 
-/* Glass Tables (Dark Mode) */
+/* Glass Tables & Table Headers (Screenshot 2, 4) */
+.dark-content table thead,
+.dark-content table thead tr,
+.dark-content table thead th,
+.dark-content thead[class*="bg-slate"],
+.dark-content thead[class*="bg-white"],
+.dark-content table thead tr th {
+  background: rgba(11, 16, 30, 0.95) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 .dark-content table th {
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: #8e8e93 !important;
+  background: rgba(11, 16, 30, 0.95) !important;
+  color: #94a3b8 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -936,31 +1063,112 @@ a[role="button"]:active {
   color: #e5e5ea !important;
 }
 
+.dark-content table tbody tr,
+.dark-content table tbody tr[class*="hover:bg-slate"]:hover,
+.dark-content table tbody tr:hover,
 .dark-content table tr:hover td {
-  background: rgba(255, 255, 255, 0.035) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Slim Translucent Scrollbars */
-.dark-content ::-webkit-scrollbar,
-.glass-light ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+/* Translucent Badges & Tags (Screenshot 1, 4) */
+.dark-content span[class*="bg-blue-50"],
+.dark-content span[class*="bg-blue-100"],
+.dark-content div[class*="bg-blue-100"]:not(.h-10):not(.w-10):not(.w-12):not(.w-14) {
+  background: rgba(59, 130, 246, 0.16) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  color: #93c5fd !important;
 }
-.dark-content ::-webkit-scrollbar-track,
-.glass-light ::-webkit-scrollbar-track {
-  background: transparent;
+
+.dark-content span[class*="bg-amber-50"],
+.dark-content span[class*="bg-amber-100"] {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(251, 191, 36, 0.28) !important;
+  color: #fcd34d !important;
 }
-.glass-light ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+
+.dark-content span[class*="bg-emerald-50"],
+.dark-content span[class*="bg-emerald-100"] {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(52, 211, 153, 0.28) !important;
+  color: #6ee7b7 !important;
+}
+
+.dark-content span[class*="bg-rose-50"],
+.dark-content span[class*="bg-rose-100"] {
+  background: rgba(244, 63, 94, 0.16) !important;
+  border-color: rgba(251, 113, 133, 0.28) !important;
+  color: #fda4af !important;
+}
+
+.dark-content span[class*="bg-purple-50"],
+.dark-content span[class*="bg-purple-100"] {
+  background: rgba(168, 85, 247, 0.16) !important;
+  border-color: rgba(192, 132, 252, 0.28) !important;
+  color: #d8b4fe !important;
+}
+
+/* Modals, Popovers & Dropdowns */
+.dark-content div[class*="shadow-xl"][class*="bg-white"],
+.dark-content div[class*="shadow-2xl"][class*="bg-white"] {
+  background: rgba(14, 20, 38, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* Authentic macOS Overlay Scrollbars — Floating pill thumb, transparent track, no arrow buttons */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+}
+
+.dark *,
+.dark-content * {
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track-piece {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.18);
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
 }
-.glass-light ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.22);
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.35);
 }
+
+.dark ::-webkit-scrollbar-thumb,
 .dark-content ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
+
+.dark ::-webkit-scrollbar-thumb:hover,
 .dark-content ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background-color: rgba(255, 255, 255, 0.38);
 }
