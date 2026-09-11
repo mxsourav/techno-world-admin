@@ -35,7 +35,16 @@ jobs:
 
       - name: Deploy to Hostinger
         run: |
+          TARGET_DIR="${{ secrets.HOSTINGER_WEB_ROOT }}"
+          TARGET_DIR="${TARGET_DIR%/}"
+          
+          echo "Ensuring remote web root exists on Hostinger..."
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.HOSTINGER_PORT }} \
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_IP }} \
+            "mkdir -p '$TARGET_DIR' && ls -ld '$TARGET_DIR'"
+          
+          echo "Syncing build artifacts..."
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.HOSTINGER_PORT }}" \
             dist/ \
-            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_IP }}:${{ secrets.HOSTINGER_WEB_ROOT }}/
+            ${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_IP }}:"$TARGET_DIR/"
