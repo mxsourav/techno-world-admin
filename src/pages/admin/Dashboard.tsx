@@ -517,8 +517,10 @@ export default function Dashboard() {
     }
     if (tab === 'coupons' && searchParams.get('action') === 'new') {
       setEditingPromotion({});
+    } else if (tab !== 'coupons' && editingPromotion) {
+      setEditingPromotion(null);
     }
-  }, [tab, location.search]);
+  }, [tab, location.search, editingPromotion]);
 
   const loadAvailableBooks = () => {
     if (availableBooks.length === 0) {
@@ -1747,7 +1749,7 @@ admin@technoworld.com`
           return (
             <div className="space-y-4">
                             {/* Universal Order Dossier Lookup Card */}
-              <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white p-4 shadow-sm">
+              <div className="rounded-2xl border border-blue-200 dark:border-white/[0.12] bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-[#0d1324]/80 p-4 shadow-sm backdrop-blur-md">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 shrink-0">
@@ -1755,13 +1757,13 @@ admin@technoworld.com`
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5"><Zap className="h-4 w-4 text-blue-600" /> Universal Order Dossier Lookup</h3>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                        <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5"><Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Universal Order Dossier Lookup</h3>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-500/30">
                           Global Search
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Paste ANY Order ID (e.g. <span className="font-mono font-bold text-slate-700">#TW-1002</span>, UUID), India Post tracking number, customer phone, or email to inspect full details across all pipeline stages.
+                      <p className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                        Paste ANY Order ID (e.g. <span className="font-mono font-bold text-slate-700 dark:text-neutral-200">#TW-1002</span>, UUID), India Post tracking number, customer phone, or email to inspect full details across all pipeline stages.
                       </p>
                     </div>
                   </div>
@@ -1776,13 +1778,13 @@ admin@technoworld.com`
                           if (e.key === 'Enter') handleUniversalLookup(universalOrderSearch);
                         }}
                         placeholder="Paste #TW-..., tracking #, or phone..."
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-inner"
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 transition-all shadow-inner"
                       />
                       {universalOrderSearch && (
                         <button
                           type="button"
                           onClick={() => setUniversalOrderSearch('')}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold"
                         >
                           ✕
                         </button>
@@ -1793,10 +1795,10 @@ admin@technoworld.com`
                       type="button"
                       onClick={handlePasteAndLookup}
                       disabled={isLookingUpOrder}
-                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-100/90 px-3 py-2 text-xs font-extrabold text-blue-900 hover:bg-blue-200 transition-all shadow-2xs shrink-0 disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 dark:border-blue-500/30 bg-blue-100/90 dark:bg-blue-500/20 px-3 py-2 text-xs font-extrabold text-blue-900 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-500/30 transition-all shadow-2xs shrink-0 disabled:opacity-50"
                       title="Paste from clipboard and search immediately"
                     >
-                      <Clipboard className="h-3.5 w-3.5 text-blue-700" />
+                      <Clipboard className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
                       <span className="hidden sm:inline">Paste & Inspect</span>
                       <span className="sm:hidden">Paste</span>
                     </button>
@@ -1877,7 +1879,7 @@ admin@technoworld.com`
                 </div>
 
                 {/* Flow Stage Pipeline Cards */}
-                <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8 border-t border-slate-100 pt-4">
+                <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8 border-t border-slate-100 dark:border-white/10 pt-4">
                   {[
                     { id: 'to_accept', count: toAcceptCount, label: 'To Accept' },
                     { id: 'to_pack', count: toPackCount, label: 'To Pack' },
@@ -1892,19 +1894,22 @@ admin@technoworld.com`
                     return (
                       <button
                         key={stg.id}
+                        type="button"
                         onClick={() => {
                           setForwardStage(stg.id as any);
                           setSelectedGroupKeys(new Set());
                           setSelectedOrderIds(new Set());
                         }}
-                        className={`flex flex-col items-start justify-between rounded-xl p-3 text-left transition-all ${
+                        className={`flex flex-col items-start justify-between rounded-2xl p-3.5 text-left transition-all duration-150 cursor-pointer outline-none focus:outline-none focus:ring-0 select-none ${
                           isActive
-                            ? 'glass-tab-active ring-2 ring-emerald-500/25'
-                            : 'glass-tab-inactive'
+                            ? 'bg-black/[0.08] dark:bg-white/[0.14] border border-black/15 dark:border-white/20 shadow-xs ring-1 ring-black/10 dark:ring-white/15'
+                            : 'bg-white/70 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-white/[0.08] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] hover:border-slate-300 dark:hover:border-white/15'
                         }`}
                       >
-                        <span className={`text-xl font-black tracking-tight ${isActive ? 'text-emerald-800' : 'text-slate-900'}`}>{stg.count}</span>
-                        <span className={`mt-1 text-xs font-bold ${isActive ? 'text-emerald-700' : 'text-slate-500'}`}>
+                        <span className={`text-xl font-extrabold tracking-tight ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {stg.count}
+                        </span>
+                        <span className={`mt-1 text-xs font-semibold ${isActive ? 'text-slate-800 dark:text-slate-200 font-bold' : 'text-slate-500 dark:text-neutral-400'}`}>
                           {stg.label}
                         </span>
                       </button>
@@ -3762,8 +3767,8 @@ admin@technoworld.com`
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
-                  <table className="w-full text-left text-xs text-slate-700 table-auto">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                  <table className="w-full text-left text-xs text-slate-700 dark:text-neutral-300 table-auto">
+                    <thead className="bg-slate-50 dark:bg-[#0c1222] border-b border-slate-200 dark:border-white/[0.08] text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                       <tr>
                         <th className="px-3 py-2.5 whitespace-nowrap">Customer</th>
                         <th className="px-2.5 py-2.5 whitespace-nowrap">Contact</th>
@@ -3775,68 +3780,68 @@ admin@technoworld.com`
                         <th className="px-3 py-2.5 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                       {customersList.map((c: any) => {
                         const defaultAddr = c.addresses?.[0] || {};
                         return (
-                          <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                          <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.04] transition-colors">
                             <td className="px-3 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-2.5">
-                                <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-800 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-blue-200">
+                                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-blue-200 dark:border-blue-500/30">
                                   {(c.name || 'C').charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0 max-w-[150px] lg:max-w-[190px]">
-                                  <span className="font-bold text-slate-900 block truncate" title={c.name || 'Anonymous User'}>
+                                  <span className="font-bold text-slate-900 dark:text-white block truncate" title={c.name || 'Anonymous User'}>
                                     {c.name || 'Anonymous User'}
                                   </span>
-                                  <span className="text-[11px] text-slate-400 block font-mono truncate" title={c.email}>
+                                  <span className="text-[11px] text-slate-400 dark:text-neutral-500 block font-mono truncate" title={c.email}>
                                     {c.email}
                                   </span>
                                 </div>
                               </div>
                             </td>
 
-                            <td className="px-2.5 py-3 font-semibold text-slate-700 whitespace-nowrap font-mono text-xs">
-                              {c.phone || defaultAddr.phone || <span className="text-slate-400 font-sans font-normal">No phone</span>}
+                            <td className="px-2.5 py-3 font-semibold text-slate-700 dark:text-neutral-300 whitespace-nowrap font-mono text-xs">
+                              {c.phone || defaultAddr.phone || <span className="text-slate-400 dark:text-neutral-500 font-sans font-normal">No phone</span>}
                             </td>
 
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 font-extrabold text-blue-800 text-[11px] whitespace-nowrap shadow-2xs">
+                              <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 px-2 py-0.5 font-extrabold text-blue-800 dark:text-blue-300 text-[11px] whitespace-nowrap shadow-2xs">
                                 {c.totalOrders} {c.totalOrders === 1 ? 'Order' : 'Orders'}
                               </span>
                             </td>
 
-                            <td className="px-2 py-3 text-right font-black text-slate-900 text-xs sm:text-sm whitespace-nowrap">
+                            <td className="px-2 py-3 text-right font-black text-slate-900 dark:text-white text-xs sm:text-sm whitespace-nowrap">
                               {formatINR(c.totalSpent || 0)}
                             </td>
 
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 font-bold text-amber-800 text-[11px] whitespace-nowrap shadow-2xs">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 font-bold text-amber-800 dark:text-amber-300 text-[11px] whitespace-nowrap shadow-2xs">
                                 <Sparkles className="h-3 w-3 text-amber-600 shrink-0" /> {c.technoPoints || 0} pts
                               </span>
                             </td>
 
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-extrabold text-emerald-800 text-[11px] whitespace-nowrap shadow-2xs">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 font-extrabold text-emerald-800 dark:text-emerald-300 text-[11px] whitespace-nowrap shadow-2xs">
                                 <CreditCard className="h-3 w-3 text-emerald-600 shrink-0" /> {formatINR(c.technoWallet || 0)}
                               </span>
                             </td>
 
-                            <td className="px-2.5 py-3 text-[11px] text-slate-500 max-w-[170px] lg:max-w-[240px] xl:max-w-[320px] truncate">
+                            <td className="px-2.5 py-3 text-[11px] text-slate-500 dark:text-neutral-400 max-w-[170px] lg:max-w-[240px] xl:max-w-[320px] truncate">
                               {defaultAddr.city ? (
                                 <span className="inline-flex items-center gap-1" title={`${defaultAddr.addressLine1 || defaultAddr.line1}, ${defaultAddr.city} (${defaultAddr.pincode})`}>
                                   <MapPin className="h-3 w-3 text-rose-500 shrink-0 inline" />
                                   <span className="truncate">{defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})</span>
                                 </span>
                               ) : (
-                                <span className="text-slate-400">No saved address</span>
+                                <span className="text-slate-400 dark:text-neutral-500">No saved address</span>
                               )}
                             </td>
 
                             <td className="px-3 py-3 text-right whitespace-nowrap">
                               <button
                                 onClick={() => setSelectedCustomerDetail(c)}
-                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs transition-all"
+                                className="rounded-lg border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-white/[0.14] hover:border-slate-300 dark:hover:border-white/[0.22] shadow-2xs transition-all"
                               >
                                 View History
                               </button>
@@ -3853,49 +3858,49 @@ admin@technoworld.com`
             {/* Customer History Detail Modal */}
             {selectedCustomerDetail && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-                <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
-                  <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
+                <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[85vh]">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
                     <div className="flex items-center gap-2.5">
                       <Users className="h-5 w-5 text-blue-600" />
                       <div>
-                        <h3 className="font-extrabold text-slate-900 text-sm">{selectedCustomerDetail.name || 'Customer Profile'}</h3>
-                        <span className="text-[11px] text-slate-500">{selectedCustomerDetail.email}</span>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">{selectedCustomerDetail.name || 'Customer Profile'}</h3>
+                        <span className="text-[11px] text-slate-500 dark:text-neutral-400">{selectedCustomerDetail.email}</span>
                       </div>
                     </div>
-                    <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+                    <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold">&times;</button>
                   </div>
 
                   <div className="p-6 overflow-y-auto space-y-4 text-xs">
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400">Total Orders</span>
-                        <span className="text-base font-black text-slate-900">{selectedCustomerDetail.totalOrders}</span>
+                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Total Orders</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white">{selectedCustomerDetail.totalOrders}</span>
                       </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400">Total Spend</span>
-                        <span className="text-base font-black text-emerald-700">{formatINR(selectedCustomerDetail.totalSpent || 0)}</span>
+                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Total Spend</span>
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{formatINR(selectedCustomerDetail.totalSpent || 0)}</span>
                       </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400">TechnoPoints</span>
-                        <span className="text-base font-black text-amber-700">⭐ {selectedCustomerDetail.technoPoints || 0}</span>
+                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">TechnoPoints</span>
+                        <span className="text-base font-black text-amber-700 dark:text-amber-400">⭐ {selectedCustomerDetail.technoPoints || 0}</span>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-bold text-slate-900 mb-2">Recent Orders:</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white mb-2">Recent Orders:</h4>
                       {selectedCustomerDetail.orders?.length === 0 ? (
-                        <p className="text-slate-400 text-xs italic">No orders placed yet.</p>
+                        <p className="text-slate-400 dark:text-neutral-500 text-xs italic">No orders placed yet.</p>
                       ) : (
                         <div className="space-y-2">
                           {selectedCustomerDetail.orders.map((o: any) => (
-                            <div key={o.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <div key={o.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] shadow-sm">
                               <div>
-                                <span className="font-extrabold text-slate-900">#{o.orderNumber}</span>
-                                <span className="block text-[10px] text-slate-400">{new Date(o.createdAt).toLocaleDateString()}</span>
+                                <span className="font-extrabold text-slate-900 dark:text-white">#{o.orderNumber}</span>
+                                <span className="block text-[10px] text-slate-400 dark:text-neutral-500">{new Date(o.createdAt).toLocaleDateString()}</span>
                               </div>
                               <div className="text-right">
-                                <span className="font-bold text-slate-900">{formatINR(o.totalAmount)}</span>
-                                <span className="block text-[10px] font-bold text-blue-700">{o.status}</span>
+                                <span className="font-bold text-slate-900 dark:text-white">{formatINR(o.totalAmount)}</span>
+                                <span className="block text-[10px] font-bold text-blue-700 dark:text-blue-400">{o.status}</span>
                               </div>
                             </div>
                           ))}
@@ -3904,10 +3909,10 @@ admin@technoworld.com`
                     </div>
                   </div>
 
-                  <div className="flex justify-end border-t border-slate-200 px-6 py-3 bg-slate-50">
+                  <div className="flex justify-end border-t border-slate-200 dark:border-white/[0.08] px-6 py-3 bg-slate-50 dark:bg-white/[0.03]">
                     <button
                       onClick={() => setSelectedCustomerDetail(null)}
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.14]"
                     >
                       Close
                     </button>
@@ -5579,28 +5584,29 @@ admin@technoworld.com`
               </div>
             )}
 
-            {/* Outbound Sent Emails & Live Mailbox Center */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-700 font-black">
-                    📬
+            {/* Outbound Sent Emails & Live Mailbox Center — Apple macOS Mail Interface */}
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] space-y-4">
+              {/* Mail Header */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200/60 dark:border-white/[0.08]">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 flex items-center justify-center shadow-xs">
+                    <Mail className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-900">Sent Emails & Outbox Center</h3>
-                    <p className="text-xs text-slate-500">Live stream of all outgoing customer emails, order notifications, delay notices, and system alerts.</p>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Sent Emails & Outbox Center</h3>
+                    <p className="text-xs text-slate-500 dark:text-neutral-400">Live stream of all customer notifications, order dispatches, and system alerts.</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 border border-slate-200">
+                  <span className="rounded-full bg-black/[0.06] dark:bg-white/[0.10] px-3 py-1 text-xs font-semibold text-slate-700 dark:text-neutral-300">
                     {emailLogs.length} Total
                   </span>
                   <button
                     type="button"
                     onClick={fetchEmailLogs}
                     disabled={isLoadingEmails}
-                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                    className="apple-pill-btn px-3 py-1.5 text-xs font-bold gap-1.5"
                   >
                     {isLoadingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                     Refresh
@@ -5609,115 +5615,147 @@ admin@technoworld.com`
               </div>
 
               {emailLogs.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-xs">
-                  <Mail className="h-8 w-8 mx-auto text-slate-300 mb-2" />
+                <div className="py-14 text-center text-slate-400 dark:text-neutral-500 text-xs">
+                  <Mail className="h-10 w-10 mx-auto text-slate-300 dark:text-neutral-600 mb-2.5" />
                   No sent emails logged yet. Click &quot;🚀 Test SMTP&quot; above or update an order to dispatch an email.
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
-                  <table className="w-full text-left text-xs text-slate-600">
-                    <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                      <tr>
-                        <th className="px-4 py-3">Recipient</th>
-                        <th className="px-4 py-3">Subject & Order</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Channel</th>
-                        <th className="px-4 py-3">Sent Time</th>
-                        <th className="px-4 py-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {emailLogs.map((log: any) => (
-                        <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="px-4 py-3">
-                            <span className="font-bold text-slate-900 block">{log.toEmail}</span>
-                            <span className="text-[10px] text-slate-400">From: {log.senderEmail}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="font-semibold text-slate-800 block line-clamp-1">{log.subject}</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[500px]">
+                  {/* Left Pane: macOS Mail 3-Line List (matches media_1789083620354.png) */}
+                  <div className="lg:col-span-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/60 dark:bg-zinc-900/50 p-2 overflow-y-auto max-h-[620px] space-y-1">
+                    {emailLogs.map((log: any) => {
+                      const isSelected = selectedEmailPreview?.id === log.id;
+                      const rawSnippet = log.message || (log.htmlContent ? log.htmlContent.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : 'Email notification sent successfully.');
+                      const formattedDate = (() => {
+                        try {
+                          const d = new Date(log.createdAt);
+                          const now = new Date();
+                          const isToday = d.toDateString() === now.toDateString();
+                          if (isToday) {
+                            return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                          }
+                          return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)}`;
+                        } catch {
+                          return '';
+                        }
+                      })();
+
+                      return (
+                        <div
+                          key={log.id}
+                          onClick={() => setSelectedEmailPreview(log)}
+                          className={`p-3.5 rounded-2xl cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-black/[0.08] dark:bg-white/[0.14] ring-1 ring-black/5 dark:ring-white/10 shadow-xs'
+                              : 'hover:bg-black/[0.035] dark:hover:bg-white/[0.05] border-b border-slate-100 dark:border-white/[0.04]'
+                          }`}
+                        >
+                          {/* Line 1: Recipient Name/Email (Bold) + Date/Time (Right) */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-[13.5px] text-slate-900 dark:text-white truncate">
+                              {log.toEmail?.split('@')[0] || log.toEmail}
+                            </span>
+                            <span className="text-[11.5px] text-slate-400 dark:text-neutral-400 font-medium shrink-0">
+                              {formattedDate}
+                            </span>
+                          </div>
+
+                          {/* Line 2: Subject Line */}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="font-semibold text-xs text-slate-800 dark:text-slate-200 line-clamp-1">
+                              {log.subject || 'Notification'}
+                            </span>
                             {log.orderNumber && (
-                              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 inline-block mt-0.5">
+                              <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.2 rounded shrink-0">
                                 #{log.orderNumber}
                               </span>
                             )}
-                          </td>
-                          <td className="px-4 py-3">
+                          </div>
+
+                          {/* Line 3: 2-Line Body Preview Snippet */}
+                          <p className="text-[11.5px] text-slate-500 dark:text-neutral-400 line-clamp-2 mt-1 leading-relaxed">
+                            {rawSnippet}
+                          </p>
+
+                          {/* Status Badge */}
+                          <div className="flex items-center gap-2 mt-2">
                             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                               log.status === 'DELIVERED'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'
                             }`}>
-                              <span className={`h-1.5 w-1.5 rounded-full ${log.status === 'DELIVERED' ? 'bg-emerald-600' : 'bg-amber-500'}`} />
+                              <span className={`h-1.5 w-1.5 rounded-full ${log.status === 'DELIVERED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                               {log.status === 'DELIVERED' ? 'Delivered' : 'Outbox'}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-[11px] text-slate-500">
-                            {log.provider || 'SMTP'}
-                          </td>
-                          <td className="px-4 py-3 text-[11px] text-slate-500 whitespace-nowrap">
-                            {new Date(log.createdAt).toLocaleString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedEmailPreview(log)}
-                              className="rounded-lg bg-slate-100 hover:bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-700 transition-colors inline-flex items-center gap-1"
-                            >
-                              👁️ View HTML
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-mono">
+                              {log.provider || 'SMTP'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Pane: Apple macOS Mail Reading / Detail Pane */}
+                  <div className="lg:col-span-7 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-950/70 p-6 flex flex-col justify-between overflow-hidden shadow-xs">
+                    {(selectedEmailPreview || (emailLogs.length > 0 ? emailLogs[0] : null)) ? (() => {
+                      const activeLog = selectedEmailPreview || emailLogs[0];
+                      return (
+                        <div className="flex flex-col h-full space-y-4">
+                          <div className="border-b border-slate-200/80 dark:border-white/[0.08] pb-4">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                                activeLog.status === 'DELIVERED'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400'
+                                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'
+                              }`}>
+                                <span className={`h-2 w-2 rounded-full ${activeLog.status === 'DELIVERED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                {activeLog.status === 'DELIVERED' ? 'Delivered via SMTP' : 'Queued Outbox'}
+                              </span>
+                              <span className="text-xs text-slate-400 dark:text-neutral-400">
+                                {new Date(activeLog.createdAt).toLocaleString('en-IN', {
+                                  dateStyle: 'medium',
+                                  timeStyle: 'short',
+                                })}
+                              </span>
+                            </div>
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-snug">
+                              {activeLog.subject}
+                            </h2>
+                            <div className="mt-2 text-xs space-y-0.5 text-slate-600 dark:text-neutral-300">
+                              <p><span className="font-semibold text-slate-400 dark:text-neutral-500">To:</span> <span className="font-bold">{activeLog.toEmail}</span></p>
+                              <p><span className="font-semibold text-slate-400 dark:text-neutral-500">From:</span> {activeLog.senderEmail || 'Techno World Books'}</p>
+                              {activeLog.orderNumber && (
+                                <p><span className="font-semibold text-slate-400 dark:text-neutral-500">Order:</span> #{activeLog.orderNumber}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto max-h-[460px] pr-2 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 p-4 border border-slate-100 dark:border-white/[0.05]">
+                            {activeLog.htmlContent ? (
+                              <div
+                                className="prose prose-sm max-w-none dark:prose-invert"
+                                dangerouslySetInnerHTML={{ __html: activeLog.htmlContent }}
+                              />
+                            ) : (
+                              <div className="whitespace-pre-wrap font-sans text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
+                                {activeLog.message || 'No body content available.'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })() : (
+                      <div className="flex flex-col items-center justify-center h-full py-20 text-center text-slate-400 dark:text-neutral-500">
+                        <Mail className="h-12 w-12 text-slate-300 dark:text-neutral-700 mb-3" />
+                        <p className="font-semibold text-sm">Select an email to view preview</p>
+                        <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">Choose any item from the left pane to inspect full message content.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Email HTML Preview Modal */}
-            {selectedEmailPreview && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-                <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
-                  <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
-                    <div>
-                      <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                        <span>✉️ Email Preview</span>
-                        <span className="text-xs font-normal text-slate-500">({selectedEmailPreview.toEmail})</span>
-                      </h3>
-                      <p className="text-xs font-bold text-slate-700 mt-0.5">{selectedEmailPreview.subject}</p>
-                    </div>
-                    <button onClick={() => setSelectedEmailPreview(null)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
-                  </div>
-
-                  <div className="p-6 overflow-y-auto flex-1 bg-slate-100">
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                      {selectedEmailPreview.htmlContent ? (
-                        <div dangerouslySetInnerHTML={{ __html: selectedEmailPreview.htmlContent }} />
-                      ) : (
-                        <div className="whitespace-pre-wrap font-sans text-sm text-slate-800">
-                          {selectedEmailPreview.message}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200 px-6 py-3 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-                    <span>Sent: {new Date(selectedEmailPreview.createdAt).toLocaleString('en-IN')}</span>
-                    <button
-                      onClick={() => setSelectedEmailPreview(null)}
-                      className="rounded-lg bg-slate-900 px-4 py-1.5 font-bold text-white text-xs hover:bg-slate-800"
-                    >
-                      Close Preview
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -5726,7 +5764,7 @@ admin@technoworld.com`
         )}
       </div>
 
-      {editingPromotion && (
+      {tab === 'coupons' && editingPromotion && (
         <PromotionEditModal
           promotion={editingPromotion}
           onClose={() => setEditingPromotion(null)}

@@ -256,18 +256,18 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
   return (
     <div className="space-y-6">
       {/* Top Header & Razorpay Integration Status Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0d1324]/75 p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-              <CreditCard className="h-6 w-6 text-emerald-600" />
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+              <CreditCard className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               Payments & Settlement Hub
             </h1>
-            <span className="bg-emerald-50 text-emerald-700 text-xs font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200/60 flex items-center gap-1">
+            <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-700/50 flex items-center gap-1">
               <Sparkles className="h-3 w-3" /> Live Settlement Hub
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
             Real-time settlement tracking, payment method distribution, order-wise reconciliation, and refunds monitoring.
           </p>
         </div>
@@ -276,10 +276,10 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] rounded-xl transition-colors cursor-pointer disabled:opacity-50"
             title="Refresh payments data"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-emerald-600 dark:text-emerald-400' : ''}`} />
             Refresh
           </button>
 
@@ -294,7 +294,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="relative flex items-center border border-slate-200/60 bg-white/50 backdrop-blur-md rounded-2xl p-1 mb-4 shadow-2xs">
+      <div className="relative flex items-center border border-slate-200/60 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-2xl p-1 mb-4 shadow-2xs">
         <button
           type="button"
           onClick={() => scrollTabs('left')}
@@ -421,75 +421,75 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
           {/* Top 5 Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Gross Volume */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs relative overflow-hidden">
-              <div className="flex items-center justify-between text-slate-500 mb-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Gross Sales</span>
-                <IndianRupee className="h-4 w-4 text-slate-400" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs relative overflow-hidden">
+              <div className="flex items-center justify-between text-slate-500 dark:text-neutral-400 mb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-neutral-400">Gross Sales</span>
+                <IndianRupee className="h-4 w-4 text-slate-400 dark:text-neutral-400" />
               </div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">
+              <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {overview ? formatINR(overview.grossVolume) : '₹0'}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-slate-500">
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-slate-500 dark:text-neutral-400">
                 <span>{overview?.counts?.total || 0} total orders placed</span>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-900" />
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-900 dark:bg-slate-400" />
             </div>
 
             {/* Net Settled */}
-            <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-emerald-50/30">
-              <div className="flex items-center justify-between text-emerald-600 mb-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-600">Settled to Bank</span>
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-5 rounded-2xl border border-emerald-200/80 dark:border-white/[0.08] shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-emerald-50/30 dark:from-[#0d1324]/75 dark:to-emerald-950/20">
+              <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Settled to Bank</span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-2xl font-black text-emerald-700 tracking-tight">
+              <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
                 {overview ? formatINR(overview.settledVolume) : '₹0'}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-emerald-700">
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                 <span>{overview?.counts?.paid || 0} Successful (Paid)</span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500" />
             </div>
 
             {/* Pending Settlements */}
-            <div className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-amber-50/30">
-              <div className="flex items-center justify-between text-amber-600 mb-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-amber-600">Unsettled / Pending</span>
-                <Clock className="h-4 w-4 text-amber-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-5 rounded-2xl border border-amber-200/80 dark:border-white/[0.08] shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-amber-50/30 dark:from-[#0d1324]/75 dark:to-amber-950/20">
+              <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">Unsettled / Pending</span>
+                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-2xl font-black text-amber-700 tracking-tight">
+              <div className="text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight">
                 {overview ? formatINR(overview.pendingSettlements) : '₹0'}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-amber-700">
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-amber-700 dark:text-amber-400">
                 <span>{overview?.counts?.pending || 0} Pending orders</span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-500" />
             </div>
 
             {/* Total Refunds */}
-            <div className="bg-white p-5 rounded-2xl border border-rose-200/80 shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-rose-50/30">
-              <div className="flex items-center justify-between text-rose-600 mb-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-rose-600">Total Refunds</span>
-                <RotateCcw className="h-4 w-4 text-rose-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-5 rounded-2xl border border-rose-200/80 dark:border-white/[0.08] shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-rose-50/30 dark:from-[#0d1324]/75 dark:to-rose-950/20">
+              <div className="flex items-center justify-between text-rose-600 dark:text-rose-400 mb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">Total Refunds</span>
+                <RotateCcw className="h-4 w-4 text-rose-600 dark:text-rose-400" />
               </div>
-              <div className="text-2xl font-black text-rose-700 tracking-tight">
+              <div className="text-2xl font-black text-rose-700 dark:text-rose-400 tracking-tight">
                 {overview ? formatINR(overview.refundedVolume) : '₹0'}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-rose-700">
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-rose-700 dark:text-rose-400">
                 <span>{overview?.counts?.refunded || 0} Returned / Refunded</span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500" />
             </div>
 
             {/* COD Pending Collection */}
-            <div className="bg-white p-5 rounded-2xl border border-blue-200/80 shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-blue-50/30">
-              <div className="flex items-center justify-between text-blue-600 mb-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600">COD In-Transit</span>
-                <Wallet className="h-4 w-4 text-blue-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-5 rounded-2xl border border-blue-200/80 dark:border-white/[0.08] shadow-xs relative overflow-hidden bg-gradient-to-br from-white to-blue-50/30 dark:from-[#0d1324]/75 dark:to-blue-950/20">
+              <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 mb-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">COD In-Transit</span>
+                <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-2xl font-black text-blue-700 tracking-tight">
+              <div className="text-2xl font-black text-blue-700 dark:text-blue-400 tracking-tight">
                 {overview ? formatINR(overview.codPendingCollection) : '₹0'}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-blue-700">
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-blue-700 dark:text-blue-400">
                 <span>Awaiting delivery cash</span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500" />
@@ -499,26 +499,26 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
           {/* Two Columns: Settlement Details & Method Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Settlement Cycle & Bank Status */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs lg:col-span-1 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-emerald-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs lg:col-span-1 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.08]">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   Bank Settlement Cycle
                 </h3>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                <span className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                   ACTIVE
                 </span>
               </div>
 
               <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-500 font-medium">Settlement Policy</span>
-                  <span className="font-bold text-slate-900">T+2 Business Days</span>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.04]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium">Settlement Policy</span>
+                  <span className="font-bold text-slate-900 dark:text-white">T+2 Business Days</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-500 font-medium">Next Projected Payout</span>
-                  <span className="font-bold text-emerald-700">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.04]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium">Next Projected Payout</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">
                     {overview?.settlementCycle?.nextEstimatedPayoutDate
                       ? new Date(overview.settlementCycle.nextEstimatedPayoutDate).toLocaleDateString('en-IN', {
                           day: 'numeric',
@@ -529,113 +529,113 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-500 font-medium">Settlement Cutoff</span>
-                  <span className="font-bold text-slate-900">11:59 PM Daily</span>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.04]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium">Settlement Cutoff</span>
+                  <span className="font-bold text-slate-900 dark:text-white">11:59 PM Daily</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-500 font-medium">Bank Account</span>
-                  <span className="font-bold text-slate-900">State Bank of India (••• 4091)</span>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/[0.04]">
+                  <span className="text-slate-500 dark:text-neutral-400 font-medium">Bank Account</span>
+                  <span className="font-bold text-slate-900 dark:text-white">State Bank of India (••• 4091)</span>
                 </div>
               </div>
 
               {/* Razorpay Readiness Banner */}
-              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
+              <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/30 space-y-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-blue-600" />
-                  <span className="font-black text-xs text-blue-900">Razorpay API Integration</span>
+                  <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="font-black text-xs text-blue-900 dark:text-blue-200">Razorpay API Integration</span>
                 </div>
-                <p className="text-[11px] text-blue-800 leading-relaxed">
+                <p className="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">
                   {overview?.razorpayIntegration?.isConfigured
                     ? `Live Gateway Configured (Key ID: ${overview.razorpayIntegration.keyIdPrefix}). Instant UPI intent & auto-webhook active.`
                     : 'System is configured with Razorpay webhooks & transaction listeners. Provide API keys to switch to 100% automated live payouts.'}
                 </p>
-                <div className="text-[10px] text-blue-700 font-mono">
+                <div className="text-[10px] text-blue-700 dark:text-blue-400 font-mono">
                   Endpoint: /api/v1/payments/razorpay/webhook
                 </div>
               </div>
             </div>
 
             {/* Payment Methods Distribution */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs lg:col-span-2 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+            <div className="bg-white dark:bg-[#0d1324]/75 p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.08]">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   Payment Methods Distribution
                 </h3>
-                <span className="text-xs text-slate-400 font-medium">Share of Total Revenue</span>
+                <span className="text-xs text-slate-400 dark:text-neutral-400 font-medium">Share of Total Revenue</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* UPI */}
-                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-2">
+                <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                         UPI
                       </div>
-                      <span className="text-xs font-bold text-slate-800">UPI / QR Code</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">UPI / QR Code</span>
                     </div>
-                    <span className="text-xs font-black text-emerald-700">
+                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">
                       {overview ? formatINR(overview.methodBreakdown?.UPI?.volume || 0) : '₹0'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-400 dark:text-neutral-400">
                     PhonePe, Google Pay, Paytm, BHIM ({overview?.methodBreakdown?.UPI?.count || 0} orders)
                   </p>
                 </div>
 
                 {/* Cards */}
-                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-2">
+                <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                         💳
                       </div>
-                      <span className="text-xs font-bold text-slate-800">Debit / Credit Cards</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">Debit / Credit Cards</span>
                     </div>
-                    <span className="text-xs font-black text-blue-700">
+                    <span className="text-xs font-black text-blue-700 dark:text-blue-400">
                       {overview ? formatINR(overview.methodBreakdown?.CARD?.volume || 0) : '₹0'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-400 dark:text-neutral-400">
                     Visa, MasterCard, RuPay ({overview?.methodBreakdown?.CARD?.count || 0} orders)
                   </p>
                 </div>
 
                 {/* Net Banking */}
-                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-2">
+                <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
                         🏛️
                       </div>
-                      <span className="text-xs font-bold text-slate-800">Net Banking</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">Net Banking</span>
                     </div>
-                    <span className="text-xs font-black text-purple-700">
+                    <span className="text-xs font-black text-purple-700 dark:text-purple-400">
                       {overview ? formatINR(overview.methodBreakdown?.NETBANKING?.volume || 0) : '₹0'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-400 dark:text-neutral-400">
                     50+ Indian banks ({overview?.methodBreakdown?.NETBANKING?.count || 0} orders)
                   </p>
                 </div>
 
                 {/* COD */}
-                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-2">
+                <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
                         💵
                       </div>
-                      <span className="text-xs font-bold text-slate-800">Cash on Delivery</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">Cash on Delivery</span>
                     </div>
-                    <span className="text-xs font-black text-amber-700">
+                    <span className="text-xs font-black text-amber-700 dark:text-amber-400">
                       {overview ? formatINR(overview.methodBreakdown?.COD?.volume || 0) : '₹0'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-400 dark:text-neutral-400">
                     Pay on Parcel Handover ({overview?.methodBreakdown?.COD?.count || 0} orders)
                   </p>
                 </div>
@@ -654,15 +654,15 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
           </div>
 
           {/* Recent 10 Transactions Table */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white dark:bg-[#0d1324]/75 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-slate-900">Recent Payment Transactions</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Real-time incoming orders & settlement states</p>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">Recent Payment Transactions</h3>
+                <p className="text-xs text-slate-400 dark:text-neutral-400 mt-0.5">Real-time incoming orders & settlement states</p>
               </div>
               <button
                 onClick={() => setSubTab('settlements')}
-                className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
+                className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
               >
                 View All
               </button>
@@ -670,7 +670,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100 text-[10px]">
+                <thead className="bg-slate-50 dark:bg-[#0c1222] text-slate-400 dark:text-neutral-400 font-extrabold uppercase tracking-wider border-b border-slate-100 dark:border-white/[0.08] text-[10px]">
                   <tr>
                     <th className="px-5 py-3.5">Order Number</th>
                     <th className="px-5 py-3.5">Payment Reference</th>
@@ -682,10 +682,10 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                     <th className="px-5 py-3.5 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                   {overview?.recentTransactions?.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-8 text-slate-400">
+                      <td colSpan={8} className="text-center py-8 text-slate-400 dark:text-neutral-400">
                         No transactions recorded yet.
                       </td>
                     </tr>
@@ -700,28 +700,28 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                       });
 
                       return (
-                        <tr key={tx.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="px-5 py-3.5 font-bold text-slate-900">
+                        <tr key={tx.id} className="hover:bg-slate-50/70 dark:hover:bg-white/[0.04] transition-colors">
+                          <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">
                             #{tx.orderNumber}
                           </td>
-                          <td className="px-5 py-3.5 font-mono text-[11px] text-slate-600">
+                          <td className="px-5 py-3.5 font-mono text-[11px] text-slate-600 dark:text-neutral-400">
                             {tx.paymentId}
                           </td>
-                          <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
+                          <td className="px-5 py-3.5 text-slate-500 dark:text-neutral-400 whitespace-nowrap">
                             <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-slate-400" />
+                              <Clock className="h-3 w-3 text-slate-400 dark:text-neutral-400" />
                               {dateStr}
                             </span>
                           </td>
-                          <td className="px-5 py-3.5 font-medium text-slate-700">
+                          <td className="px-5 py-3.5 font-medium text-slate-700 dark:text-neutral-200">
                             {tx.customerName}
                           </td>
                           <td className="px-5 py-3.5">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-neutral-300">
                               {tx.paymentMethod}
                             </span>
                           </td>
-                          <td className="px-5 py-3.5 font-black text-slate-900">
+                          <td className="px-5 py-3.5 font-black text-slate-900 dark:text-white">
                             {formatINR(tx.totalAmount)}
                           </td>
                           <td className="px-5 py-3.5">

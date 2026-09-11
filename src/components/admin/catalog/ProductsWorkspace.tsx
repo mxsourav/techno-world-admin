@@ -157,9 +157,9 @@ export default function ProductsWorkspace() {
       </div>
 
       {/* Workspace Tabs & Table */}
-      <div className="flex-1 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl overflow-hidden flex flex-col shadow-xs">
+      <div className="flex-1 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl overflow-hidden flex flex-col shadow-xs dark:bg-[#0d1324]/75 dark:border-white/[0.08]">
         {/* Tabs */}
-        <div className="border-b border-slate-200/60 px-6 py-3 bg-white/40 backdrop-blur-md">
+        <div className="border-b border-slate-200/60 px-6 py-3 bg-white/40 backdrop-blur-md dark:bg-white/[0.03] dark:border-white/[0.08]">
           <div className="flex gap-2 overflow-x-auto py-0.5">
             {['all', 'published', 'draft', 'low_stock', 'out_of_stock', 'archived'].map(t => (
               <button
@@ -178,7 +178,7 @@ export default function ProductsWorkspace() {
         </div>
 
         {/* Filter Bar */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-3">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-3 dark:bg-white/[0.02] dark:border-white/[0.08]">
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -187,21 +187,21 @@ export default function ProductsWorkspace() {
                 placeholder="Search products, ISBN, SKU..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-80 rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-80 rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white dark:placeholder-neutral-500"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
+            <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-neutral-200 dark:hover:bg-white/[0.10]">
               <Settings2 className="h-4 w-4" /> More Filters
             </button>
           </div>
           
           <div className="flex items-center gap-3">
             {selectedIds.size > 0 && (
-              <button onClick={handleDeleteSelected} className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 hover:bg-rose-100 transition-colors">
+              <button onClick={handleDeleteSelected} className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 hover:bg-rose-100 transition-colors dark:border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300">
                 <Trash2 className="h-4 w-4" /> Delete ({selectedIds.size})
               </button>
             )}
-            <button onClick={handleDeleteAll} className="flex items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors">
+            <button onClick={handleDeleteAll} className="flex items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20">
               <AlertCircle className="h-4 w-4" /> Delete All
             </button>
           </div>
@@ -210,9 +210,9 @@ export default function ProductsWorkspace() {
         {/* Table Area */}
         <div className="flex-1 overflow-auto p-0">
           <table className="w-full min-w-[1200px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 sticky top-0 z-10 shadow-sm">
+            <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 sticky top-0 z-10 shadow-sm dark:bg-[#0c1222] dark:border-white/[0.08] dark:text-neutral-400">
               <tr>
-                <th className="px-6 py-3 w-12"><input type="checkbox" onChange={handleSelectAll} checked={data.length > 0 && selectedIds.size === data.length} className="rounded border-slate-300" /></th>
+                <th className="px-6 py-3 w-12"><input type="checkbox" onChange={handleSelectAll} checked={data.length > 0 && selectedIds.size === data.length} className="rounded border-slate-300 dark:border-white/20 dark:bg-white/10" /></th>
                 <th className="px-6 py-3">Product Details</th>
                 <th className="px-6 py-3">Pricing & Margin</th>
                 <th className="px-6 py-3">Inventory</th>
@@ -221,28 +221,28 @@ export default function ProductsWorkspace() {
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
               {loading ? (
-                <tr><td colSpan={7} className="py-20 text-center text-slate-500">Loading catalog...</td></tr>
+                <tr><td colSpan={7} className="py-20 text-center text-slate-500 dark:text-neutral-400">Loading catalog...</td></tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan={7} className="py-20 text-center text-slate-500">No products found.</td></tr>
+                <tr><td colSpan={7} className="py-20 text-center text-slate-500 dark:text-neutral-400">No products found.</td></tr>
               ) : (
                 data.map((book) => (
-                  <tr key={book.id} onClick={() => setViewingBook(book)} className="hover:bg-slate-50 group cursor-pointer transition-colors">
-                    <td className="px-6 py-4 align-top" onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(book.id)} onChange={() => toggleSelect(book.id)} className="rounded border-slate-300" /></td>
+                  <tr key={book.id} onClick={() => setViewingBook(book)} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] group cursor-pointer transition-colors">
+                    <td className="px-6 py-4 align-top" onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(book.id)} onChange={() => toggleSelect(book.id)} className="rounded border-slate-300 dark:border-white/20 dark:bg-white/10" /></td>
                     
                     <td className="px-6 py-4">
                       <div className="flex gap-4">
                         {book.coverUrl ? (
-                          <img src={getImageUrl(book.coverUrl)} className="h-16 w-12 rounded object-cover shadow-sm bg-slate-50 shrink-0" alt={book.title} loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                          <img src={getImageUrl(book.coverUrl)} className="h-16 w-12 rounded object-cover shadow-sm bg-slate-50 dark:bg-white/5 shrink-0" alt={book.title} loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                         ) : (
-                          <div className="h-16 w-12 rounded bg-slate-100 flex items-center justify-center border border-slate-200 text-xs text-slate-400">No Img</div>
+                          <div className="h-16 w-12 rounded bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 text-xs text-slate-400">No Img</div>
                         )}
                         <div>
-                          <div className="font-bold text-slate-900 line-clamp-1">{book.title}</div>
-                          <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">{book.categoryName} • {book.publisherName}</div>
+                          <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{book.title}</div>
+                          <div className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 line-clamp-1">{book.categoryName} • {book.publisherName}</div>
                           <div className="flex items-center gap-2 mt-1.5 text-[10px] uppercase font-bold text-slate-400">
-                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700 font-mono">SKU: {formatClientSku(book)}</span>
+                            <span className="rounded bg-slate-100 dark:bg-white/[0.08] px-1.5 py-0.5 text-slate-700 dark:text-neutral-300 font-mono">SKU: {formatClientSku(book)}</span>
                             {book.isbn13 && <span>ISBN: {book.isbn13}</span>}
                             {(!book.description || book.description === 'No description provided.' || book.description.trim() === '') ? (
                               <button
@@ -266,9 +266,9 @@ export default function ProductsWorkspace() {
 
                     <td className="px-6 py-4 align-top">
                       <div className="flex flex-col gap-1">
-                        <div className="flex justify-between w-32"><span className="text-slate-500 text-xs">MRP:</span><span className="font-semibold text-slate-400 line-through">{formatINR(book.mrp)}</span></div>
-                        <div className="flex justify-between w-32"><span className="text-slate-500 text-xs">Selling:</span><span className="font-bold text-slate-900">{formatINR(book.price)}</span></div>
-                        <div className="flex justify-between w-32 mt-1"><span className="text-slate-500 text-xs">Margin:</span><span className="font-bold text-emerald-600">{book.costPrice ? Math.round(((book.price - book.costPrice) / book.price) * 100) : 0}%</span></div>
+                        <div className="flex justify-between w-32"><span className="text-slate-500 dark:text-neutral-400 text-xs">MRP:</span><span className="font-semibold text-slate-400 line-through">{formatINR(book.mrp)}</span></div>
+                        <div className="flex justify-between w-32"><span className="text-slate-500 dark:text-neutral-400 text-xs">Selling:</span><span className="font-bold text-slate-900 dark:text-white">{formatINR(book.price)}</span></div>
+                        <div className="flex justify-between w-32 mt-1"><span className="text-slate-500 dark:text-neutral-400 text-xs">Margin:</span><span className="font-bold text-emerald-600 dark:text-emerald-400">{book.costPrice ? Math.round(((book.price - book.costPrice) / book.price) * 100) : 0}%</span></div>
                       </div>
                     </td>
 
@@ -276,12 +276,12 @@ export default function ProductsWorkspace() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex h-2 w-2 rounded-full ${book.stock > 20 ? 'bg-emerald-500' : book.stock > 0 ? 'bg-orange-500' : 'bg-rose-500'}`}></span>
-                          <span className="font-bold text-slate-900">{book.stock} units</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{book.stock} units</span>
                         </div>
-                        <div className="text-xs text-slate-500 mt-1">
+                        <div className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
                           Reserved: {book.reservedStock || 0}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-slate-400 dark:text-neutral-500">
                           {book.warehouse || 'Main Warehouse'}
                         </div>
                       </div>
@@ -290,11 +290,11 @@ export default function ProductsWorkspace() {
                     <td className="px-6 py-4 align-top">
                       <div className="flex flex-col gap-2">
                         <div className="text-xs">
-                          <span className="text-slate-500">Lifetime Sold: </span>
-                          <span className="font-bold text-slate-900">{book.lifetimeSales || 0}</span>
+                          <span className="text-slate-500 dark:text-neutral-400">Lifetime Sold: </span>
+                          <span className="font-bold text-slate-900 dark:text-white">{book.lifetimeSales || 0}</span>
                         </div>
                         <div className="inline-flex items-center">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${book.health === 'Excellent' ? 'bg-emerald-100 text-emerald-700' : book.health === 'Good' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${book.health === 'Excellent' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : book.health === 'Good' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'}`}>
                             {book.health} ({book.healthScore}%)
                           </span>
                         </div>
@@ -304,10 +304,10 @@ export default function ProductsWorkspace() {
                     <td className="px-6 py-4 align-top">
                       <div className="flex flex-col gap-2">
                         <div className="text-xs">
-                          <span className="text-slate-500">Last Updated: </span>
-                          <span className="font-bold text-slate-900">{book.updatedAt ? new Date(book.updatedAt).toLocaleDateString() + ' ' + new Date(book.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                          <span className="text-slate-500 dark:text-neutral-400">Last Updated: </span>
+                          <span className="font-bold text-slate-900 dark:text-white">{book.updatedAt ? new Date(book.updatedAt).toLocaleDateString() + ' ' + new Date(book.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); setViewingLogs(book); }} className="text-left text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); setViewingLogs(book); }} className="text-left text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline inline-flex items-center gap-1">
                           View Change Logs
                         </button>
                       </div>
@@ -332,20 +332,20 @@ export default function ProductsWorkspace() {
       {/* Right Side Drawer */}
       {viewingBook && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={() => setViewingBook(null)} />
-          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out border-l border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-900">Product Details</h2>
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={() => setViewingBook(null)} />
+          <div className="absolute inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-[#0d1324] shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out border-l border-slate-200 dark:border-white/[0.12]">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Product Details</h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setEditingBook(viewingBook); setViewingBook(null); }} className="rounded-lg bg-emerald-100 text-emerald-700 px-3 py-1.5 text-sm font-bold hover:bg-emerald-200">Edit</button>
-                <button onClick={() => setViewingBook(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"><X className="h-5 w-5" /></button>
+                <button onClick={() => { setEditingBook(viewingBook); setViewingBook(null); }} className="rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 text-sm font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50">Edit</button>
+                <button onClick={() => setViewingBook(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-600 dark:hover:text-white"><X className="h-5 w-5" /></button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
               
               {/* Header Info */}
               <div className="flex gap-6">
-                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0 shadow-sm flex items-center justify-center">
+                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 shrink-0 shadow-sm flex items-center justify-center">
                   {viewingBook.coverUrl ? (
                     <img
                       src={getImageUrl(viewingBook.coverUrl)}
@@ -358,27 +358,27 @@ export default function ProductsWorkspace() {
                       }}
                     />
                   ) : null}
-                  <div className="absolute inset-0 -z-1 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-100">
-                    <BookOpen className="h-6 w-6 text-slate-300 mb-1" />
-                    <span className="text-[10px] font-bold text-slate-500 line-clamp-2">{viewingBook.title}</span>
+                  <div className="absolute inset-0 -z-1 flex flex-col items-center justify-center p-2 text-center text-slate-400 dark:text-neutral-500 bg-slate-100 dark:bg-white/5">
+                    <BookOpen className="h-6 w-6 text-slate-300 dark:text-neutral-600 mb-1" />
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 line-clamp-2">{viewingBook.title}</span>
                   </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{viewingBook.status}</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.health === 'Excellent' ? 'bg-emerald-100 text-emerald-700' : viewingBook.health === 'Good' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>Health: {viewingBook.healthScore}%</span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-neutral-300'}`}>{viewingBook.status}</span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.health === 'Excellent' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : viewingBook.health === 'Good' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'}`}>Health: {viewingBook.healthScore}%</span>
                   </div>
-                  <h3 className="text-xl font-extrabold text-slate-900">{viewingBook.title}</h3>
-                  <p className="text-sm font-semibold text-slate-500 mt-1">{viewingBook.author || 'Unknown Author'}</p>
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">{viewingBook.title}</h3>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-neutral-400 mt-1">{viewingBook.author || 'Unknown Author'}</p>
                   
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-slate-500 text-xs mb-1">ISBN 13</p>
-                      <p className="font-mono font-medium text-slate-900">{viewingBook.isbn13 || 'N/A'}</p>
+                      <p className="text-slate-500 dark:text-neutral-400 text-xs mb-1">ISBN 13</p>
+                      <p className="font-mono font-medium text-slate-900 dark:text-white">{viewingBook.isbn13 || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 text-xs mb-1">SKU</p>
-                      <p className="font-mono font-medium text-slate-900">{viewingBook.sku || 'N/A'}</p>
+                      <p className="text-slate-500 dark:text-neutral-400 text-xs mb-1">SKU</p>
+                      <p className="font-mono font-medium text-slate-900 dark:text-white">{viewingBook.sku || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -386,58 +386,58 @@ export default function ProductsWorkspace() {
 
               {/* Pricing & Inventory */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-slate-200 p-4">
+                <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-white dark:bg-white/[0.03]">
                   <div className="flex items-center gap-2 mb-4">
-                    <BarChart2 className="h-4 w-4 text-slate-400" />
-                    <h4 className="font-bold text-slate-800">Pricing</h4>
+                    <BarChart2 className="h-4 w-4 text-slate-400 dark:text-neutral-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-white">Pricing</h4>
                   </div>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-500">MRP</span><span className="font-medium text-slate-400 line-through">{formatINR(viewingBook.mrp)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Selling Price</span><span className="font-bold text-slate-900">{formatINR(viewingBook.price)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Cost Price</span><span className="font-medium text-slate-900">{viewingBook.costPrice ? formatINR(viewingBook.costPrice) : '₹0 (Not Set)'}</span></div>
-                    <div className="flex justify-between border-t border-slate-100 pt-2"><span className="text-slate-500 font-bold">Margin</span><span className={`font-bold ${viewingBook.costPrice ? 'text-emerald-600' : 'text-slate-400'}`}>{viewingBook.costPrice ? `${Math.round(((viewingBook.price - viewingBook.costPrice) / viewingBook.price) * 100)}%` : '0%'}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">MRP</span><span className="font-medium text-slate-400 line-through">{formatINR(viewingBook.mrp)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">Selling Price</span><span className="font-bold text-slate-900 dark:text-white">{formatINR(viewingBook.price)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">Cost Price</span><span className="font-medium text-slate-900 dark:text-white">{viewingBook.costPrice ? formatINR(viewingBook.costPrice) : '₹0 (Not Set)'}</span></div>
+                    <div className="flex justify-between border-t border-slate-100 dark:border-white/10 pt-2"><span className="text-slate-500 dark:text-neutral-400 font-bold">Margin</span><span className={`font-bold ${viewingBook.costPrice ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{viewingBook.costPrice ? `${Math.round(((viewingBook.price - viewingBook.costPrice) / viewingBook.price) * 100)}%` : '0%'}</span></div>
                   </div>
                 </div>
                 
-                <div className="rounded-xl border border-slate-200 p-4">
+                <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-white dark:bg-white/[0.03]">
                   <div className="flex items-center gap-2 mb-4">
-                    <Package className="h-4 w-4 text-slate-400" />
-                    <h4 className="font-bold text-slate-800">Inventory</h4>
+                    <Package className="h-4 w-4 text-slate-400 dark:text-neutral-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-white">Inventory</h4>
                   </div>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between"><span className="text-slate-500">Available</span><span className="font-bold text-slate-900">{viewingBook.stock}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Reserved</span><span className="font-medium text-slate-900">{viewingBook.reservedStock || 0}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Reorder Level</span><span className="font-medium text-amber-600">{viewingBook.reorderLevel ?? 20} <span className="text-[10px] text-slate-400 font-normal">(Alert at ≤ {viewingBook.reorderLevel ?? 20})</span></span></div>
-                    <div className="flex justify-between border-t border-slate-100 pt-2"><span className="text-slate-500">Warehouse</span><span className="font-medium text-slate-700">{viewingBook.warehouse || 'Main Warehouse'}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">Available</span><span className="font-bold text-slate-900 dark:text-white">{viewingBook.stock}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">Reserved</span><span className="font-medium text-slate-900 dark:text-white">{viewingBook.reservedStock || 0}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-neutral-400">Reorder Level</span><span className="font-medium text-amber-600 dark:text-amber-400">{viewingBook.reorderLevel ?? 20} <span className="text-[10px] text-slate-400 font-normal">(Alert at ≤ {viewingBook.reorderLevel ?? 20})</span></span></div>
+                    <div className="flex justify-between border-t border-slate-100 dark:border-white/10 pt-2"><span className="text-slate-500 dark:text-neutral-400">Warehouse</span><span className="font-medium text-slate-700 dark:text-neutral-300">{viewingBook.warehouse || 'Main Warehouse'}</span></div>
                   </div>
                 </div>
               </div>
 
                {/* Performance / Sales */}
-              <div className="rounded-xl border border-slate-200 p-4">
-                 <h4 className="font-bold text-slate-800 mb-4">Performance</h4>
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-white dark:bg-white/[0.03]">
+                 <h4 className="font-bold text-slate-800 dark:text-white mb-4">Performance</h4>
                  <div className="grid grid-cols-3 gap-4">
-                   <div className="text-center p-3 bg-slate-50 rounded-lg">
-                     <p className="text-xs text-slate-500 mb-1">Lifetime Sold</p>
-                     <p className="text-lg font-extrabold text-emerald-700">{viewingBook.lifetimeSales || 0}</p>
+                   <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Lifetime Sold</p>
+                     <p className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">{viewingBook.lifetimeSales || 0}</p>
                    </div>
-                   <div className="text-center p-3 bg-slate-50 rounded-lg">
-                     <p className="text-xs text-slate-500 mb-1">In Cart</p>
-                     <p className="text-lg font-extrabold text-blue-700">{viewingBook.inCartCount ?? 0}</p>
+                   <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">In Cart</p>
+                     <p className="text-lg font-extrabold text-blue-700 dark:text-blue-400">{viewingBook.inCartCount ?? 0}</p>
                    </div>
-                   <div className="text-center p-3 bg-slate-50 rounded-lg">
-                     <p className="text-xs text-slate-500 mb-1">Wishlisted</p>
-                     <p className="text-lg font-extrabold text-rose-700">{viewingBook.wishlistCount ?? 0}</p>
+                   <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
+                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Wishlisted</p>
+                     <p className="text-lg font-extrabold text-rose-700 dark:text-rose-400">{viewingBook.wishlistCount ?? 0}</p>
                    </div>
                  </div>
               </div>
 
               {/* Book Description & Syllabus Card with 1-Click Quick Editor */}
-              <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-white shadow-xs">
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 space-y-3 bg-white dark:bg-white/[0.03] shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-emerald-600" />
-                    <h4 className="font-bold text-slate-800">Book Description & Syllabus</h4>
+                    <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-white">Book Description & Syllabus</h4>
                   </div>
                   {editingDescId !== viewingBook.id ? (
                     <button
@@ -446,7 +446,7 @@ export default function ProductsWorkspace() {
                         setEditingDescId(viewingBook.id);
                         setDescInput(viewingBook.description || '');
                       }}
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
                       <Edit2 className="h-3 w-3" /> Edit Description
                     </button>
@@ -460,17 +460,17 @@ export default function ProductsWorkspace() {
                       value={descInput}
                       onChange={(e) => setDescInput(e.target.value)}
                       placeholder="Enter comprehensive book description, syllabus, chapters outline, and exam features..."
-                      className="w-full rounded-lg border border-slate-300 p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                      className="w-full rounded-lg border border-slate-300 dark:border-white/20 dark:bg-white/[0.06] dark:text-white p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
                     />
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-slate-400 dark:text-neutral-400">
                         {descInput.length} characters
                       </span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setEditingDescId(null)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/10"
                         >
                           Cancel
                         </button>
@@ -499,19 +499,19 @@ export default function ProductsWorkspace() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100 text-xs text-slate-700 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap">
+                  <div className="rounded-lg bg-slate-50 dark:bg-white/[0.04] p-3.5 border border-slate-100 dark:border-white/10 text-xs text-slate-700 dark:text-neutral-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap">
                     {viewingBook.description && viewingBook.description.trim() !== '' && viewingBook.description !== 'No description provided.' ? (
                       viewingBook.description
                     ) : (
                       <div className="text-center py-3">
-                        <p className="text-slate-400 italic text-xs mb-2">No description provided yet for this book.</p>
+                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs mb-2">No description provided yet for this book.</p>
                         <button
                           type="button"
                           onClick={() => {
                             setEditingDescId(viewingBook.id);
                             setDescInput('');
                           }}
-                          className="rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold hover:bg-emerald-100"
+                          className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 px-3 py-1 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
                         >
                           + Add Description Now
                         </button>
@@ -522,12 +522,12 @@ export default function ProductsWorkspace() {
               </div>
 
               {/* Search & SEO Keywords Card (Admin Only) */}
-              <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-white shadow-xs">
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 space-y-3 bg-white dark:bg-white/[0.03] shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Search className="h-4 w-4 text-emerald-600" />
-                    <h4 className="font-bold text-slate-800">Search & SEO Keywords</h4>
-                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-200">
+                    <Search className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-white">Search & SEO Keywords</h4>
+                    <span className="rounded-md bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-white/10">
                       🔒 Admin Only
                     </span>
                   </div>
@@ -554,7 +554,7 @@ export default function ProductsWorkspace() {
                   ) : null}
                 </div>
 
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-neutral-400">
                   Customer search queries will match against these terms (alternate spellings, exam names, syllabus keywords). Customers never see these keywords on the storefront.
                 </p>
 
@@ -565,10 +565,10 @@ export default function ProductsWorkspace() {
                       value={keywordsInput}
                       onChange={(e) => setKeywordsInput(e.target.value)}
                       placeholder="e.g. NEET 2026, Physics MCQ, WBJEE, HC Verma, Class 11, Medical Entrance"
-                      className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                      className="w-full rounded-lg border border-slate-300 dark:border-white/20 dark:bg-white/[0.06] dark:text-white p-2.5 text-xs font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     />
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-[10px] font-bold uppercase text-slate-400">Quick Exam Tags:</span>
+                      <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-neutral-400">Quick Exam Tags:</span>
                       {['NEET 2026', 'JEE Advanced', 'WBJEE', 'UPSC Prelims', 'WBCS Exam', 'CBSE Class 12', 'Physics MCQ'].map(tag => (
                         <button
                           key={tag}
@@ -578,7 +578,7 @@ export default function ProductsWorkspace() {
                             if (!cur) setKeywordsInput(tag);
                             else if (!cur.toLowerCase().includes(tag.toLowerCase())) setKeywordsInput(`${cur}, ${tag}`);
                           }}
-                          className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-700 shadow-2xs"
+                          className="rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.06] px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-neutral-300 hover:border-emerald-500 hover:text-emerald-700 shadow-2xs"
                         >
                           + {tag}
                         </button>
@@ -588,7 +588,7 @@ export default function ProductsWorkspace() {
                       <button
                         type="button"
                         onClick={() => setEditingKeywordsId(null)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/10"
                       >
                         Cancel
                       </button>
@@ -616,7 +616,7 @@ export default function ProductsWorkspace() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
+                  <div className="rounded-lg bg-slate-50 dark:bg-white/[0.04] p-3 border border-slate-100 dark:border-white/10">
                     {(() => {
                       const kws = viewingBook.seoKeywords;
                       let kwArray: string[] = [];
@@ -633,14 +633,14 @@ export default function ProductsWorkspace() {
                       if (kwArray.length === 0) {
                         return (
                           <div className="text-center py-2">
-                            <p className="text-slate-400 italic text-xs mb-1">No custom search keywords set yet.</p>
+                            <p className="text-slate-400 dark:text-neutral-500 italic text-xs mb-1">No custom search keywords set yet.</p>
                             <button
                               type="button"
                               onClick={() => {
                                 setEditingKeywordsId(viewingBook.id);
                                 setKeywordsInput('');
                               }}
-                              className="rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold hover:bg-emerald-100"
+                              className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 px-3 py-1 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
                             >
                               + Add SEO Keywords
                             </button>
@@ -651,7 +651,7 @@ export default function ProductsWorkspace() {
                       return (
                         <div className="flex flex-wrap gap-1.5">
                           {kwArray.map((kw, i) => (
-                            <span key={i} className="inline-flex items-center rounded-md bg-white border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-800 shadow-2xs">
+                            <span key={i} className="inline-flex items-center rounded-md bg-white dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-2xs">
                               🏷️ {kw}
                             </span>
                           ))}
