@@ -184,102 +184,20 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inspectorScrollRef = useRef<HTMLDivElement>(null);
 
-  // Dynamic canvas size tracking for responsive preview geometry
-  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 1120, height: 630 });
-
-  useEffect(() => {
-    if (!canvasWrapperRef.current) return;
-    const updateSize = () => {
-      if (canvasWrapperRef.current) {
-        const rect = canvasWrapperRef.current.getBoundingClientRect();
-        setCanvasSize({ width: rect.width, height: rect.height });
-      }
-    };
-    updateSize();
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setCanvasSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-    ro.observe(canvasWrapperRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  // Compute frame and iframe geometry based on device preset and available canvas
-  const previewGeometry = useMemo(() => {
-    const padX = 48;
-    const padY = 48;
-    const availW = Math.max(320, canvasSize.width - padX);
-    const availH = Math.max(240, canvasSize.height - padY);
-
-    if (devicePreset === 'desktop') {
-      const baseW = 1120;
-      const baseH = 630; // 16:9 HD standard
-      const fitScale = Math.min(1, availW / baseW, availH / baseH);
-      const totalScale = +(fitScale * zoomLevel).toFixed(3);
-      const frameW = Math.round(baseW * fitScale * zoomLevel);
-      const frameH = Math.round(baseH * fitScale * zoomLevel);
-      return {
-        frameWidth: frameW,
-        frameHeight: frameH,
-        iframeWidth: baseW,
-        iframeHeight: baseH,
-        scale: totalScale,
-        aspectRatio: '16 / 9',
-        isScaled: true,
-      };
+  // Determine device frame width
+  const frameWidthStyle = useMemo(() => {
+    switch (devicePreset) {
+      case 'desktop':
+        return 'min(100%, 1280px)';
+      case 'tablet':
+        return '840px';
+      case 'mobile':
+        return '400px';
+      case 'custom':
+      default:
+        return `${customWidth}px`;
     }
-
-    if (devicePreset === 'mobile') {
-      const baseW = 390;
-      const baseH = 844;
-      const fitScale = Math.min(1, (availH - 20) / baseH);
-      const totalScale = +(fitScale * zoomLevel).toFixed(3);
-      const frameW = Math.round(baseW * fitScale * zoomLevel);
-      const frameH = Math.round(baseH * fitScale * zoomLevel);
-      return {
-        frameWidth: frameW,
-        frameHeight: frameH,
-        iframeWidth: baseW,
-        iframeHeight: baseH,
-        scale: totalScale,
-        aspectRatio: undefined,
-        isScaled: true,
-      };
-    }
-
-    if (devicePreset === 'tablet') {
-      const baseW = 820;
-      const baseH = 1080;
-      const fitScale = Math.min(1, availW / baseW, (availH - 20) / baseH);
-      const totalScale = +(fitScale * zoomLevel).toFixed(3);
-      const frameW = Math.round(baseW * fitScale * zoomLevel);
-      const frameH = Math.round(baseH * fitScale * zoomLevel);
-      return {
-        frameWidth: frameW,
-        frameHeight: frameH,
-        iframeWidth: baseW,
-        iframeHeight: baseH,
-        scale: totalScale,
-        aspectRatio: undefined,
-        isScaled: true,
-      };
-    }
-
-    // Custom / Fluid
-    return {
-      frameWidth: customWidth,
-      frameHeight: '100%' as any,
-      iframeWidth: customWidth,
-      iframeHeight: '100%' as any,
-      scale: zoomLevel,
-      aspectRatio: undefined,
-      isScaled: false,
-    };
-  }, [canvasSize, devicePreset, zoomLevel, customWidth]);
+  }, [devicePreset, customWidth]);
 
   // Fetch current published content from backend
   useEffect(() => {
@@ -891,38 +809,31 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         {/* Center / Left: Interactive Live Preview Canvas (Centered horizontally & vertically) */}
         <div
           ref={canvasWrapperRef}
-          className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 lg:p-8 flex overflow-auto relative select-none`}
+          className={`flex-1 ${themeClasses.canvasBg} p-3 sm:p-5 flex overflow-auto relative select-none`}
           style={{ minWidth: 0 }}
         >
           {/* Responsive Preview Device Window Frame (Floating Display with Border & Shadow) */}
           <div
             className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70 m-auto shrink-0 select-none"
             style={{
-              width: `${previewGeometry.frameWidth}px`,
-              height: typeof previewGeometry.frameHeight === 'number' ? `${previewGeometry.frameHeight}px` : previewGeometry.frameHeight,
-              maxWidth: '100%',
-              maxHeight: '100%',
-              aspectRatio: previewGeometry.aspectRatio,
+              width: frameWidthStyle,
+              height: 'calc(100% - 12px)',
+              maxHeight: 'calc(100% - 12px)',
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: 'center center',
+              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out, width 0.15s ease-out',
               isolation: 'isolate',
             }}
           >
-            {/* Live Interactive Storefront Iframe Container */}
-            <div
-              className="relative overflow-hidden bg-white"
-              style={{
-                width: previewGeometry.isScaled ? `${previewGeometry.iframeWidth}px` : '100%',
-                height: previewGeometry.isScaled ? `${previewGeometry.iframeHeight}px` : '100%',
-                transform: previewGeometry.isScaled ? `scale(${previewGeometry.scale})` : undefined,
-                transformOrigin: 'top left',
-              }}
-            >
+            {/* Live Interactive Storefront Iframe Container (Full Page Scrollable) */}
+            <div className="w-full h-full flex-1 relative overflow-hidden bg-white">
               <iframe
                 ref={iframeRef}
                 key={iframeKey}
                 src={previewUrl}
                 onLoad={handleIframeLoad}
                 title="Live Storefront Preview"
-                className="w-full h-full border-0 bg-white block rounded-none"
+                className="w-full h-full border-0 bg-white block"
                 style={{
                   width: '100%',
                   height: '100%',
