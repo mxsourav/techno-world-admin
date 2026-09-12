@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Monitor,
   Tablet,
@@ -182,6 +182,104 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const [iframeKey, setIframeKey] = useState<number>(Date.now());
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inspectorScrollRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic canvas size tracking for responsive preview geometry
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 1120, height: 630 });
+
+  useEffect(() => {
+    if (!canvasWrapperRef.current) return;
+    const updateSize = () => {
+      if (canvasWrapperRef.current) {
+        const rect = canvasWrapperRef.current.getBoundingClientRect();
+        setCanvasSize({ width: rect.width, height: rect.height });
+      }
+    };
+    updateSize();
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setCanvasSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    ro.observe(canvasWrapperRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute frame and iframe geometry based on device preset and available canvas
+  const previewGeometry = useMemo(() => {
+    const padX = 48;
+    const padY = 48;
+    const availW = Math.max(320, canvasSize.width - padX);
+    const availH = Math.max(240, canvasSize.height - padY);
+
+    if (devicePreset === 'desktop') {
+      const baseW = 1120;
+      const baseH = 630; // 16:9 HD standard
+      const fitScale = Math.min(1, availW / baseW, availH / baseH);
+      const totalScale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.round(baseW * fitScale * zoomLevel);
+      const frameH = Math.round(baseH * fitScale * zoomLevel);
+      return {
+        frameWidth: frameW,
+        frameHeight: frameH,
+        iframeWidth: baseW,
+        iframeHeight: baseH,
+        scale: totalScale,
+        aspectRatio: '16 / 9',
+        isScaled: true,
+      };
+    }
+
+    if (devicePreset === 'mobile') {
+      const baseW = 390;
+      const baseH = 844;
+      const fitScale = Math.min(1, (availH - 20) / baseH);
+      const totalScale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.round(baseW * fitScale * zoomLevel);
+      const frameH = Math.round(baseH * fitScale * zoomLevel);
+      return {
+        frameWidth: frameW,
+        frameHeight: frameH,
+        iframeWidth: baseW,
+        iframeHeight: baseH,
+        scale: totalScale,
+        aspectRatio: undefined,
+        isScaled: true,
+      };
+    }
+
+    if (devicePreset === 'tablet') {
+      const baseW = 820;
+      const baseH = 1080;
+      const fitScale = Math.min(1, availW / baseW, (availH - 20) / baseH);
+      const totalScale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.round(baseW * fitScale * zoomLevel);
+      const frameH = Math.round(baseH * fitScale * zoomLevel);
+      return {
+        frameWidth: frameW,
+        frameHeight: frameH,
+        iframeWidth: baseW,
+        iframeHeight: baseH,
+        scale: totalScale,
+        aspectRatio: undefined,
+        isScaled: true,
+      };
+    }
+
+    // Custom / Fluid
+    return {
+      frameWidth: customWidth,
+      frameHeight: '100%' as any,
+      iframeWidth: customWidth,
+      iframeHeight: '100%' as any,
+      scale: zoomLevel,
+      aspectRatio: undefined,
+      isScaled: false,
+    };
+  }, [canvasSize, devicePreset, zoomLevel, customWidth]);
 
   // Fetch current published content from backend
   useEffect(() => {
@@ -211,6 +309,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         setSelectedKey(data.key);
         if (isInspectorCollapsed) {
           setIsInspectorCollapsed(false);
+        }
+        if (inspectorScrollRef.current) {
+          inspectorScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
         }
         setContent((prev) => {
           const next = { ...prev };
@@ -342,6 +443,10 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const handleSelectKeyFromDirectory = (item: EditableKeyInfo) => {
     setSelectedKey(item.key);
     selectedKeyRef.current = item.key;
+
+    if (inspectorScrollRef.current) {
+      inspectorScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     if (item.page && selectedPage !== item.page) {
       setSelectedPage(item.page);
@@ -786,27 +891,31 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         {/* Center / Left: Interactive Live Preview Canvas (Centered horizontally & vertically) */}
         <div
           ref={canvasWrapperRef}
-          className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 lg:p-8 flex items-center justify-center overflow-auto relative select-none`}
+          className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 lg:p-8 flex overflow-auto relative select-none`}
+          style={{ minWidth: 0 }}
         >
           {/* Responsive Preview Device Window Frame (Floating Display with Border & Shadow) */}
           <div
-            className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70"
+            className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70 m-auto shrink-0 select-none"
             style={{
-              width: devicePreset === 'desktop'
-                ? 'min(100%, calc((100vh - 210px) * 16 / 9))'
-                : (devicePreset === 'mobile' ? '390px' : (devicePreset === 'tablet' ? '820px' : `${customWidth}px`)),
-              maxWidth: devicePreset === 'desktop' ? '1120px' : '100%',
-              aspectRatio: devicePreset === 'desktop' ? '16 / 9' : undefined,
-              height: devicePreset === 'desktop' ? 'auto' : '100%',
-              maxHeight: devicePreset === 'desktop' ? 'min(calc(100vh - 210px), 100%)' : '100%',
-              transform: `scale(${zoomLevel})`,
-              transformOrigin: 'center center',
-              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out, width 0.15s ease-out',
+              width: `${previewGeometry.frameWidth}px`,
+              height: typeof previewGeometry.frameHeight === 'number' ? `${previewGeometry.frameHeight}px` : previewGeometry.frameHeight,
+              maxWidth: '100%',
+              maxHeight: '100%',
+              aspectRatio: previewGeometry.aspectRatio,
               isolation: 'isolate',
             }}
           >
-            {/* Live Interactive Storefront Iframe Container (Full frame visible area without duplicate inner bar) */}
-            <div className="w-full flex-1 h-full relative overflow-hidden bg-white rounded-none">
+            {/* Live Interactive Storefront Iframe Container */}
+            <div
+              className="relative overflow-hidden bg-white"
+              style={{
+                width: previewGeometry.isScaled ? `${previewGeometry.iframeWidth}px` : '100%',
+                height: previewGeometry.isScaled ? `${previewGeometry.iframeHeight}px` : '100%',
+                transform: previewGeometry.isScaled ? `scale(${previewGeometry.scale})` : undefined,
+                transformOrigin: 'top left',
+              }}
+            >
               <iframe
                 ref={iframeRef}
                 key={iframeKey}
@@ -823,13 +932,15 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             </div>
 
             {/* Canvas Right Edge Drag Handle for Custom Width Resizing */}
-            <div
-              onMouseDown={handleCanvasResizeMouseDown}
-              title="Drag horizontally to resize preview width"
-              className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-blue-500/40 active:bg-blue-600 transition-colors z-30 flex items-center justify-center group"
-            >
-              <div className="w-1 h-8 rounded-full bg-slate-400/60 dark:bg-white/30 group-hover:bg-blue-500 shadow" />
-            </div>
+            {devicePreset === 'custom' && (
+              <div
+                onMouseDown={handleCanvasResizeMouseDown}
+                title="Drag horizontally to resize preview width"
+                className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-blue-500/40 active:bg-blue-600 transition-colors z-30 flex items-center justify-center group"
+              >
+                <div className="w-1 h-8 rounded-full bg-slate-400/60 dark:bg-white/30 group-hover:bg-blue-500 shadow" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -895,7 +1006,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
+            <div ref={inspectorScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
               {/* Active Selected Element Editor */}
               {selectedKey ? (
                 <div className={`rounded-xl p-4.5 border transition-all ${themeClasses.card} space-y-4`}>
