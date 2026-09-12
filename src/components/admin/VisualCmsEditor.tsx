@@ -357,8 +357,9 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         );
       };
       sendSelect();
-      setTimeout(sendSelect, 100);
-      setTimeout(sendSelect, 300);
+      setTimeout(sendSelect, 80);
+      setTimeout(sendSelect, 220);
+      setTimeout(sendSelect, 500);
     }
   };
 
@@ -594,7 +595,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       } ${themeClasses.root} ${themeClasses.frameBorder}`}
     >
       {/* Apple Titlebar & Toolbar */}
-      <div className={`flex flex-wrap items-center justify-between gap-2 px-4 py-2 ${themeClasses.header} select-none shrink-0`}>
+      <div className={`flex flex-nowrap items-center justify-between gap-2 px-3 py-1.5 ${themeClasses.header} select-none shrink-0 overflow-x-auto`}>
         {/* Left: macOS Traffic Light Dots & Title */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -782,26 +783,25 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
       {/* Main Workbench Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Center / Left: Interactive Live Preview Canvas */}
+        {/* Center / Left: Interactive Live Preview Canvas (Centered horizontally & vertically) */}
         <div
           ref={canvasWrapperRef}
-          className={`flex-1 ${themeClasses.canvasBg} p-2 sm:p-3 flex flex-col items-center justify-start overflow-auto relative select-none`}
+          className={`flex-1 ${themeClasses.canvasBg} p-4 sm:p-6 lg:p-8 flex items-center justify-center overflow-auto relative select-none`}
         >
-          {/* Responsive Preview Device Window Frame (16:9 in Desktop Preset, Resizable, Max Area) */}
+          {/* Responsive Preview Device Window Frame (Floating Display with Border & Shadow) */}
           <div
-            className={`flex flex-col rounded-none overflow-hidden transition-all duration-150 ${themeClasses.frameBorder} bg-white relative shadow-xl`}
+            className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70"
             style={{
-              width: devicePreset === 'desktop' ? '100%' : (devicePreset === 'mobile' ? 390 : (devicePreset === 'tablet' ? 820 : customWidth)),
-              maxWidth: '100%',
+              width: devicePreset === 'desktop'
+                ? 'min(100%, calc((100vh - 210px) * 16 / 9))'
+                : (devicePreset === 'mobile' ? '390px' : (devicePreset === 'tablet' ? '820px' : `${customWidth}px`)),
+              maxWidth: devicePreset === 'desktop' ? '1120px' : '100%',
               aspectRatio: devicePreset === 'desktop' ? '16 / 9' : undefined,
               height: devicePreset === 'desktop' ? 'auto' : '100%',
-              maxHeight: devicePreset === 'desktop' ? '100%' : undefined,
-              minHeight: devicePreset === 'desktop' ? undefined : '520px',
-              borderRadius: '0px',
-              overflow: 'hidden',
+              maxHeight: devicePreset === 'desktop' ? 'min(calc(100vh - 210px), 100%)' : '100%',
               transform: `scale(${zoomLevel})`,
-              transformOrigin: 'top center',
-              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out',
+              transformOrigin: 'center center',
+              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out, width 0.15s ease-out',
               isolation: 'isolate',
             }}
           >
