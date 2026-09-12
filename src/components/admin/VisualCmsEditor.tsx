@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Sliders,
   PanelRightClose,
+  PanelRight,
   Globe,
   SlidersHorizontal,
   Type,
@@ -128,6 +129,48 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
   // Fullscreen expansion
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Zoom Controls & Interactive Canvas Scaling
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Ctrl + Mouse Wheel listener for zooming preview
+  useEffect(() => {
+    const el = canvasWrapperRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setZoomLevel((prev) => Math.min(2.0, Math.max(0.4, +(prev + delta).toFixed(2))));
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // Keyboard shortcut listener for Ctrl + / Ctrl - / Ctrl 0
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === '=' || e.key === '+') {
+          e.preventDefault();
+          setZoomLevel((prev) => Math.min(2.0, +(prev + 0.1).toFixed(2)));
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          setZoomLevel((prev) => Math.max(0.4, +(prev - 0.1).toFixed(2)));
+        } else if (e.key === '0') {
+          e.preventDefault();
+          setZoomLevel(1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Content & Preview State
   const [selectedPage, setSelectedPage] = useState<string>('/');
@@ -588,7 +631,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">Visual CMS Studio</span>
+                <span className="text-xs font-black tracking-tight text-slate-900 dark:text-white">Visual CMS</span>
                 <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   Live Preview
                 </span>
@@ -600,7 +643,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
           </div>
         </div>
 
-        {/* Center: Device Viewport Presets & Page Selector */}
+        {/* Center: Device Viewport Presets, Page Selector & Zoom */}
         <div className="flex items-center gap-2">
           {/* Apple Segmented Device Pill */}
           <div className="flex items-center p-1 rounded-lg bg-black/[0.05] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/10 backdrop-blur-md">
@@ -620,7 +663,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               }`}
             >
               <Tablet className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">iPad</span>
+              <span className="hidden sm:inline">Tablet</span>
             </button>
             <button
               onClick={() => setDevicePreset('mobile')}
@@ -629,7 +672,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
               }`}
             >
               <Smartphone className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">iPhone</span>
+              <span className="hidden sm:inline">Mobile</span>
             </button>
             <button
               onClick={() => setDevicePreset('custom')}
@@ -640,6 +683,31 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             >
               <SlidersHorizontal className="h-3 w-3" />
               <span className="text-[11px] font-mono">{typeof getCanvasWidthPx() === 'number' ? `${getCanvasWidthPx()}px` : 'Fluid'}</span>
+            </button>
+          </div>
+
+          {/* Zoom Controls Pill (Ctrl + / Ctrl - / Ctrl + Wheel) */}
+          <div className="flex items-center p-0.5 rounded-lg bg-black/[0.05] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/10 backdrop-blur-md">
+            <button
+              onClick={() => setZoomLevel((prev) => Math.max(0.4, +(prev - 0.1).toFixed(2)))}
+              title="Zoom Out (Ctrl -)"
+              className="p-1 rounded-md hover:bg-black/[0.06] dark:hover:bg-white/10 text-slate-600 dark:text-neutral-200 transition-colors"
+            >
+              <Minus className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setZoomLevel(1)}
+              title="Reset Zoom to 100% (Ctrl 0)"
+              className="px-1.5 py-0.5 text-[11px] font-mono font-bold text-slate-700 dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {Math.round(zoomLevel * 100)}%
+            </button>
+            <button
+              onClick={() => setZoomLevel((prev) => Math.min(2.0, +(prev + 0.1).toFixed(2)))}
+              title="Zoom In (Ctrl +)"
+              className="p-1 rounded-md hover:bg-black/[0.06] dark:hover:bg-white/10 text-slate-600 dark:text-neutral-200 transition-colors"
+            >
+              <Plus className="h-3 w-3" />
             </button>
           </div>
 
@@ -662,7 +730,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
           </div>
         </div>
 
-        {/* Right: Reload, and Publish Live Button */}
+        {/* Right: Reload, Open External, Inspector Toggle, and Publish Live Button */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIframeKey(Date.now())}
@@ -672,7 +740,30 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             <RotateCw className="h-3.5 w-3.5" />
           </button>
 
-          {/* Clean Publish Button (No emoji) */}
+          <a
+            href={`${previewOrigin}${selectedPage}`}
+            target="_blank"
+            rel="noreferrer"
+            title="Open storefront in new tab"
+            className="p-2 rounded-lg bg-black/[0.05] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] transition-colors text-slate-500 dark:text-neutral-200"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+
+          {/* Inspector Panel Toggle Button */}
+          <button
+            onClick={() => setIsInspectorCollapsed((prev) => !prev)}
+            title={isInspectorCollapsed ? "Open Inspector" : "Collapse Inspector"}
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+              !isInspectorCollapsed
+                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60'
+                : 'bg-black/[0.05] dark:bg-white/[0.06] text-slate-600 dark:text-neutral-200 hover:bg-black/[0.08] dark:hover:bg-white/[0.1]'
+            }`}
+          >
+            <PanelRight className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Clean Publish Button */}
           <button
             onClick={handlePublish}
             disabled={isPublishing}
@@ -692,53 +783,30 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       {/* Main Workbench Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Center / Left: Interactive Live Preview Canvas */}
-        <div className={`flex-1 ${themeClasses.canvasBg} p-2 sm:p-3 flex flex-col items-center justify-start overflow-auto relative select-none`}>
-          {/* Responsive Preview Device Window Frame (Resizable, Square Clean Normal Corners) */}
+        <div
+          ref={canvasWrapperRef}
+          className={`flex-1 ${themeClasses.canvasBg} p-2 sm:p-3 flex flex-col items-center justify-start overflow-auto relative select-none`}
+        >
+          {/* Responsive Preview Device Window Frame (16:9 in Desktop Preset, Resizable, Max Area) */}
           <div
             className={`flex flex-col rounded-none overflow-hidden transition-all duration-150 ${themeClasses.frameBorder} bg-white relative shadow-xl`}
             style={{
-              width: getCanvasWidthPx(),
+              width: devicePreset === 'desktop' ? '100%' : (devicePreset === 'mobile' ? 390 : (devicePreset === 'tablet' ? 820 : customWidth)),
               maxWidth: '100%',
-              height: '100%',
-              minHeight: '520px',
+              aspectRatio: devicePreset === 'desktop' ? '16 / 9' : undefined,
+              height: devicePreset === 'desktop' ? 'auto' : '100%',
+              maxHeight: devicePreset === 'desktop' ? '100%' : undefined,
+              minHeight: devicePreset === 'desktop' ? undefined : '520px',
               borderRadius: '0px',
               overflow: 'hidden',
-              transform: 'translateZ(0)',
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: 'top center',
+              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out',
               isolation: 'isolate',
             }}
           >
-            {/* Safari Mock Address Bar */}
-            <div className="bg-slate-100/90 dark:bg-[#0c1222]/90 border-b border-slate-200/80 dark:border-white/[0.08] px-3.5 py-2 flex items-center justify-between shrink-0 select-none backdrop-blur-md rounded-none">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              </div>
-
-              {/* Safari Capsule Search Bar */}
-              <div className="bg-white dark:bg-white/[0.08] px-4 py-1 rounded-md border border-slate-200 dark:border-white/10 text-[11px] font-mono text-slate-600 dark:text-neutral-200 truncate max-w-sm flex items-center gap-1.5 shadow-2xs">
-                <span className="text-slate-400">🔒</span>
-                <span>technoworldbooks.in{selectedPage}</span>
-                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-950/60 px-1 rounded">
-                  ?cms_edit=true
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={`${previewOrigin}${selectedPage}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="Open storefront in new tab"
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
-
-            {/* Live Interactive Storefront Iframe Container */}
-            <div className="w-full flex-1 relative overflow-hidden bg-white rounded-none">
+            {/* Live Interactive Storefront Iframe Container (Full frame visible area without duplicate inner bar) */}
+            <div className="w-full flex-1 h-full relative overflow-hidden bg-white rounded-none">
               <iframe
                 ref={iframeRef}
                 key={iframeKey}
@@ -764,6 +832,17 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
             </div>
           </div>
         </div>
+
+        {/* Docked Inspector Expand Button when collapsed */}
+        {isInspectorCollapsed && (
+          <button
+            onClick={() => setIsInspectorCollapsed(false)}
+            title="Open Inspector"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-l-xl bg-white dark:bg-[#131b2e] border-l border-t border-b border-slate-200 dark:border-white/10 shadow-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-neutral-200 flex items-center justify-center group"
+          >
+            <PanelRight className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+          </button>
+        )}
 
         {/* Draggable Splitter Handle between Preview and Inspector */}
         {!isInspectorCollapsed && (

@@ -812,7 +812,7 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       console.error('Failed to fetch detailed customer profile:', err);
-      toast.error('Could not fetch complete customer dossier');
+      toast.error('Could not fetch customer details');
     } finally {
       setIsLoadingCustomerDetails(false);
     }
@@ -1935,7 +1935,7 @@ admin@technoworld.com`
 
           return (
             <div className="space-y-4">
-                            {/* Universal Order Dossier Lookup Card */}
+                            {/* Universal Order Search & Lookup Card */}
               <div className="rounded-2xl border border-blue-200 dark:border-white/[0.12] bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-[#0d1324]/80 p-4 shadow-sm backdrop-blur-md">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -1944,7 +1944,7 @@ admin@technoworld.com`
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5"><Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Universal Order Dossier Lookup</h3>
+                        <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5"><Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Universal Order Search & Lookup</h3>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-500/30">
                           Global Search
                         </span>
@@ -3371,7 +3371,7 @@ admin@technoworld.com`
                 </div>
               )}
 
-                            {/* Universal Order Dossier Modal */}
+                            {/* Universal Order Details Modal */}
               {lookupOrderDossier && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
                   <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh]">
@@ -3383,7 +3383,7 @@ admin@technoworld.com`
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-black text-white text-base">Order Dossier: #{lookupOrderDossier.orderNumber}</h3>
+                            <h3 className="font-black text-white text-base">Order Details: #{lookupOrderDossier.orderNumber}</h3>
                             <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border shadow-2xs ${
                               lookupOrderDossier.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
                               lookupOrderDossier.status === 'CONFIRMED' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
@@ -3910,13 +3910,10 @@ admin@technoworld.com`
               <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-white/[0.08]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Customer Accounts & Order Dossier</h2>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
-                      Industrial Admin
-                    </span>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Customer Accounts</h2>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
-                    Manage store patrons, assign/deduct TechnoPoints loyalty rewards, blacklist suspicious accounts, and inspect detailed book reading history.
+                    Manage customer accounts, update TechnoPoints loyalty rewards, manage access permissions, and view order history.
                   </p>
                 </div>
 
@@ -4146,13 +4143,13 @@ admin@technoworld.com`
                                   )}
                                 </button>
 
-                                {/* View Dossier Trigger */}
+                                {/* View Customer Details Trigger */}
                                 <button
                                   type="button"
                                   onClick={() => handleOpenCustomerDetails(c)}
                                   className="rounded-lg border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-white/[0.14] shadow-2xs transition-all"
                                 >
-                                  Dossier
+                                  View Details
                                 </button>
                               </div>
                             </td>
@@ -4343,7 +4340,7 @@ admin@technoworld.com`
               </div>
             )}
 
-            {/* Comprehensive Customer Dossier & Book Purchase History Modal */}
+            {/* Customer Profile & Purchase History Modal */}
             {selectedCustomerDetail && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
                 <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[90vh]">
@@ -4517,12 +4514,12 @@ admin@technoworld.com`
 
                   {/* Footer */}
                   <div className="flex items-center justify-between border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
-                    <span className="text-[11px] text-slate-400">Patron since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}</span>
+                    <span className="text-[11px] text-slate-400">Customer since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}</span>
                     <button
                       onClick={() => setSelectedCustomerDetail(null)}
                       className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
                     >
-                      Close Dossier
+                      Close
                     </button>
                   </div>
                 </div>
