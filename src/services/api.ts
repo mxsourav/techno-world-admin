@@ -223,6 +223,20 @@ export const api = {
     }
   },
 
+  putUpload: async <T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> => {
+    try {
+      const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      return handleResponse<T>(response);
+    } catch (error: any) {
+      if (error instanceof ApiError) throw error;
+      console.error(`API PUT UPLOAD ${endpoint} error:`, error);
+      throw new ApiError(0, 'Unable to connect to the server.');
+    }
+  },
+
   patch: async <T>(endpoint: string, body?: any): Promise<ApiResponse<T>> => {
     try {
       const response = await fetchWithAuth(`${API_URL}${endpoint}`, {
@@ -270,6 +284,9 @@ export const api = {
 export const categoryService = {
   getCategories: () => api.get<any[]>('/categories'),
   getCategoryBySlug: (slug: string) => api.get<any>(`/categories/${slug}`),
+  getAllAdminCategories: () => api.get<any[]>('/admin/categories'),
+  reorderCategories: (categoryIds: string[]) => api.patch<any>('/admin/categories/reorder', { categoryIds }),
+  updateCategory: (id: string, data: any) => api.patch<any>(`/admin/categories/${id}`, data),
 };
 
 export const bookService = {
@@ -338,7 +355,29 @@ export const adminService = {
     senderName?: string;
   }) => api.post<any>('/admin/smtp/test', data),
   getEmailLogs: (params?: { limit?: number }) => api.get<any[]>('/admin/emails', params),
-  getCustomers: (params?: { search?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
+  getCustomers: (params?: { search?: string; status?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
+  toggleCustomerStatus: (id: string, data: { isActive?: boolean; reason?: string }) =>
+    api.patch<any>(`/admin/customers/${id}/status`, data),
+  adjustCustomerPoints: (id: string, data: { points: number; type: 'CREDIT' | 'DEBIT'; reason?: string }) =>
+    api.post<any>(`/admin/customers/${id}/points`, data),
+  getCustomerDetails: (id: string) => api.get<any>(`/admin/customers/${id}/details`),
+  exportCustomers: async (format: 'csv' | 'sql'): Promise<void> => {
+    const res = await fetchWithAuth(`${API_URL}/admin/customers/export?format=${format}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to export customer data');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `techno_customers_${dateStr}.${format === 'sql' ? 'sql' : 'csv'}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
   getSearchTrends: (params?: { period?: string; startDate?: string; endDate?: string }) =>
     api.get<any>('/admin/analytics/search-trends', params),
   getAutoAcceptSetting: () => api.get<{ enabled: boolean }>('/admin/settings/auto-accept'),
@@ -718,6 +757,133 @@ export const heroService = {
   },
   deleteCover: () =>
     api.delete<{ id: string; hero_book_cover_url: null; hero_book_cover_updated_at: string }>('/hero/admin/cover'),
+};
+
+export interface BookImageItem {
+  id: string;
+  bookId: string;
+  publicId: string;
+  secureUrl: string;
+  resourceType: string;
+  format?: string | null;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  sortOrder: number;
+  isCover: boolean;
+  altText?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SiteMediaType = 'BANNER' | 'PROMOTIONAL' | 'FIXED' | 'VIDEO';
+
+export interface SiteMediaItem {
+  id: string;
+  type: SiteMediaType;
+  name: string;
+  publicId: string;
+  secureUrl: string;
+  resourceType: string;
+  format?: string | null;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  duration?: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  altText?: string | null;
+  targetUrl?: string | null;
+  metadata?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const bookMediaService = {
+  getImages: (bookId: string) =>
+    api.get<BookImageItem[]>(`/admin/books/${bookId}/images`),
+
+  uploadCover: (bookId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.upload<{ book: any; image: BookImageItem }>(`/admin/books/${bookId}/cover`, formData);
+  },
+
+  uploadGallery: (bookId: string, files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    return api.upload<BookImageItem[]>(`/admin/books/${bookId}/images`, formData);
+  },
+
+  deleteImage: (bookId: string, imageId: string) =>
+    api.delete<{ newCoverUrl: string | null; remainingImages: BookImageItem[] }>(
+      `/admin/books/${bookId}/images/${imageId}`
+    ),
+
+  reorderImages: (bookId: string, imageIds: string[]) =>
+    api.patch<BookImageItem[]>(`/admin/books/${bookId}/images/reorder`, { imageIds }),
+
+  setCover: (bookId: string, imageId: string) =>
+    api.patch<{ coverUrl: string; coverPublicId: string }>(
+      `/admin/books/${bookId}/images/${imageId}/cover`
+    ),
+
+  uploadPdf: (bookId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.upload<{ previewPdfUrl: string; previewPdfPublicId: string }>(
+      `/admin/books/${bookId}/pdf`,
+      formData
+    );
+  },
+
+  deletePdf: (bookId: string) =>
+    api.delete<{ success: boolean; message: string }>(`/admin/books/${bookId}/pdf`),
+};
+
+export const siteMediaService = {
+  list: (params?: { type?: string; search?: string; isActive?: boolean }) =>
+    api.get<SiteMediaItem[]>('/admin/site-media', params as Record<string, string | number | boolean>),
+
+  upload: (
+    file: File,
+    data: {
+      type: SiteMediaType;
+      name: string;
+      altText?: string;
+      targetUrl?: string;
+      sortOrder?: number;
+    }
+  ) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', data.type);
+    formData.append('name', data.name);
+    if (data.altText) formData.append('altText', data.altText);
+    if (data.targetUrl) formData.append('targetUrl', data.targetUrl);
+    if (data.sortOrder !== undefined) formData.append('sortOrder', String(data.sortOrder));
+    return api.upload<SiteMediaItem>('/admin/site-media', formData);
+  },
+
+  replace: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.putUpload<SiteMediaItem>(`/admin/site-media/${id}/replace`, formData);
+  },
+
+  update: (
+    id: string,
+    data: {
+      name?: string;
+      altText?: string;
+      targetUrl?: string;
+      sortOrder?: number;
+      isActive?: boolean;
+      type?: SiteMediaType;
+    }
+  ) => api.patch<SiteMediaItem>(`/admin/site-media/${id}`, data),
+
+  delete: (id: string) => api.delete<{ success: boolean; message: string }>(`/admin/site-media/${id}`),
 };
 
 

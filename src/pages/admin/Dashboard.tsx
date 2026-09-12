@@ -45,15 +45,40 @@ import {
   Link2,
   Clipboard,
   Sparkles,
-  CreditCard,
   MapPin,
   Phone,
   Building2,
-  Tag
+  Tag,
+  Upload,
+  Copy,
+  RefreshCw,
+  Image as ImageIcon,
+  ArrowUpDown,
+  UserX,
+  UserCheck,
+  Award,
+  FileSpreadsheet,
+  Database,
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
-import { adminService, bookService, categoryService, orderService, mediaService, cmsService, promotionService, shippingService, reviewService, questionService, invoiceService, bookRequestService, getImageUrl } from '@/services/api';
+import {
+  adminService,
+  bookService,
+  categoryService,
+  orderService,
+  siteMediaService,
+  type SiteMediaItem,
+  type SiteMediaType,
+  cmsService,
+  promotionService,
+  shippingService,
+  reviewService,
+  questionService,
+  invoiceService,
+  bookRequestService,
+  getImageUrl
+} from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { ShippingStickerModal } from '@/components/admin/ShippingStickerModal';
 import { toast } from 'sonner';
@@ -64,6 +89,7 @@ import PaymentsWorkspace from '@/components/admin/payments/PaymentsWorkspace';
 import BlogWorkspace from '@/components/admin/blog/BlogWorkspace';
 import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
 import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
+import CategoryOrderManager from '@/components/admin/cms/CategoryOrderManager';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -140,8 +166,23 @@ export default function Dashboard() {
   const [previewOrder, setPreviewOrder] = useState<any | null>(null);
   const [customersList, setCustomersList] = useState<any[]>([]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerStatusFilter, setCustomerStatusFilter] = useState<'ALL' | 'ACTIVE' | 'BLACKLISTED'>('ALL');
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any | null>(null);
+  const [isLoadingCustomerDetails, setIsLoadingCustomerDetails] = useState(false);
+  const [isExportingCustomers, setIsExportingCustomers] = useState(false);
+
+  // Points Assignment Modal State
+  const [pointsModalCustomer, setPointsModalCustomer] = useState<any | null>(null);
+  const [pointsAmount, setPointsAmount] = useState<string>('50');
+  const [pointsType, setPointsType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
+  const [pointsReason, setPointsReason] = useState<string>('');
+  const [isSubmittingPoints, setIsSubmittingPoints] = useState(false);
+
+  // Blacklist / Status Confirmation Modal State
+  const [statusModalCustomer, setStatusModalCustomer] = useState<any | null>(null);
+  const [statusReason, setStatusReason] = useState<string>('');
+  const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
 
   // Universal Instant Order Lookup State
   const [universalOrderSearch, setUniversalOrderSearch] = useState('');
@@ -219,7 +260,7 @@ export default function Dashboard() {
   // Auto-Accept Orders Setting State (Default: ON)
   const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(true);
   const [isLoadingAutoAccept, setIsLoadingAutoAccept] = useState<boolean>(false);
-  const [cmsSubTab, setCmsSubTab] = useState<'visual' | 'hero_cover' | 'legacy'>('visual');
+  const [cmsSubTab, setCmsSubTab] = useState<'visual' | 'categories' | 'hero_cover' | 'legacy'>('visual');
 
   useEffect(() => {
     adminService.getAutoAcceptSetting()
@@ -475,9 +516,30 @@ export default function Dashboard() {
   };
 
 
-  const [mediaItems, setMediaItems] = useState<any[]>([]);
+  const [siteMediaItems, setSiteMediaItems] = useState<SiteMediaItem[]>([]);
+  const [selectedMediaCategory, setSelectedMediaCategory] = useState<string>('ALL');
+  const [siteMediaSearch, setSiteMediaSearch] = useState('');
+  const [isLoadingSiteMedia, setIsLoadingSiteMedia] = useState(false);
+  const [isSiteMediaModalOpen, setIsSiteMediaModalOpen] = useState(false);
+  const [isSubmittingSiteMedia, setIsSubmittingSiteMedia] = useState(false);
+  const [isReplacingMediaId, setIsReplacingMediaId] = useState<string | null>(null);
+  const [newMediaForm, setNewMediaForm] = useState<{
+    type: SiteMediaType;
+    name: string;
+    altText: string;
+    targetUrl: string;
+    sortOrder: number;
+    file: File | null;
+  }>({
+    type: 'BANNER',
+    name: '',
+    altText: '',
+    targetUrl: '',
+    sortOrder: 0,
+    file: null,
+  });
   const [cmsSections, setCmsSections] = useState<any[]>([]);
-  const [cmsEditing, setCmsEditing] = useState<Record<string, any>>({});  const [isUploading, setIsUploading] = useState(false);
+  const [cmsEditing, setCmsEditing] = useState<Record<string, any>>({});
   const [promotions, setPromotions] = useState<any[]>([]);
   const [editingPromotion, setEditingPromotion] = useState<any>(null);
   
@@ -718,17 +780,121 @@ export default function Dashboard() {
     }
   };
 
-  const fetchCustomers = (search?: string) => {
+  const fetchCustomers = (search?: string, status?: string) => {
     setIsLoadingCustomers(true);
-    adminService.getCustomers({ search: search || customerSearchQuery })
+    const activeStatus = status !== undefined ? status : customerStatusFilter;
+    const queryParams: any = {
+      search: search !== undefined ? search : customerSearchQuery,
+    };
+    if (activeStatus && activeStatus !== 'ALL') {
+      queryParams.status = activeStatus;
+    }
+    adminService.getCustomers(queryParams)
       .then((res: any) => {
         if (res.success && res.data) {
           setCustomersList(res.data.customers || []);
         }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error('Failed to load customers:', err);
+        toast.error('Failed to load customers');
+      })
       .finally(() => setIsLoadingCustomers(false));
   };
+
+  const handleOpenCustomerDetails = async (customer: any) => {
+    setIsLoadingCustomerDetails(true);
+    setSelectedCustomerDetail(customer);
+    try {
+      const res = await adminService.getCustomerDetails(customer.id);
+      if (res?.success && res.data?.customer) {
+        setSelectedCustomerDetail(res.data.customer);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch detailed customer profile:', err);
+      toast.error('Could not fetch complete customer dossier');
+    } finally {
+      setIsLoadingCustomerDetails(false);
+    }
+  };
+
+  const handleStatusChangeSubmit = async () => {
+    if (!statusModalCustomer) return;
+    setIsSubmittingStatus(true);
+    try {
+      const newStatus = !statusModalCustomer.isActive;
+      const res = await adminService.toggleCustomerStatus(statusModalCustomer.id, {
+        isActive: newStatus,
+        reason: statusReason.trim() || undefined,
+      });
+      if (res?.success) {
+        toast.success(res.message || (newStatus ? 'Customer account re-activated!' : 'Customer blacklisted!'));
+        setStatusModalCustomer(null);
+        setStatusReason('');
+        fetchCustomers();
+        if (selectedCustomerDetail && selectedCustomerDetail.id === statusModalCustomer.id) {
+          setSelectedCustomerDetail({ ...selectedCustomerDetail, isActive: newStatus });
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update customer status');
+    } finally {
+      setIsSubmittingStatus(false);
+    }
+  };
+
+  const handlePointsSubmit = async () => {
+    if (!pointsModalCustomer) return;
+    const pts = parseInt(pointsAmount, 10);
+    if (isNaN(pts) || pts <= 0) {
+      toast.error('Please enter a valid positive number of points.');
+      return;
+    }
+
+    if (pointsType === 'DEBIT' && (pointsModalCustomer.technoPoints || 0) < pts) {
+      toast.error(`Cannot deduct ${pts} points. Customer only has ${pointsModalCustomer.technoPoints || 0} points.`);
+      return;
+    }
+
+    setIsSubmittingPoints(true);
+    try {
+      const res = await adminService.adjustCustomerPoints(pointsModalCustomer.id, {
+        points: pts,
+        type: pointsType,
+        reason: pointsReason.trim() || undefined,
+      });
+
+      if (res?.success) {
+        toast.success(res.message || 'TechnoPoints updated successfully!');
+        const updatedPoints = res.data?.technoPoints;
+        setPointsModalCustomer(null);
+        setPointsReason('');
+        setPointsAmount('50');
+        fetchCustomers();
+        if (selectedCustomerDetail && selectedCustomerDetail.id === pointsModalCustomer.id) {
+          setSelectedCustomerDetail({ ...selectedCustomerDetail, technoPoints: updatedPoints });
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update TechnoPoints');
+    } finally {
+      setIsSubmittingPoints(false);
+    }
+  };
+
+  const handleExportCustomers = async (format: 'csv' | 'sql') => {
+    try {
+      setIsExportingCustomers(true);
+      toast.info(`Preparing ${format === 'sql' ? 'SQL dump' : 'Excel/CSV spreadsheet'}...`);
+      await adminService.exportCustomers(format);
+      toast.success(`Customer data exported as ${format.toUpperCase()}!`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to export customer records');
+    } finally {
+      setIsExportingCustomers(false);
+    }
+  };
+
 
   const navigateToCustomer = (customerIdentifier: string) => {
     setPreviewOrder(null);
@@ -985,11 +1151,32 @@ export default function Dashboard() {
 
 
 
+  const fetchSiteMedia = async () => {
+    setIsLoadingSiteMedia(true);
+    try {
+      const params: any = {};
+      if (selectedMediaCategory !== 'ALL') {
+        params.type = selectedMediaCategory;
+      }
+      if (siteMediaSearch.trim()) {
+        params.search = siteMediaSearch.trim();
+      }
+      const res = await siteMediaService.list(params);
+      if (res?.data) {
+        setSiteMediaItems(res.data);
+      }
+    } catch (err: any) {
+      console.error('Failed to load site media:', err);
+    } finally {
+      setIsLoadingSiteMedia(false);
+    }
+  };
+
   useEffect(() => {
     if (tab === 'media') {
-      mediaService.list().then(res => setMediaItems(res.data)).catch(console.error);
+      fetchSiteMedia();
     }
-  }, [tab]);
+  }, [tab, selectedMediaCategory, siteMediaSearch]);
 
   useEffect(() => {
     if (tab === 'cms') {
@@ -3718,13 +3905,78 @@ admin@technoworld.com`
 
         {tab === 'customers' && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100">
+            {/* Customer Header & Controls */}
+            <div className="rounded-2xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-[#0c1222] p-4 sm:p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-white/[0.08]">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">Customer Accounts & Order History</h2>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Search customer accounts, inspect shipping addresses, lifetime book spend, and TechnoPoints balances.
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Customer Accounts & Order Dossier</h2>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                      Industrial Admin
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">
+                    Manage store patrons, assign/deduct TechnoPoints loyalty rewards, blacklist suspicious accounts, and inspect detailed book reading history.
                   </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Export Dropdown */}
+                  <div className="inline-flex rounded-xl shadow-2xs border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.06] p-1 gap-1">
+                    <button
+                      type="button"
+                      disabled={isExportingCustomers}
+                      onClick={() => handleExportCustomers('csv')}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors disabled:opacity-50"
+                      title="Export customer list to Excel / CSV"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Excel / CSV</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isExportingCustomers}
+                      onClick={() => handleExportCustomers('sql')}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors disabled:opacity-50"
+                      title="Export customer records as SQL insert dump"
+                    >
+                      <Database className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>SQL Dump</span>
+                    </button>
+                  </div>
+
+                  {/* Refresh Button */}
+                  <button
+                    type="button"
+                    onClick={() => fetchCustomers()}
+                    className="p-2 rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.06] text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors"
+                    title="Refresh Customers"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoadingCustomers ? 'animate-spin text-blue-600' : ''}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters & Search Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06]">
+                  {(['ALL', 'ACTIVE', 'BLACKLISTED'] as const).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => {
+                        setCustomerStatusFilter(st);
+                        fetchCustomers(undefined, st);
+                      }}
+                      className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
+                        customerStatusFilter === st
+                          ? 'bg-white dark:bg-white/[0.15] text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'
+                      }`}
+                    >
+                      {st === 'ALL' ? 'All Patrons' : st === 'ACTIVE' ? 'Active' : 'Blacklisted'}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="relative w-full max-w-sm">
@@ -3736,8 +3988,8 @@ admin@technoworld.com`
                       setCustomerSearchQuery(e.target.value);
                       fetchCustomers(e.target.value);
                     }}
-                    placeholder="Search by customer name, email, phone..."
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                    placeholder="Search by name, email, or phone..."
+                    className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-100 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324] transition-all shadow-inner"
                   />
                   {customerSearchQuery && (
                     <button
@@ -3757,37 +4009,42 @@ admin@technoworld.com`
               {isLoadingCustomers ? (
                 <div className="py-16 text-center text-slate-400">
                   <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600 mb-2" />
-                  <p className="text-xs font-semibold">Loading customer accounts...</p>
+                  <p className="text-xs font-semibold">Loading patron records...</p>
                 </div>
               ) : customersList.length === 0 ? (
                 <div className="py-16 text-center text-slate-400">
                   <Users className="mx-auto h-12 w-12 text-slate-300 mb-3" />
-                  <h4 className="text-base font-bold text-slate-800">No customers found</h4>
-                  <p className="text-xs text-slate-500 mt-1">Customers who register or place orders on the bookstore will appear here.</p>
+                  <h4 className="text-base font-bold text-slate-800 dark:text-neutral-200">No customers found</h4>
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">No customer accounts matched your search criteria.</p>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
                   <table className="w-full text-left text-xs text-slate-700 dark:text-neutral-300 table-auto">
-                    <thead className="bg-slate-50 dark:bg-[#0c1222] border-b border-slate-200 dark:border-white/[0.08] text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
+                    <thead className="bg-slate-50 dark:bg-[#0a0f1d] border-b border-slate-200 dark:border-white/[0.08] text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                       <tr>
                         <th className="px-3 py-2.5 whitespace-nowrap">Customer</th>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Status</th>
                         <th className="px-2.5 py-2.5 whitespace-nowrap">Contact</th>
-                        <th className="px-2 py-2.5 text-center whitespace-nowrap">Total Orders</th>
+                        <th className="px-2 py-2.5 text-center whitespace-nowrap">Orders</th>
                         <th className="px-2 py-2.5 text-right whitespace-nowrap">Lifetime Spend</th>
                         <th className="px-2 py-2.5 text-center whitespace-nowrap">TechnoPoints</th>
-                        <th className="px-2 py-2.5 text-center whitespace-nowrap">TechnoWallet</th>
-                        <th className="px-2.5 py-2.5 whitespace-nowrap">Primary Address</th>
-                        <th className="px-3 py-2.5 text-right whitespace-nowrap">Actions</th>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Primary City</th>
+                        <th className="px-3 py-2.5 text-right whitespace-nowrap">Admin Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-white/[0.06]">
                       {customersList.map((c: any) => {
                         const defaultAddr = c.addresses?.[0] || {};
+                        const isBlacklisted = c.isActive === false;
                         return (
                           <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.04] transition-colors">
                             <td className="px-3 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-2.5">
-                                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-blue-200 dark:border-blue-500/30">
+                                <div className={`h-8 w-8 rounded-full font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border ${
+                                  isBlacklisted
+                                    ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                                    : 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-500/30'
+                                }`}>
                                   {(c.name || 'C').charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0 max-w-[150px] lg:max-w-[190px]">
@@ -3799,6 +4056,18 @@ admin@technoworld.com`
                                   </span>
                                 </div>
                               </div>
+                            </td>
+
+                            <td className="px-2.5 py-3 whitespace-nowrap">
+                              {isBlacklisted ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 px-2 py-0.5 font-extrabold text-rose-700 dark:text-rose-300 text-[10.5px]">
+                                  <UserX className="h-3 w-3" /> Blacklisted
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 font-extrabold text-emerald-700 dark:text-emerald-300 text-[10.5px]">
+                                  <UserCheck className="h-3 w-3" /> Active
+                                </span>
+                              )}
                             </td>
 
                             <td className="px-2.5 py-3 font-semibold text-slate-700 dark:text-neutral-300 whitespace-nowrap font-mono text-xs">
@@ -3816,35 +4085,76 @@ admin@technoworld.com`
                             </td>
 
                             <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 font-bold text-amber-800 dark:text-amber-300 text-[11px] whitespace-nowrap shadow-2xs">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 font-extrabold text-amber-800 dark:text-amber-300 text-[11px] whitespace-nowrap shadow-2xs">
                                 <Sparkles className="h-3 w-3 text-amber-600 shrink-0" /> {c.technoPoints || 0} pts
                               </span>
                             </td>
 
-                            <td className="px-2 py-3 text-center whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 font-extrabold text-emerald-800 dark:text-emerald-300 text-[11px] whitespace-nowrap shadow-2xs">
-                                <CreditCard className="h-3 w-3 text-emerald-600 shrink-0" /> {formatINR(c.technoWallet || 0)}
-                              </span>
-                            </td>
-
-                            <td className="px-2.5 py-3 text-[11px] text-slate-500 dark:text-neutral-400 max-w-[170px] lg:max-w-[240px] xl:max-w-[320px] truncate">
+                            <td className="px-2.5 py-3 text-[11px] text-slate-500 dark:text-neutral-400 max-w-[170px] lg:max-w-[220px] truncate">
                               {defaultAddr.city ? (
-                                <span className="inline-flex items-center gap-1" title={`${defaultAddr.addressLine1 || defaultAddr.line1}, ${defaultAddr.city} (${defaultAddr.pincode})`}>
+                                <span className="inline-flex items-center gap-1" title={`${defaultAddr.city} (${defaultAddr.pincode})`}>
                                   <MapPin className="h-3 w-3 text-rose-500 shrink-0 inline" />
-                                  <span className="truncate">{defaultAddr.addressLine1 || defaultAddr.line1}, {defaultAddr.city} ({defaultAddr.pincode})</span>
+                                  <span className="truncate">{defaultAddr.city} ({defaultAddr.pincode})</span>
                                 </span>
                               ) : (
-                                <span className="text-slate-400 dark:text-neutral-500">No saved address</span>
+                                <span className="text-slate-400 dark:text-neutral-500">No address saved</span>
                               )}
                             </td>
 
                             <td className="px-3 py-3 text-right whitespace-nowrap">
-                              <button
-                                onClick={() => setSelectedCustomerDetail(c)}
-                                className="rounded-lg border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-white/[0.14] hover:border-slate-300 dark:hover:border-white/[0.22] shadow-2xs transition-all"
-                              >
-                                View History
-                              </button>
+                              <div className="inline-flex items-center gap-1.5">
+                                {/* Points Modal Trigger */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPointsModalCustomer(c);
+                                    setPointsAmount('50');
+                                    setPointsType('CREDIT');
+                                    setPointsReason('');
+                                  }}
+                                  className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-extrabold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 shadow-2xs transition-all inline-flex items-center gap-1"
+                                  title="Assign or Deduct Loyalty TechnoPoints"
+                                >
+                                  <Award className="h-3 w-3 text-amber-600" />
+                                  <span>Points</span>
+                                </button>
+
+                                {/* Blacklist / Whitelist Trigger */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setStatusModalCustomer(c);
+                                    setStatusReason('');
+                                  }}
+                                  className={`rounded-lg border px-2 py-1 text-xs font-extrabold shadow-2xs transition-all inline-flex items-center gap-1 ${
+                                    isBlacklisted
+                                      ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100'
+                                      : 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 hover:bg-rose-100'
+                                  }`}
+                                  title={isBlacklisted ? 'Re-activate Patron' : 'Blacklist Patron'}
+                                >
+                                  {isBlacklisted ? (
+                                    <>
+                                      <UserCheck className="h-3 w-3 text-emerald-600" />
+                                      <span>Whitelist</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserX className="h-3 w-3 text-rose-600" />
+                                      <span>Blacklist</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                {/* View Dossier Trigger */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenCustomerDetails(c)}
+                                  className="rounded-lg border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-white/[0.14] shadow-2xs transition-all"
+                                >
+                                  Dossier
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -3855,66 +4165,364 @@ admin@technoworld.com`
               )}
             </div>
 
-            {/* Customer History Detail Modal */}
-            {selectedCustomerDetail && (
+            {/* Points Assignment Modal */}
+            {pointsModalCustomer && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-                <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[85vh]">
+                <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12]">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
                     <div className="flex items-center gap-2.5">
-                      <Users className="h-5 w-5 text-blue-600" />
+                      <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                        <Award className="h-5 w-5" />
+                      </div>
                       <div>
-                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">{selectedCustomerDetail.name || 'Customer Profile'}</h3>
-                        <span className="text-[11px] text-slate-500 dark:text-neutral-400">{selectedCustomerDetail.email}</span>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Assign TechnoPoints</h3>
+                        <span className="text-[11px] text-slate-500 dark:text-neutral-400">{pointsModalCustomer.name} ({pointsModalCustomer.email})</span>
                       </div>
                     </div>
-                    <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold">&times;</button>
+                    <button onClick={() => setPointsModalCustomer(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold">&times;</button>
                   </div>
 
-                  <div className="p-6 overflow-y-auto space-y-4 text-xs">
-                    <div className="grid grid-cols-3 gap-3">
+                  <div className="p-6 space-y-4 text-xs">
+                    <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl flex items-center justify-between">
+                      <span className="font-bold text-amber-900 dark:text-amber-300">Current Loyalty Balance:</span>
+                      <span className="text-base font-black text-amber-800 dark:text-amber-200">⭐ {pointsModalCustomer.technoPoints || 0} pts</span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-neutral-300">Action Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPointsType('CREDIT')}
+                          className={`py-2 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                            pointsType === 'CREDIT'
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                              : 'border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-slate-700 dark:text-neutral-300'
+                          }`}
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Credit Points (+)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPointsType('DEBIT')}
+                          className={`py-2 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                            pointsType === 'DEBIT'
+                              ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                              : 'border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-slate-700 dark:text-neutral-300'
+                          }`}
+                        >
+                          <X className="h-3.5 w-3.5" /> Deduct Points (-)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-neutral-300">Points Amount</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={pointsAmount}
+                        onChange={(e) => setPointsAmount(e.target.value)}
+                        placeholder="e.g. 50"
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-neutral-300">Audit Reason / Note (Mandatory for record)</label>
+                      <textarea
+                        rows={2}
+                        value={pointsReason}
+                        onChange={(e) => setPointsReason(e.target.value)}
+                        placeholder="e.g. Annual member bonus reward, review contest winner, goodwill coupon..."
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.04] p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 resize-none"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl text-[11px] text-blue-900 dark:text-blue-300 leading-relaxed">
+                      💡 <b>Points Only (No Cash):</b> This updates loyalty balance strictly. An official confirmation email with your note will automatically be dispatched to the patron.
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
+                    <button
+                      type="button"
+                      onClick={() => setPointsModalCustomer(null)}
+                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingPoints}
+                      onClick={handlePointsSubmit}
+                      className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 text-xs font-extrabold shadow-md inline-flex items-center gap-1.5 transition-all disabled:opacity-50"
+                    >
+                      {isSubmittingPoints ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                      <span>Apply Points Adjustment</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Blacklist / Status Modal */}
+            {statusModalCustomer && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12]">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-xl ${
+                        statusModalCustomer.isActive !== false
+                          ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400'
+                          : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                        {statusModalCustomer.isActive !== false ? <UserX className="h-5 w-5" /> : <UserCheck className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+                          {statusModalCustomer.isActive !== false ? 'Blacklist Customer Account' : 'Re-Activate Customer Account'}
+                        </h3>
+                        <span className="text-[11px] text-slate-500 dark:text-neutral-400">{statusModalCustomer.name}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setStatusModalCustomer(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold">&times;</button>
+                  </div>
+
+                  <div className="p-6 space-y-4 text-xs">
+                    <p className="text-slate-600 dark:text-neutral-300 leading-relaxed">
+                      {statusModalCustomer.isActive !== false ? (
+                        <>
+                          Are you sure you want to <b>blacklist</b> this account? All active login sessions will be immediately invalidated and login access suspended.
+                        </>
+                      ) : (
+                        <>
+                          Are you sure you want to <b>re-activate</b> this patron account? The customer will regain instant access to their profile and checkout privileges.
+                        </>
+                      )}
+                    </p>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 dark:text-neutral-300">Reason / Note for Customer Notice</label>
+                      <textarea
+                        rows={3}
+                        value={statusReason}
+                        onChange={(e) => setStatusReason(e.target.value)}
+                        placeholder={statusModalCustomer.isActive !== false ? 'Reason for suspension (e.g. fraudulent activity, disputed orders)...' : 'Reactivation note...'}
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.04] p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-rose-500 resize-none"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-[11px] text-amber-900 dark:text-amber-300">
+                      ✉️ A formal notification email will automatically be transmitted to <b>{statusModalCustomer.email}</b> informing them of this status change.
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
+                    <button
+                      type="button"
+                      onClick={() => setStatusModalCustomer(null)}
+                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmittingStatus}
+                      onClick={handleStatusChangeSubmit}
+                      className={`rounded-xl text-white px-5 py-2 text-xs font-extrabold shadow-md inline-flex items-center gap-1.5 transition-all disabled:opacity-50 ${
+                        statusModalCustomer.isActive !== false ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                    >
+                      {isSubmittingStatus ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      <span>{statusModalCustomer.isActive !== false ? 'Confirm Blacklist' : 'Confirm Whitelist'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Comprehensive Customer Dossier & Book Purchase History Modal */}
+            {selectedCustomerDetail && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[90vh]">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 font-black flex items-center justify-center text-sm shadow-2xs border border-blue-200 dark:border-blue-500/30">
+                        {(selectedCustomerDetail.name || 'C').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-slate-900 dark:text-white text-base">{selectedCustomerDetail.name || 'Anonymous User'}</h3>
+                          {selectedCustomerDetail.isActive === false ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">Blacklisted</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500 dark:text-neutral-400 font-mono">{selectedCustomerDetail.email}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl font-bold">&times;</button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-6 overflow-y-auto space-y-6 text-xs [scrollbar-width:thin]">
+                    {/* Top Stats Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
                         <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Total Orders</span>
-                        <span className="text-base font-black text-slate-900 dark:text-white">{selectedCustomerDetail.totalOrders}</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white">{selectedCustomerDetail.totalOrders}</span>
                       </div>
                       <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Total Spend</span>
-                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{formatINR(selectedCustomerDetail.totalSpent || 0)}</span>
+                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Lifetime Spend</span>
+                        <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{formatINR(selectedCustomerDetail.totalSpent || 0)}</span>
                       </div>
                       <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
                         <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">TechnoPoints</span>
-                        <span className="text-base font-black text-amber-700 dark:text-amber-400">⭐ {selectedCustomerDetail.technoPoints || 0}</span>
+                        <span className="text-lg font-black text-amber-700 dark:text-amber-400">⭐ {selectedCustomerDetail.technoPoints || 0}</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
+                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">TechnoWallet</span>
+                        <span className="text-lg font-black text-blue-700 dark:text-blue-400">{formatINR(selectedCustomerDetail.technoWallet || 0)}</span>
                       </div>
                     </div>
 
+                    {/* Books Ordered History */}
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white mb-2">Recent Orders:</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 text-sm">
+                          <BookOpen className="h-4 w-4 text-emerald-600" />
+                          Books Purchased ({selectedCustomerDetail.purchasedBooks?.length || 0})
+                        </h4>
+                        {isLoadingCustomerDetails && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
+                            <Loader2 className="h-3 w-3 animate-spin" /> Loading full catalog logs...
+                          </span>
+                        )}
+                      </div>
+
+                      {selectedCustomerDetail.purchasedBooks?.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {selectedCustomerDetail.purchasedBooks.map((b: any) => (
+                            <div key={b.bookId} className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.03] flex items-start gap-3">
+                              <div className="h-16 w-12 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center border border-slate-300 dark:border-slate-600">
+                                {b.coverImage ? (
+                                  <img src={b.coverImage} alt={b.title} className="h-full w-full object-cover" />
+                                ) : (
+                                  <BookOpen className="h-6 w-6 text-slate-400" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h5 className="font-extrabold text-slate-900 dark:text-white text-xs line-clamp-2 leading-tight" title={b.title}>
+                                  {b.title}
+                                </h5>
+                                {b.edition && (
+                                  <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-slate-200 dark:bg-white/[0.1] text-slate-700 dark:text-neutral-300">
+                                    {b.edition}
+                                  </span>
+                                )}
+                                <div className="mt-1 flex items-center justify-between text-[11px]">
+                                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{formatINR(b.unitPrice)} &times; {b.totalQuantity}</span>
+                                  <span className="font-extrabold text-slate-900 dark:text-white">{formatINR(b.totalSpent)}</span>
+                                </div>
+                                <div className="mt-1 text-[10px] text-slate-400 dark:text-neutral-500 font-mono truncate">
+                                  Last Order: #{b.orderReferences?.[0]?.orderNumber} ({new Date(b.lastPurchasedAt).toLocaleDateString()})
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs py-2">No book order items recorded yet.</p>
+                      )}
+                    </div>
+
+                    {/* Order Hierarchy & Consignments */}
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 dark:text-white mb-3 text-sm flex items-center gap-1.5">
+                        <Package className="h-4 w-4 text-blue-600" />
+                        Order History & Dispatches
+                      </h4>
                       {selectedCustomerDetail.orders?.length === 0 ? (
                         <p className="text-slate-400 dark:text-neutral-500 text-xs italic">No orders placed yet.</p>
                       ) : (
                         <div className="space-y-2">
                           {selectedCustomerDetail.orders.map((o: any) => (
-                            <div key={o.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] shadow-sm">
+                            <div key={o.id} className="flex flex-wrap items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] shadow-2xs gap-3">
                               <div>
-                                <span className="font-extrabold text-slate-900 dark:text-white">#{o.orderNumber}</span>
-                                <span className="block text-[10px] text-slate-400 dark:text-neutral-500">{new Date(o.createdAt).toLocaleDateString()}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-slate-900 dark:text-white">#{o.orderNumber}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                    o.status === 'DELIVERED'
+                                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                                      : o.status === 'SHIPPED'
+                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
+                                      : 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+                                  }`}>
+                                    {o.status}
+                                  </span>
+                                  <span className="text-[10.5px] font-semibold text-slate-400">{o.paymentMethod || 'PREPAID'}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 dark:text-neutral-500 mt-0.5">
+                                  {new Date(o.createdAt).toLocaleString()} &bull; {o.items?.length || 1} book title(s)
+                                </div>
                               </div>
                               <div className="text-right">
-                                <span className="font-bold text-slate-900 dark:text-white">{formatINR(o.totalAmount)}</span>
-                                <span className="block text-[10px] font-bold text-blue-700 dark:text-blue-400">{o.status}</span>
+                                <span className="font-black text-slate-900 dark:text-white text-sm">{formatINR(o.totalAmount)}</span>
+                                {o.trackingNumber && (
+                                  <span className="block text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">
+                                    Tracking: {o.trackingNumber}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
+
+                    {/* Saved Addresses */}
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 dark:text-white mb-2 text-sm flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4 text-rose-500" />
+                        Shipping Addresses ({selectedCustomerDetail.addresses?.length || 0})
+                      </h4>
+                      {selectedCustomerDetail.addresses?.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {selectedCustomerDetail.addresses.map((addr: any) => (
+                            <div key={addr.id} className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-xs">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-slate-900 dark:text-white">{addr.fullName || selectedCustomerDetail.name}</span>
+                                {addr.isDefault && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">Default</span>
+                                )}
+                              </div>
+                              <p className="text-slate-600 dark:text-neutral-400 leading-snug">
+                                {addr.addressLine1 || addr.line1}
+                                {addr.city ? `, ${addr.city}` : ''}
+                                {addr.state ? `, ${addr.state}` : ''} - {addr.pincode}
+                              </p>
+                              <span className="block mt-1 font-mono text-[11px] text-slate-500">Phone: {addr.phone || 'N/A'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs">No address registered on profile.</p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex justify-end border-t border-slate-200 dark:border-white/[0.08] px-6 py-3 bg-slate-50 dark:bg-white/[0.03]">
+                  {/* Footer */}
+                  <div className="flex items-center justify-between border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
+                    <span className="text-[11px] text-slate-400">Patron since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}</span>
                     <button
                       onClick={() => setSelectedCustomerDetail(null)}
-                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.14]"
+                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
                     >
-                      Close
+                      Close Dossier
                     </button>
                   </div>
                 </div>
@@ -4815,59 +5423,529 @@ admin@technoworld.com`
           </div>
         )}
         {tab === 'media' && (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm font-bold text-slate-800">Media Library</p>
-              <label className={`flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white cursor-pointer hover:bg-emerald-800 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                <Plus className="h-4 w-4" />
-                <input type="file" multiple className="hidden" onChange={async (e) => {
-                  const files = Array.from(e.target.files || []);
-                  if (!files.length) return;
-                  setIsUploading(true);
-                  try {
-                    for (const file of files) {
-                      await mediaService.upload(file, 'general');
-                    }
-                    toast.success(`${files.length} files uploaded`);
-                    const res = await mediaService.list();
-                    setMediaItems(res.data);
-                  } catch(err) {
-                    toast.error('Upload failed');
-                  } finally {
-                    setIsUploading(false);
-                  }
-                }} />
-                {isUploading ? 'Uploading...' : 'Upload Files'}
-              </label>
+          <div className="space-y-6">
+            {/* Header & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                    <ImageIcon className="h-4 w-4" />
+                  </span>
+                  <h2 className="text-base font-bold text-slate-900">Site Media & Assets (Cloudinary)</h2>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Manage categorized media stored in Cloudinary folder <code className="font-mono text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">Home/site/{'{category}'}/</code>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={fetchSiteMedia}
+                  disabled={isLoadingSiteMedia}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                  title="Refresh media list"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoadingSiteMedia ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSiteMediaModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Upload New Asset</span>
+                </button>
+              </div>
             </div>
-            {mediaItems.length === 0 ? (
-              <div className="py-12 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">No media files found. Upload some!</div>
+
+            {/* Filter Bar & Search */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              {/* Category Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { key: 'ALL', label: 'All Media', folder: 'Home/site/' },
+                  { key: 'BANNER', label: 'Banners', folder: 'Home/site/banners' },
+                  { key: 'PROMOTIONAL', label: 'Promotional', folder: 'Home/site/promotional' },
+                  { key: 'FIXED', label: 'Fixed Assets', folder: 'Home/site/fixed' },
+                  { key: 'VIDEO', label: 'Videos', folder: 'Home/site/videos' },
+                ].map((cat) => {
+                  const isActive = selectedMediaCategory === cat.key;
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setSelectedMediaCategory(cat.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                        isActive
+                          ? 'bg-emerald-700 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                          isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {cat.key === 'ALL'
+                          ? siteMediaItems.length
+                          : siteMediaItems.filter((m) => m.type === cat.key).length}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={siteMediaSearch}
+                  onChange={(e) => setSiteMediaSearch(e.target.value)}
+                  placeholder="Search assets by name or link..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Media Items Grid */}
+            {isLoadingSiteMedia ? (
+              <div className="py-16 text-center bg-white rounded-2xl border border-slate-200">
+                <Loader2 className="h-7 w-7 animate-spin text-emerald-600 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-600">Loading Cloudinary site assets...</p>
+              </div>
+            ) : siteMediaItems.length === 0 ? (
+              <div className="py-16 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200 p-6">
+                <ImageIcon className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-700">No media assets found in this folder</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                  Click "Upload New Asset" to upload banners, promotional graphics, fixed brand assets, or marketing videos directly into Cloudinary.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSiteMediaModalOpen(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Upload Asset
+                </button>
+              </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {mediaItems.map(m => (
-                  <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                    {m.type === 'image' ? (
-                      <img src={getImageUrl(m.url)} alt={m.altText || m.filename} className="h-full w-full object-cover" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center text-slate-400 p-2 text-center">
-                        <BookOpen className="h-8 w-8 mb-2" />
-                        <span className="text-xs font-medium break-all line-clamp-2">{m.filename}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                {siteMediaItems.map((media) => {
+                  const isVideo = media.resourceType === 'video' || media.type === 'VIDEO';
+                  const folderName =
+                    media.type === 'BANNER'
+                      ? 'Home/site/banners'
+                      : media.type === 'PROMOTIONAL'
+                      ? 'Home/site/promotional'
+                      : media.type === 'VIDEO'
+                      ? 'Home/site/videos'
+                      : 'Home/site/fixed';
+
+                  return (
+                    <div
+                      key={media.id}
+                      className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden hover:border-slate-300 transition"
+                    >
+                      {/* Media Preview (Video or Image) */}
+                      <div className="relative aspect-[16/10] w-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                        {isVideo ? (
+                          <video
+                            src={media.secureUrl}
+                            controls
+                            preload="metadata"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={getImageUrl(media.secureUrl)}
+                            alt={media.altText || media.name}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                            loading="lazy"
+                          />
+                        )}
+
+                        {/* Badges on preview */}
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider text-white shadow-xs ${
+                              media.type === 'BANNER'
+                                ? 'bg-emerald-600'
+                                : media.type === 'PROMOTIONAL'
+                                ? 'bg-blue-600'
+                                : media.type === 'VIDEO'
+                                ? 'bg-amber-600'
+                                : 'bg-purple-600'
+                            }`}
+                          >
+                            {media.type}
+                          </span>
+                        </div>
+
+                        <div className="absolute top-2 right-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold shadow-xs ${
+                              media.isActive
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-slate-700 text-slate-200'
+                            }`}
+                          >
+                            {media.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-slate-900/60 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-2">
-                      <button onClick={() => window.open(m.url, '_blank')} className="rounded bg-white/20 p-2 text-white hover:bg-white/40"><Search className="h-4 w-4" /></button>
-                      <button onClick={async () => {
-                        if(confirm('Delete this file?')) {
-                          try {
-                            await mediaService.delete(m.id);
-                            setMediaItems(items => items.filter(i => i.id !== m.id));
-                            toast.success('Deleted');
-                          } catch(err) { toast.error('Failed to delete'); }
-                        }
-                      }} className="rounded bg-rose-500/80 p-2 text-white hover:bg-rose-500"><AlertCircle className="h-4 w-4" /></button>
+
+                      {/* Info & Details */}
+                      <div className="flex-1 p-3.5 space-y-2.5">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 truncate" title={media.name}>
+                            {media.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
+                            <span>📁 {folderName}</span>
+                            {media.format && <span>• {media.format.toUpperCase()}</span>}
+                            {media.bytes && (
+                              <span>• {(media.bytes / 1024).toFixed(0)} KB</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {media.targetUrl && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate">
+                            <Link2 className="h-3 w-3 shrink-0 text-slate-400" />
+                            <span className="truncate">{media.targetUrl}</span>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                          {/* Left actions: Copy URL & View */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(media.secureUrl);
+                                toast.success('Cloudinary CDN URL copied!');
+                              }}
+                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition"
+                              title="Copy CDN URL"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+
+                            <a
+                              href={media.secureUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition"
+                              title="Open original asset in new tab"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+
+                            {/* Replace File Trigger */}
+                            <label
+                              className={`p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition cursor-pointer ${
+                                isReplacingMediaId === media.id ? 'opacity-50 pointer-events-none' : ''
+                              }`}
+                              title="Replace file in Cloudinary"
+                            >
+                              {isReplacingMediaId === media.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-600" />
+                              ) : (
+                                <RefreshCw className="h-3.5 w-3.5" />
+                              )}
+                              <input
+                                type="file"
+                                accept={isVideo ? 'video/*' : 'image/*'}
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setIsReplacingMediaId(media.id);
+                                  try {
+                                    await siteMediaService.replace(media.id, file);
+                                    toast.success('Asset replaced in Cloudinary!');
+                                    fetchSiteMedia();
+                                  } catch (err: any) {
+                                    toast.error(err.message || 'Failed to replace asset');
+                                  } finally {
+                                    setIsReplacingMediaId(null);
+                                    e.target.value = '';
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Right actions: Toggle Active & Delete */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await siteMediaService.update(media.id, { isActive: !media.isActive });
+                                  toast.success(`Asset marked as ${!media.isActive ? 'Active' : 'Inactive'}`);
+                                  fetchSiteMedia();
+                                } catch {
+                                  toast.error('Failed to toggle status');
+                                }
+                              }}
+                              className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${
+                                media.isActive
+                                  ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              }`}
+                            >
+                              {media.isActive ? 'Pause' : 'Activate'}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (confirm(`Delete "${media.name}" permanently from Cloudinary?`)) {
+                                  try {
+                                    await siteMediaService.delete(media.id);
+                                    setSiteMediaItems((prev) => prev.filter((m) => m.id !== media.id));
+                                    toast.success('Asset removed from Cloudinary');
+                                  } catch (err: any) {
+                                    toast.error(err.message || 'Failed to delete asset');
+                                  }
+                                }
+                              }}
+                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                              title="Delete from Cloudinary"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Upload Site Media Modal */}
+            {isSiteMediaModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+                <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100 text-emerald-800">
+                        <Upload className="h-3.5 w-3.5" />
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900">Upload Site Asset to Cloudinary</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSiteMediaModalOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none"
+                    >
+                      &times;
+                    </button>
                   </div>
-                ))}
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!newMediaForm.file) {
+                        toast.error('Please select a file to upload');
+                        return;
+                      }
+                      if (!newMediaForm.name.trim()) {
+                        toast.error('Please provide a name for the asset');
+                        return;
+                      }
+
+                      setIsSubmittingSiteMedia(true);
+                      try {
+                        await siteMediaService.upload(newMediaForm.file, {
+                          type: newMediaForm.type,
+                          name: newMediaForm.name.trim(),
+                          altText: newMediaForm.altText.trim() || undefined,
+                          targetUrl: newMediaForm.targetUrl.trim() || undefined,
+                          sortOrder: Number(newMediaForm.sortOrder) || 0,
+                        });
+                        toast.success('Asset uploaded to Cloudinary successfully!');
+                        setIsSiteMediaModalOpen(false);
+                        setNewMediaForm({
+                          type: 'BANNER',
+                          name: '',
+                          altText: '',
+                          targetUrl: '',
+                          sortOrder: 0,
+                          file: null,
+                        });
+                        fetchSiteMedia();
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to upload asset');
+                      } finally {
+                        setIsSubmittingSiteMedia(false);
+                      }
+                    }}
+                    className="p-6 space-y-4"
+                  >
+                    {/* Category Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Asset Category / Folder Target *
+                      </label>
+                      <select
+                        value={newMediaForm.type}
+                        onChange={(e) =>
+                          setNewMediaForm((prev) => ({
+                            ...prev,
+                            type: e.target.value as SiteMediaType,
+                          }))
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                      >
+                        <option value="BANNER">Banners (Home/site/banners/)</option>
+                        <option value="PROMOTIONAL">Promotional Graphics (Home/site/promotional/)</option>
+                        <option value="FIXED">Fixed Brand Assets (Home/site/fixed/)</option>
+                        <option value="VIDEO">Videos (Home/site/videos/)</option>
+                      </select>
+                      <p className="mt-1 text-[10px] text-slate-400">
+                        Target Cloudinary folder:{' '}
+                        <code className="font-mono text-emerald-700">
+                          {newMediaForm.type === 'BANNER'
+                            ? 'Home/site/banners/'
+                            : newMediaForm.type === 'PROMOTIONAL'
+                            ? 'Home/site/promotional/'
+                            : newMediaForm.type === 'VIDEO'
+                            ? 'Home/site/videos/'
+                            : 'Home/site/fixed/'}
+                        </code>
+                      </p>
+                    </div>
+
+                    {/* File Dropzone */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Select File (Image or Video) *
+                      </label>
+                      <input
+                        type="file"
+                        required
+                        accept={
+                          newMediaForm.type === 'VIDEO'
+                            ? 'video/mp4,video/webm,video/quicktime'
+                            : 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml'
+                        }
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] || null;
+                          setNewMediaForm((prev) => ({
+                            ...prev,
+                            file: f,
+                            name: prev.name ? prev.name : f ? f.name.split('.')[0] : '',
+                          }));
+                        }}
+                        className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                      />
+                      <p className="mt-1 text-[10px] text-slate-400">
+                        {newMediaForm.type === 'VIDEO'
+                          ? 'Supported video formats: MP4, WEBM, MOV (Up to 60MB).'
+                          : 'Supported image formats: JPG, PNG, WEBP, GIF, SVG (Up to 15MB).'}
+                      </p>
+                    </div>
+
+                    {/* Asset Name */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Asset Name / Identifier *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newMediaForm.name}
+                        onChange={(e) =>
+                          setNewMediaForm((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                        placeholder="e.g. spring_exam_banner_2026"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    {/* Destination URL */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Destination Link / Target URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={newMediaForm.targetUrl}
+                        onChange={(e) =>
+                          setNewMediaForm((prev) => ({ ...prev, targetUrl: e.target.value }))
+                        }
+                        placeholder="e.g. /category/wbssc or https://..."
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    {/* Alt Text & Sort Order */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Alt Text (SEO & A11y)
+                        </label>
+                        <input
+                          type="text"
+                          value={newMediaForm.altText}
+                          onChange={(e) =>
+                            setNewMediaForm((prev) => ({ ...prev, altText: e.target.value }))
+                          }
+                          placeholder="e.g. Special discounts on WBSSC books"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Sort Order (Priority)
+                        </label>
+                        <input
+                          type="number"
+                          value={newMediaForm.sortOrder}
+                          onChange={(e) =>
+                            setNewMediaForm((prev) => ({
+                              ...prev,
+                              sortOrder: parseInt(e.target.value, 10) || 0,
+                            }))
+                          }
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Modal Actions */}
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsSiteMediaModalOpen(false)}
+                        className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmittingSiteMedia}
+                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
+                      >
+                        {isSubmittingSiteMedia ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        <span>{isSubmittingSiteMedia ? 'Uploading...' : 'Upload to Cloudinary'}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
           </div>
@@ -4892,6 +5970,19 @@ admin@technoworld.com`
               >
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Visual Live On-Page Editor</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCmsSubTab('categories')}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  cmsSubTab === 'categories'
+                    ? 'glass-tab-active'
+                    : 'glass-tab-inactive'
+                }`}
+              >
+                <ArrowUpDown className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Category Order (Navbar & Drawer)</span>
               </button>
 
               <button
@@ -4922,6 +6013,8 @@ admin@technoworld.com`
             </div>
 
             {cmsSubTab === 'visual' && <VisualCmsEditor />}
+
+            {cmsSubTab === 'categories' && <CategoryOrderManager />}
 
             {cmsSubTab === 'hero_cover' && <HeroBookCoverManager />}
 

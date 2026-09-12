@@ -59,6 +59,11 @@ const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
   { key: 'home.exam_zone_title', label: 'Exam Zone Heading', section: 'Homepage Highlights', defaultText: 'NEET · JEE · UPSC · GATE · SSC — all prep books in one place', page: '/' },
   { key: 'home.exam_zone_desc', label: 'Exam Zone Subtitle', section: 'Homepage Highlights', defaultText: "Previous year papers, toppers' booklists and combo packs at the best prices.", page: '/' },
 
+  // Special Offer Floating Popup (page '/')
+  { key: 'popup.badge', label: 'Offer Popup Badge', section: 'Floating Special Offer', defaultText: 'Special offer', page: '/' },
+  { key: 'popup.headline', label: 'Offer Popup Headline', section: 'Floating Special Offer', defaultText: 'Book sale · Up to 60% off', page: '/' },
+  { key: 'popup.subtext', label: 'Offer Popup Subtext', section: 'Floating Special Offer', defaultText: 'Find your next favourite read.', multiline: true, page: '/' },
+
   // Homepage Book Sections (page '/')
   { key: 'home.section_recommended', label: 'Recommended Section Title', section: 'Homepage Book Sections', defaultText: 'Recommended For You', page: '/' },
   { key: 'home.section_competitive', label: 'Competitive Exam Section Title', section: 'Homepage Book Sections', defaultText: 'Competitive Exam Books', page: '/' },
@@ -156,7 +161,10 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       const data = event.data;
       if (!data || typeof data !== 'object') return;
 
-      if (data.type === 'TW_CMS_ELEMENT_CLICKED' && data.key) {
+      if (data.type === 'TW_CMS_IFRAME_READY') {
+        // Handshake: live preview iframe is ready for synchronization
+        handleIframeLoad();
+      } else if (data.type === 'TW_CMS_ELEMENT_CLICKED' && data.key) {
         setSelectedKey(data.key);
         if (isInspectorCollapsed) {
           setIsInspectorCollapsed(false);
@@ -184,6 +192,12 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [isInspectorCollapsed]);
+
+  // Track latest selected key in a ref for iframe load handshakes
+  const selectedKeyRef = useRef(selectedKey);
+  useEffect(() => {
+    selectedKeyRef.current = selectedKey;
+  }, [selectedKey]);
 
   // Determine storefront preview base URL (points to local storefront on port 3000 during dev, or live domain in production)
   const isLocalHost = typeof window !== 'undefined' && (
@@ -264,32 +278,44 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       }
     });
 
-    if (selectedKey) {
-      iframeRef.current.contentWindow.postMessage(
-        {
-          type: 'TW_CMS_SELECT_KEY',
-          key: selectedKey,
-        },
-        '*'
-      );
+    const targetKey = selectedKeyRef.current || selectedKey;
+    if (targetKey) {
+      const sendKey = () => {
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'TW_CMS_SELECT_KEY',
+            key: targetKey,
+          },
+          '*'
+        );
+      };
+      sendKey();
+      setTimeout(sendKey, 150);
+      setTimeout(sendKey, 400);
     }
   };
 
   // Selection from directory: auto-switches page if necessary and sends scroll & highlight command
   const handleSelectKeyFromDirectory = (item: EditableKeyInfo) => {
     setSelectedKey(item.key);
+    selectedKeyRef.current = item.key;
 
     if (item.page && selectedPage !== item.page) {
       setSelectedPage(item.page);
       setIframeKey(Date.now());
     } else {
-      iframeRef.current?.contentWindow?.postMessage(
-        {
-          type: 'TW_CMS_SELECT_KEY',
-          key: item.key,
-        },
-        '*'
-      );
+      const sendSelect = () => {
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'TW_CMS_SELECT_KEY',
+            key: item.key,
+          },
+          '*'
+        );
+      };
+      sendSelect();
+      setTimeout(sendSelect, 100);
+      setTimeout(sendSelect, 300);
     }
   };
 
