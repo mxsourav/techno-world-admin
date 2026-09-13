@@ -184,20 +184,109 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inspectorScrollRef = useRef<HTMLDivElement>(null);
 
-  // Determine device frame width
-  const frameWidthStyle = useMemo(() => {
-    switch (devicePreset) {
-      case 'desktop':
-        return 'min(100%, 1280px)';
-      case 'tablet':
-        return '840px';
-      case 'mobile':
-        return '400px';
-      case 'custom':
-      default:
-        return `${customWidth}px`;
+  // Dynamic canvas size tracking for responsive preview geometry
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 1100, height: 700 });
+
+  useEffect(() => {
+    if (!canvasWrapperRef.current) return;
+    const updateSize = () => {
+      if (canvasWrapperRef.current) {
+        const rect = canvasWrapperRef.current.getBoundingClientRect();
+        setCanvasSize({ width: rect.width, height: rect.height });
+      }
+    };
+    updateSize();
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setCanvasSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    ro.observe(canvasWrapperRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute exact viewport specs, frame size, and scaling factor
+  const deviceSpecs = useMemo(() => {
+    const pad = 32;
+    const availW = Math.max(300, canvasSize.width - pad);
+    const availH = Math.max(300, canvasSize.height - pad);
+
+    if (devicePreset === 'desktop') {
+      const baseW = 1280; // Full Desktop HD viewport (ensures desktop header, layout & grid)
+      const fitScale = Math.min(1, availW / baseW);
+      const scale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.min(availW, Math.round(baseW * scale));
+      const frameH = availH;
+      const innerH = Math.round(frameH / scale);
+
+      return {
+        frameWidth: `${frameW}px`,
+        frameHeight: `${frameH}px`,
+        iframeWidth: `${baseW}px`,
+        iframeHeight: `${innerH}px`,
+        scale,
+        aspectRatio: undefined,
+        isPhone: false,
+        isScaled: true,
+      };
     }
-  }, [devicePreset, customWidth]);
+
+    if (devicePreset === 'tablet') {
+      const baseW = 768; // True iPad portrait tablet viewport (fits cleanly without cutoffs)
+      const fitScale = Math.min(1, availW / baseW);
+      const scale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.min(availW, Math.round(baseW * scale));
+      const frameH = availH;
+      const innerH = Math.round(frameH / scale);
+
+      return {
+        frameWidth: `${frameW}px`,
+        frameHeight: `${frameH}px`,
+        iframeWidth: `${baseW}px`,
+        iframeHeight: `${innerH}px`,
+        scale,
+        aspectRatio: undefined,
+        isPhone: false,
+        isScaled: true,
+      };
+    }
+
+    if (devicePreset === 'mobile') {
+      // 9:16 Aspect Ratio Phone Display (390 × 693.3px)
+      const baseW = 390;
+      const baseH = 693; // 390 * 16 / 9 = 693.33px -> exact 9:16
+      const fitScale = Math.min(1, availW / baseW, availH / baseH);
+      const scale = +(fitScale * zoomLevel).toFixed(3);
+      const frameW = Math.round(baseW * scale);
+      const frameH = Math.round(baseH * scale);
+
+      return {
+        frameWidth: `${frameW}px`,
+        frameHeight: `${frameH}px`,
+        iframeWidth: `${baseW}px`,
+        iframeHeight: `${baseH}px`,
+        scale,
+        aspectRatio: '9 / 16',
+        isPhone: true,
+        isScaled: true,
+      };
+    }
+
+    // Custom / Fluid
+    return {
+      frameWidth: `${customWidth}px`,
+      frameHeight: `${availH}px`,
+      iframeWidth: `${customWidth}px`,
+      iframeHeight: `${availH}px`,
+      scale: zoomLevel,
+      aspectRatio: undefined,
+      isPhone: false,
+      isScaled: zoomLevel !== 1,
+    };
+  }, [canvasSize, devicePreset, zoomLevel, customWidth]);
 
   // Fetch current published content from backend
   useEffect(() => {
@@ -814,19 +903,37 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         >
           {/* Responsive Preview Device Window Frame (Floating Display with Border & Shadow) */}
           <div
-            className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70 m-auto shrink-0 select-none"
+            className={`relative flex flex-col overflow-hidden transition-all duration-150 bg-white m-auto shrink-0 select-none ${
+              deviceSpecs.isPhone
+                ? 'rounded-[38px] border-[7px] border-slate-800 dark:border-slate-700 shadow-2xl shadow-slate-950/40 ring-1 ring-white/20'
+                : 'rounded-2xl border-2 border-slate-300/80 dark:border-white/15 shadow-2xl shadow-slate-950/25 dark:shadow-black/70'
+            }`}
             style={{
-              width: frameWidthStyle,
-              height: 'calc(100% - 12px)',
-              maxHeight: 'calc(100% - 12px)',
-              transform: `scale(${zoomLevel})`,
-              transformOrigin: 'center center',
-              transition: isDraggingCanvas ? 'none' : 'transform 0.1s ease-out, width 0.15s ease-out',
+              width: deviceSpecs.frameWidth,
+              height: deviceSpecs.frameHeight,
+              maxHeight: '100%',
+              maxWidth: '100%',
+              aspectRatio: deviceSpecs.aspectRatio,
               isolation: 'isolate',
             }}
           >
-            {/* Live Interactive Storefront Iframe Container (Full Page Scrollable) */}
-            <div className="w-full h-full flex-1 relative overflow-hidden bg-white">
+            {/* Phone Top Speaker & Camera Notch Bar */}
+            {deviceSpecs.isPhone && (
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 h-3.5 w-24 bg-slate-900 rounded-full z-40 flex items-center justify-center pointer-events-none">
+                <div className="h-1 w-8 rounded-full bg-slate-700" />
+              </div>
+            )}
+
+            {/* Live Interactive Storefront Iframe Container */}
+            <div
+              className="relative overflow-hidden bg-white w-full h-full"
+              style={{
+                width: deviceSpecs.isScaled ? deviceSpecs.iframeWidth : '100%',
+                height: deviceSpecs.isScaled ? deviceSpecs.iframeHeight : '100%',
+                transform: deviceSpecs.isScaled ? `scale(${deviceSpecs.scale})` : undefined,
+                transformOrigin: 'top left',
+              }}
+            >
               <iframe
                 ref={iframeRef}
                 key={iframeKey}
