@@ -184,118 +184,39 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const inspectorScrollRef = useRef<HTMLDivElement>(null);
 
-  // Track actual dimensions of the preview canvas area
-  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const el = canvasWrapperRef.current;
-    if (!el) return;
-
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setCanvasSize({ width: Math.round(width), height: Math.round(height) });
-      }
-    });
-
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   // Compute exact frame dimensions and inner viewport transform
   const previewLayout = useMemo(() => {
-    const availW = Math.max(320, (canvasSize.width || 1000) - 24);
-    const availH = Math.max(320, (canvasSize.height || 700) - 24);
+    // Width presets
+    let targetWidth: string | number = '100%';
+    let maxWidth: string | undefined = '100%';
 
     if (devicePreset === 'mobile') {
-      // Standard smartphone resolution: 390px x 693px (exact 9:16 aspect ratio)
-      const baseW = 390;
-      const baseH = 693;
-      const fitScale = Math.min(1, availW / baseW, availH / baseH) * zoomLevel;
-      const frameW = Math.round(baseW * fitScale);
-      const frameH = Math.round(baseH * fitScale);
-
-      return {
-        frameWidth: `${frameW}px`,
-        frameHeight: `${frameH}px`,
-        aspectRatio: '9 / 16',
-        innerStyle: {
-          width: `${baseW}px`,
-          height: `${baseH}px`,
-          transform: `scale(${fitScale})`,
-          transformOrigin: 'top left',
-        } as React.CSSProperties,
-        renderedWidth: baseW,
-        isScaled: true,
-      };
+      targetWidth = 390;
+      maxWidth = '390px';
+    } else if (devicePreset === 'tablet') {
+      targetWidth = 768;
+      maxWidth = '768px';
+    } else if (devicePreset === 'custom') {
+      targetWidth = customWidth;
+      maxWidth = `${customWidth}px`;
+    } else {
+      // Desktop
+      maxWidth = '1440px';
+      targetWidth = '100%';
     }
 
-    if (devicePreset === 'tablet') {
-      // Tablet portrait: 768px wide, fills vertical canvas
-      const baseW = 768;
-      const fitScale = Math.min(1, availW / baseW) * zoomLevel;
-      const frameW = Math.min(availW, Math.round(baseW * fitScale));
-      const frameH = availH;
-      const innerH = Math.round(frameH / fitScale);
-
-      return {
-        frameWidth: `${frameW}px`,
-        frameHeight: `${frameH}px`,
-        aspectRatio: undefined,
-        innerStyle: {
-          width: `${baseW}px`,
-          height: `${innerH}px`,
-          transform: `scale(${fitScale})`,
-          transformOrigin: 'top left',
-        } as React.CSSProperties,
-        renderedWidth: baseW,
-        isScaled: fitScale < 1 || zoomLevel !== 1,
-      };
-    }
-
-    if (devicePreset === 'custom') {
-      const baseW = customWidth;
-      const fitScale = Math.min(1, availW / baseW) * zoomLevel;
-      const frameW = Math.min(availW, Math.round(baseW * fitScale));
-      const frameH = availH;
-      const innerH = Math.round(frameH / fitScale);
-
-      return {
-        frameWidth: `${frameW}px`,
-        frameHeight: `${frameH}px`,
-        aspectRatio: undefined,
-        innerStyle: {
-          width: `${baseW}px`,
-          height: `${innerH}px`,
-          transform: `scale(${fitScale})`,
-          transformOrigin: 'top left',
-        } as React.CSSProperties,
-        renderedWidth: baseW,
-        isScaled: fitScale < 1 || zoomLevel !== 1,
-      };
-    }
-
-    // Desktop: Standard desktop 1280px resolution scaled down if canvas < 1280px, fills vertical canvas with 0 empty gap
-    const baseW = 1280;
-    const fitScale = Math.min(1, availW / baseW) * zoomLevel;
-    const frameW = Math.min(availW, Math.round(baseW * fitScale));
-    const frameH = availH;
-    const innerH = Math.round(frameH / fitScale);
+    const isScaled = zoomLevel !== 1;
 
     return {
-      frameWidth: `${frameW}px`,
-      frameHeight: `${frameH}px`,
-      aspectRatio: undefined,
-      innerStyle: {
-        width: `${baseW}px`,
-        height: `${innerH}px`,
-        transform: `scale(${fitScale})`,
-        transformOrigin: 'top left',
-      } as React.CSSProperties,
-      renderedWidth: baseW,
-      isScaled: fitScale < 1 || zoomLevel !== 1,
+      frameWidth: typeof targetWidth === 'number' ? `${targetWidth}px` : targetWidth,
+      maxWidth,
+      frameHeight: '100%',
+      zoomStyle: isScaled ? {
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: 'center center',
+      } : undefined,
     };
-  }, [canvasSize, devicePreset, customWidth, zoomLevel]);
+  }, [devicePreset, customWidth, zoomLevel]);
 
   // Fetch current published content from backend
   useEffect(() => {
@@ -912,20 +833,20 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         >
           {/* Responsive Preview Device Window Frame (Floating Display with Border & Shadow) */}
           <div
-            className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-150 border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70 m-auto shrink-0 select-none"
+            className="relative flex flex-col rounded-2xl overflow-hidden border-2 border-slate-300/80 dark:border-white/15 bg-white shadow-2xl shadow-slate-950/25 dark:shadow-black/70 m-auto select-none"
             style={{
               width: previewLayout.frameWidth,
-              height: previewLayout.frameHeight,
-              aspectRatio: previewLayout.aspectRatio,
-              transition: isDraggingCanvas ? 'none' : 'width 0.15s ease-out, height 0.15s ease-out',
+              maxWidth: previewLayout.maxWidth,
+              height: '100%',
+              maxHeight: devicePreset === 'mobile' ? '844px' : undefined,
+              aspectRatio: devicePreset === 'mobile' ? '9 / 16' : undefined,
+              transition: isDraggingCanvas ? 'none' : 'width 0.15s ease-out',
               isolation: 'isolate',
+              ...previewLayout.zoomStyle,
             }}
           >
             {/* Live Interactive Storefront Iframe Container (Full Page Scrollable) */}
-            <div
-              className="relative overflow-hidden bg-white"
-              style={previewLayout.innerStyle}
-            >
+            <div className="relative w-full h-full flex-1 overflow-hidden bg-white">
               <iframe
                 ref={iframeRef}
                 key={iframeKey}
