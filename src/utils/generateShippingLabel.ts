@@ -494,21 +494,32 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           @media screen {
             body {
               background: #e2e8f0;
-              padding: 24px;
+              padding: 0;
+              margin: 0;
+              display: flex;
+              justify-content: center;
+              align-items: flex-start;
+              min-height: 100vh;
             }
             .preview-wrapper {
-              max-width: 600px;
+              width: 100%;
+              max-width: 480px;
               margin: 0 auto;
+              padding: 10px 8px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
             }
             .sticker-page-break {
-              margin-bottom: 24px;
-              box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+              margin-bottom: 16px;
+              box-shadow: 0 4px 14px rgba(0,0,0,0.15);
               border-radius: 4px;
               background: #ffffff;
               display: flex;
               align-items: center;
               justify-content: center;
-              padding: 12px;
+              padding: 0;
+              overflow: hidden;
             }
           }
 
@@ -518,7 +529,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             width: ${currentSize.width};
             min-height: ${currentSize.height};
             max-height: ${currentSize.height};
-            padding: 2.5mm 3.5mm;
+            padding: 2mm 3mm;
             background: #ffffff;
             border: 2px solid #000000;
             display: flex;
@@ -535,10 +546,10 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             border-bottom: 2px solid #000000;
             align-items: center;
             text-align: center;
-            min-height: 52px;
+            min-height: 42px;
           }
           .speedpost-header-col {
-            padding: 3px 4px;
+            padding: 2px 3px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -551,7 +562,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           }
           .speedpost-tw-logo {
             max-width: 96%;
-            max-height: 46px;
+            max-height: 38px;
             width: auto;
             height: auto;
             object-fit: contain;
@@ -559,18 +570,18 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             margin: 0 auto;
           }
           .speedpost-text-logo {
-            font-size: 11px;
+            font-size: 10px;
             line-height: 1.15;
             text-align: center;
           }
           .speedpost-text-logo .brand-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
             color: #000000;
             letter-spacing: 0.5px;
           }
           .speedpost-text-logo .brand-sub {
-            font-size: 7.5px;
+            font-size: 7px;
             font-weight: 700;
             color: #333333;
             text-transform: uppercase;
@@ -579,7 +590,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           }
           .speedpost-post-title {
             font-family: Arial, sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 900;
             color: #000000;
             line-height: 1;
@@ -592,11 +603,11 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             margin-top: 1px;
           }
           .speedpost-mini-barcode svg {
-            max-height: 24px;
+            max-height: 22px;
             margin: 0 auto;
           }
           .speedpost-mini-awb-no {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: 900;
             letter-spacing: 0.5px;
             margin-top: 1px;
@@ -605,22 +616,22 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           /* 2. Banner */
           .speedpost-service-banner {
             text-align: center;
-            font-size: 19px;
+            font-size: 16px;
             font-weight: 900;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            padding: 3px 0;
+            padding: 2px 0;
             border-bottom: 2px solid #000000;
             line-height: 1.1;
           }
 
           /* Section Boxes */
           .speedpost-section-box {
-            padding: 4px 4px;
+            padding: 2.5px 3px;
             border-bottom: 2px solid #000000;
           }
           .speedpost-section-title {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 900;
             letter-spacing: 0.4px;
             text-transform: uppercase;
@@ -629,65 +640,67 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
 
           /* Ship To */
           .speedpost-recipient-name {
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: 900;
             color: #000000;
             line-height: 1.15;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
           .speedpost-address-line {
-            font-size: 10.5px;
-            line-height: 1.25;
-            margin-bottom: 3px;
+            font-size: 9.5px;
+            line-height: 1.2;
+            margin-bottom: 2px;
           }
           .speedpost-mob-line {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 800;
           }
 
           /* Items */
           .speedpost-items-content {
-            font-size: 10px;
-            line-height: 1.3;
+            font-size: 9px;
+            line-height: 1.25;
             color: #000000;
+            max-height: 28mm;
+            overflow: hidden;
           }
 
           /* Return */
           .speedpost-return-name {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 900;
           }
           .speedpost-return-sub {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
           }
           .speedpost-return-addr {
-            font-size: 9.5px;
-            line-height: 1.2;
+            font-size: 8.5px;
+            line-height: 1.15;
             margin: 1px 0;
           }
           .speedpost-return-contact, .speedpost-return-gst {
-            font-size: 9px;
-            line-height: 1.2;
+            font-size: 8px;
+            line-height: 1.15;
           }
 
           /* AWB Barcode Box */
           .speedpost-awb-box {
             text-align: center;
-            padding: 4px 2px 2px 2px;
+            padding: 2.5px 2px 1.5px 2px;
           }
           .speedpost-awb-title {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
           }
           .speedpost-main-barcode svg {
             margin: 0 auto;
-            max-height: 48px;
+            max-height: 40px;
           }
           .speedpost-awb-number {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
             letter-spacing: 1px;
             font-family: Arial, monospace;
@@ -697,10 +710,10 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           /* Footer */
           .speedpost-footer-text {
             text-align: center;
-            font-size: 9.5px;
+            font-size: 8.5px;
             font-weight: 900;
             letter-spacing: 0.5px;
-            padding-top: 3px;
+            padding-top: 2px;
             text-transform: uppercase;
             display: flex;
             align-items: center;
@@ -708,7 +721,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
             gap: 8px;
           }
           .speedpost-price-badge {
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 900;
             padding: 1px 4px;
             border-radius: 2px;

@@ -735,11 +735,11 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
               )}
             </div>
 
-            <div className="flex-1 bg-white rounded-xl border border-slate-300 shadow-inner overflow-hidden flex items-center justify-center p-2 min-h-[480px]">
+            <div className="flex-1 bg-slate-200/60 rounded-xl border border-slate-300 shadow-inner overflow-y-auto flex items-start justify-center p-2 min-h-[500px] max-h-[620px]">
               <iframe
                 title="Shipping Label Preview"
                 srcDoc={previewHtml}
-                className="w-full h-full min-h-[500px] border-0 rounded"
+                className="w-full h-[580px] border-0 rounded bg-white shadow-xs"
               />
             </div>
           </div>
