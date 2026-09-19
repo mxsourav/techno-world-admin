@@ -49,6 +49,7 @@ const TAB_SECTIONS = [
     title: 'Store & Content',
     tabs: [
       { id: 'customers', name: 'Customers', icon: Users },
+      { id: 'abandoned_carts', name: 'Abandoned Carts', icon: ShoppingCart },
       { id: 'coupons', name: 'Coupons', icon: Tag },
       { id: 'reviews', name: 'Reviews', icon: Star },
       { id: 'media', name: 'Media Library', icon: FolderOpen },
