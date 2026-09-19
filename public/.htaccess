@@ -1,4 +1,11 @@
 # ------------------------------------------------------------------------------
+# | Strict Security & Crawler Protection                                       |
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+</IfModule>
+
+# ------------------------------------------------------------------------------
 # | Single Page Application (SPA) URL Rewriting for Apache & LiteSpeed        |
 # ------------------------------------------------------------------------------
 

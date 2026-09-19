@@ -1,0 +1,5 @@
+# Techno World Books Admin Portal — robots.txt
+# Strict Security Directive: Crawlers must NEVER index this private portal.
+
+User-agent: *
+Disallow: /
