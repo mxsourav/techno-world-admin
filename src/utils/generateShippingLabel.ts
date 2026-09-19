@@ -830,7 +830,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
           </div>
           <div style="display: flex; gap: 8px;">
             <button onclick="window.print()" style="background: #047857; color: white; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px;">
-              🖨️ Direct Print Now
+              Direct Print Now
             </button>
             <button onclick="window.close()" style="background: #475569; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">
               Close

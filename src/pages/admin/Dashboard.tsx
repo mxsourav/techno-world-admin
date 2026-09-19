@@ -80,7 +80,10 @@ import {
   getImageUrl
 } from '@/services/api';
 import { generateAndPrintInvoice } from '@/utils/generateInvoice';
+import { generateCode128Svg } from '@/utils/generateShippingLabel';
 import { ShippingStickerModal } from '@/components/admin/ShippingStickerModal';
+import IndiaPostManifestModal from '@/components/admin/IndiaPostManifestModal';
+import AbandonedCartsWorkspace from '@/components/admin/AbandonedCartsWorkspace';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
 import ProductsWorkspace from '@/components/admin/catalog/ProductsWorkspace';
@@ -122,6 +125,7 @@ export default function Dashboard() {
   const [shippingLoading, setShippingLoading] = useState<string | null>(null); void shippingLoading;
   const [shippingModalLabel, setShippingModalLabel] = useState<any | null>(null);
   const [shippingTrackingModal, setShippingTrackingModal] = useState<any | null>(null);
+  const [isManifestModalOpen, setIsManifestModalOpen] = useState(false);
   
   // Flipkart Seller Hub style Forward Orders State
   const [orderViewMode, setOrderViewMode] = useState<'smart_groups' | 'order_id'>('smart_groups');
@@ -1415,6 +1419,32 @@ admin@technoworld.com`
     }
   };
 
+  const handleRtoRestock = async (orderId: string, orderNumber: string) => {
+    if (!window.confirm(`Process Return to Origin (RTO) for Order #${orderNumber}? This will restock all order items back to inventory and cancel the order.`)) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const res = await fetch(`/api/v1/admin/orders/${orderId}/rto`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ reason: 'Undelivered parcel returned by India Post / RTO' }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(json.message);
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED', notes: (o.notes || '') + ' [RTO RESTOCKED]' } : o));
+      } else {
+        toast.error(json.message || 'Failed to process RTO restock');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Network error processing RTO restock');
+    }
+  };
+
   const bookIndiaPostShipment = async (
     orderId: string,
     deliveryPartner?: string,
@@ -1490,6 +1520,84 @@ admin@technoworld.com`
     } catch (err: any) {
       toast.error(err.message || 'Failed to load shipping label');
     }
+  };
+
+  const handlePrintShippingModalLabel = () => {
+    if (!shippingModalLabel) return;
+    const printWindow = window.open('', '_blank', 'width=650,height=750');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+    const svgBarcode = generateCode128Svg(shippingModalLabel.barcode_no || 'SP100000010IN', 52, 2.0);
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>India Post Shipping Label - ${shippingModalLabel.barcode_no}</title>
+          <style>
+            @page { size: 105mm 148mm; margin: 6mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; color: #111; }
+            .label-card { border: 2px solid #000; padding: 12px; border-radius: 4px; box-sizing: border-box; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 8px; }
+            .carrier-title { font-size: 16px; font-weight: 900; color: #b91c1c; text-transform: uppercase; margin: 0; }
+            .service-name { font-size: 12px; font-weight: 700; margin: 2px 0 0; }
+            .bnpl-badge { border: 1.5px solid #000; padding: 2px 6px; font-size: 10px; font-weight: 800; text-align: right; }
+            .barcode-box { text-align: center; margin: 12px 0 8px; }
+            .barcode-no { font-family: monospace; font-size: 15px; font-weight: 800; letter-spacing: 2px; margin-top: 4px; }
+            .address-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 8px 0; margin-top: 8px; font-size: 11px; }
+            .to-section { padding-right: 8px; }
+            .from-section { border-left: 1px solid #999; padding-left: 8px; font-size: 10px; }
+            .title-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #444; margin-bottom: 2px; }
+            .bold-name { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
+            .pin-highlight { font-size: 14px; font-weight: 900; margin: 4px 0; }
+            .footer-note { font-size: 8px; text-align: center; color: #666; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="label-card">
+            <div class="header">
+              <div>
+                <p class="carrier-title">INDIA POST</p>
+                <p class="service-name">${shippingModalLabel.service_type || 'SPEED POST (DOMESTIC)'}</p>
+              </div>
+              <div style="text-align: right;">
+                <span class="bnpl-badge">POSTAGE PREPAID / BNPL</span>
+                <p style="font-size: 9px; margin: 2px 0 0; color: #555;">Kolkata GPO BNPL Centre</p>
+              </div>
+            </div>
+            <div class="barcode-box">
+              ${svgBarcode}
+              <div class="barcode-no">${shippingModalLabel.barcode_no}</div>
+            </div>
+            <div class="address-grid">
+              <div class="to-section">
+                <div class="title-tag">To (Consignee):</div>
+                <div class="bold-name">${shippingModalLabel.recipient_name}</div>
+                <div>${shippingModalLabel.recipient_address}</div>
+                <div>${shippingModalLabel.recipient_city}, ${shippingModalLabel.recipient_state || ''}</div>
+                <div class="pin-highlight">PIN: ${shippingModalLabel.recipient_pin}</div>
+                <div><b>Mobile:</b> ${shippingModalLabel.recipient_mobile}</div>
+              </div>
+              <div class="from-section">
+                <div class="title-tag">From (Sender / BNPL Client):</div>
+                <div class="bold-name">${shippingModalLabel.sender_name || 'Techno World Books Hub'}</div>
+                <div>${shippingModalLabel.sender_company || 'M/s Techno World'}</div>
+                <div>${shippingModalLabel.sender_address || 'College Street Book Market'}</div>
+                <div>${shippingModalLabel.sender_city} - ${shippingModalLabel.sender_pin}</div>
+                <div><b>Tel:</b> ${shippingModalLabel.sender_mobile || '9830000000'}</div>
+                <div style="margin-top: 6px; font-weight: bold;">Weight: ${shippingModalLabel.weight || 450}g</div>
+              </div>
+            </div>
+            <div class="footer-note">Booking Hub: Kolkata GPO (700001) &bull; Printed at ${new Date().toLocaleString('en-IN')} &bull; Techno World Books</div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const openTrackingModal = async (identifier: string) => {
@@ -1827,6 +1935,7 @@ admin@technoworld.com`
 
         {tab === 'products' && <ProductsWorkspace />}
         {tab === 'blog' && <BlogWorkspace />}
+        {tab === 'abandoned_carts' && <AbandonedCartsWorkspace />}
         {tab === 'orders' && (() => {
           // Filter orders according to Flipkart fulfillment stages
           const getStageOrders = (stg: string) => {
@@ -1854,6 +1963,29 @@ admin@technoworld.com`
           const completedCount = getStageOrders('completed').length;
 
           const activeStageOrders = getStageOrders(forwardStage).filter(o => {
+            // Logistics Partner filter
+            if (selectedLogisticsFilter && selectedLogisticsFilter !== 'ALL') {
+              const method = (o.shippingMethod || '').toUpperCase();
+              const carrier = (o.shippingCarrier || '').toUpperCase();
+              const notes = (o.notes || '').toUpperCase();
+              const tracking = (o.trackingNumber || '').toUpperCase();
+
+              if (selectedLogisticsFilter === 'SPEED_POST') {
+                const isSpeed = method.includes('SPEED') || carrier.includes('SPEED') || notes.includes('SPEED') || tracking.startsWith('SP') || tracking.startsWith('EB') || tracking.startsWith('EE');
+                if (!isSpeed) return false;
+              } else if (selectedLogisticsFilter === 'NORMAL_POST') {
+                const isSpeed = method.includes('SPEED') || carrier.includes('SPEED') || notes.includes('SPEED') || tracking.startsWith('SP') || tracking.startsWith('EB') || tracking.startsWith('EE');
+                const isLocal = method.includes('LOCAL') || method.includes('EXPRESS') || carrier.includes('LOCAL') || carrier.includes('PORTER') || carrier.includes('RAPIDO');
+                if (isSpeed || isLocal) return false;
+              } else if (selectedLogisticsFilter === 'LOCAL') {
+                const isLocal = method.includes('LOCAL') || method.includes('EXPRESS') || carrier.includes('LOCAL') || carrier.includes('PORTER') || carrier.includes('RAPIDO');
+                if (!isLocal) return false;
+              } else if (selectedLogisticsFilter === 'INDIA_POST') {
+                const isLocal = method.includes('LOCAL') || method.includes('EXPRESS') || carrier.includes('LOCAL') || carrier.includes('PORTER') || carrier.includes('RAPIDO');
+                if (isLocal) return false;
+              }
+            }
+
             if (!orderSearchQuery.trim()) return true;
             const q = orderSearchQuery.toLowerCase().trim();
             const ordNum = (o.orderNumber || '').toLowerCase();
@@ -2155,10 +2287,12 @@ admin@technoworld.com`
                     <select
                       value={selectedLogisticsFilter}
                       onChange={(e) => setSelectedLogisticsFilter(e.target.value)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none"
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
                     >
-                      <option value="ALL">Logistics Partner: India Post</option>
-                      <option value="INDIA_POST">Speed Post (National)</option>
+                      <option value="ALL">All Logistics Partners</option>
+                      <option value="INDIA_POST">Logistics Partner: India Post (All)</option>
+                      <option value="SPEED_POST">Speed Post (National)</option>
+                      <option value="NORMAL_POST">Book Post / Standard Post</option>
                       <option value="LOCAL">Kolkata Local Courier</option>
                     </select>
 
@@ -2222,6 +2356,16 @@ admin@technoworld.com`
                       <span>{selectedOrderIds.size > 0 ? `Print Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
                     </button>
 
+                    {/* India Post Handover Manifest Button */}
+                    <button
+                      onClick={() => setIsManifestModalOpen(true)}
+                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-1.5 text-xs font-bold text-blue-800 hover:bg-blue-100 shadow-sm transition-all cursor-pointer"
+                      title="Generate and print India Post Despatch Manifest / Handover Journal for today's booked articles"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-blue-700" />
+                      <span>Postal Manifest</span>
+                    </button>
+
                     {/* Other Actions Dropdown */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
@@ -2234,6 +2378,30 @@ admin@technoworld.com`
 
                       {isOtherActionsOpen && (
                         <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl z-30 py-1 text-xs font-semibold text-slate-700">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+                                const res = await fetch('/api/v1/admin/reports/gstr1', {
+                                  headers: token ? { Authorization: `Bearer ${token}` } : {},
+                                });
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `GSTR1_Report_${new Date().toISOString().slice(0, 7)}.csv`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                toast.success('GSTR-1 Tax Report downloaded successfully');
+                              } catch (e) {
+                                toast.error('Failed to export GSTR-1 report');
+                              }
+                              setIsOtherActionsOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-indigo-700 font-bold"
+                          >
+                            <Download className="h-3.5 w-3.5 text-indigo-600" /> Export GSTR-1 Tax (.csv)
+                          </button>
                           <button
                             onClick={() => {
                               const csvRows = ['OrderNumber,Customer,Phone,TotalAmount,Status,Date'];
@@ -3743,6 +3911,18 @@ admin@technoworld.com`
                         >
                           <Mail className="h-3.5 w-3.5" /> Slight Delay Notice
                         </button>
+                        {previewOrder.status !== 'CANCELLED' && (
+                          <button
+                            onClick={() => {
+                              handleRtoRestock(previewOrder.id, previewOrder.orderNumber);
+                              setPreviewOrder(null);
+                            }}
+                            className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="Restock inventory and mark order as Return to Origin"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" /> RTO Restock
+                          </button>
+                        )}
                       </div>
 
                       <button
@@ -7048,14 +7228,15 @@ admin@technoworld.com`
                 </div>
               </div>
 
-              {/* Barcode Mock */}
-              <div className="text-center py-2 bg-slate-50 border border-slate-200 rounded">
-                <div className="h-8 flex items-center justify-center gap-1">
-                  {[4, 2, 6, 1, 5, 2, 4, 3, 6, 2, 5, 1, 4, 2, 6, 3, 5, 1, 4, 2, 6, 3].map((h, i) => (
-                    <span key={i} className="bg-black inline-block" style={{ width: `${(i % 3) + 1}px`, height: `${h * 4 + 10}px` }} />
-                  ))}
-                </div>
-                <p className="mt-1 font-mono font-bold text-sm tracking-widest">{shippingModalLabel.barcode_no}</p>
+              {/* Scannable India Post Standard Code 128 Barcode */}
+              <div className="text-center py-2.5 bg-white border border-slate-200 rounded-lg shadow-inner">
+                <div
+                  className="flex justify-center items-center overflow-hidden px-2"
+                  dangerouslySetInnerHTML={{
+                    __html: generateCode128Svg(shippingModalLabel.barcode_no || 'SP100000010IN', 48, 1.8),
+                  }}
+                />
+                <p className="mt-1 font-mono font-extrabold text-sm tracking-widest text-slate-900">{shippingModalLabel.barcode_no}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-b pb-3">
@@ -7082,10 +7263,10 @@ admin@technoworld.com`
 
             <div className="mt-5 flex gap-3">
               <button
-                onClick={() => window.print()}
+                onClick={handlePrintShippingModalLabel}
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm"
               >
-                <Printer className="h-4 w-4" /> Print Label
+                <Printer className="h-4 w-4" /> Print Official A6 Label
               </button>
               <button
                 onClick={() => setShippingModalLabel(null)}
@@ -7793,6 +7974,13 @@ admin@technoworld.com`
         onClose={() => setStickerModalState({ isOpen: false })}
         order={stickerModalState.order}
         orders={stickerModalState.orders}
+      />
+
+      {/* Official India Post Despatch Manifest / Handover Journal Modal */}
+      <IndiaPostManifestModal
+        isOpen={isManifestModalOpen}
+        onClose={() => setIsManifestModalOpen(false)}
+        orders={orders.filter(o => o.trackingNumber)}
       />
 
       <style>{`

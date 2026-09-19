@@ -340,7 +340,7 @@ export default function SearchAnalyticsWorkspace() {
                 Today's Pageviews
               </span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-slate-900">{liveData.todayPageviews || 64}</span>
+                <span className="text-3xl font-black text-slate-900">{liveData.todayPageviews ?? 0}</span>
                 <span className="text-xs font-bold text-amber-600">views</span>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">Catalog, product & blog pages</p>
@@ -352,43 +352,53 @@ export default function SearchAnalyticsWorkspace() {
                   Device Distribution
                 </span>
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
-                  {liveData.deviceDistribution?.mobilePercent || 70}% Mobile
+                  {(liveData.deviceDistribution?.totalSessions || 0) > 0
+                    ? `${liveData.deviceDistribution?.mobilePercent ?? 0}% Mobile`
+                    : 'Real-time Telemetry'}
                 </span>
               </div>
 
               {/* Progress bar of traffic share */}
               <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${liveData.deviceDistribution?.mobilePercent || 70}%` }}
-                  title={`Mobile: ${liveData.deviceDistribution?.mobilePercent || 70}%`}
-                />
-                <div
-                  className="bg-blue-500 transition-all duration-500"
-                  style={{ width: `${liveData.deviceDistribution?.desktopPercent || 30}%` }}
-                  title={`Desktop: ${liveData.deviceDistribution?.desktopPercent || 30}%`}
-                />
+                {(liveData.deviceDistribution?.totalSessions || 0) > 0 ? (
+                  <>
+                    <div
+                      className="bg-emerald-500 transition-all duration-500"
+                      style={{ width: `${liveData.deviceDistribution?.mobilePercent ?? 0}%` }}
+                      title={`Mobile: ${liveData.deviceDistribution?.mobilePercent ?? 0}%`}
+                    />
+                    <div
+                      className="bg-blue-500 transition-all duration-500"
+                      style={{ width: `${liveData.deviceDistribution?.desktopPercent ?? 0}%` }}
+                      title={`Desktop: ${liveData.deviceDistribution?.desktopPercent ?? 0}%`}
+                    />
+                  </>
+                ) : (
+                  <div className="w-full bg-slate-200" title="Awaiting visitor sessions" />
+                )}
               </div>
 
               {/* Counts & Live vs 24h breakdown */}
               <div className="mt-3 flex items-center justify-between text-xs font-bold text-slate-700">
                 <span className="flex items-center gap-1 text-emerald-700">
                   <Smartphone className="h-3.5 w-3.5 text-emerald-600" />
-                  Mobile: {liveData.deviceDistribution?.cumulativeMobile || 42}
+                  Mobile: {liveData.deviceDistribution?.cumulativeMobile ?? 0}
                   <span className="text-[10px] text-emerald-600/70 font-normal">
-                    ({liveData.deviceDistribution?.mobile || 0} live)
+                    ({liveData.deviceDistribution?.mobile ?? 0} live)
                   </span>
                 </span>
                 <span className="flex items-center gap-1 text-blue-700">
                   <Monitor className="h-3.5 w-3.5 text-blue-600" />
-                  Desktop: {liveData.deviceDistribution?.cumulativeDesktop || 18}
+                  Desktop: {liveData.deviceDistribution?.cumulativeDesktop ?? 0}
                   <span className="text-[10px] text-blue-600/70 font-normal">
-                    ({liveData.deviceDistribution?.desktop || 1} live)
+                    ({liveData.deviceDistribution?.desktop ?? 0} live)
                   </span>
                 </span>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
-                24h traffic share: {liveData.deviceDistribution?.mobilePercent || 70}% mobile vs {liveData.deviceDistribution?.desktopPercent || 30}% desktop
+                {(liveData.deviceDistribution?.totalSessions || 0) > 0
+                  ? `24h traffic share: ${liveData.deviceDistribution?.mobilePercent ?? 0}% mobile vs ${liveData.deviceDistribution?.desktopPercent ?? 0}% desktop`
+                  : 'Live telemetry active — visitor device sessions track automatically'}
               </p>
             </div>
           </div>
