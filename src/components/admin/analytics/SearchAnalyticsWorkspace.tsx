@@ -219,7 +219,7 @@ export default function SearchAnalyticsWorkspace() {
               </span>
               <span>Live Traffic</span>
               <span className="rounded-full bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-black">
-                {liveData.activeNow || 1}
+                {liveData.activeNow ?? 0}
               </span>
             </button>
 
@@ -281,7 +281,7 @@ export default function SearchAnalyticsWorkspace() {
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
                   </span>
                   <span className="text-xl font-black text-slate-900">
-                    {liveData.activeNow || 1} Active Online {liveData.activeNow === 1 ? 'Visitor' : 'Visitors'} Right Now
+                    {liveData.activeNow ?? 0} Active Online {liveData.activeNow === 1 ? 'Visitor' : 'Visitors'} Right Now
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5">
@@ -318,7 +318,7 @@ export default function SearchAnalyticsWorkspace() {
                 Active Sessions
               </span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-emerald-700">{liveData.activeNow || 1}</span>
+                <span className="text-3xl font-black text-emerald-700">{liveData.activeNow ?? 0}</span>
                 <span className="text-xs font-bold text-emerald-600">online right now</span>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">Sliding 5-min active heartbeats</p>
@@ -329,10 +329,10 @@ export default function SearchAnalyticsWorkspace() {
                 Today's Unique Visitors
               </span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-slate-900">{liveData.todayVisitors || 18}</span>
+                <span className="text-3xl font-black text-slate-900">{liveData.todayVisitors ?? 0}</span>
                 <span className="text-xs font-bold text-blue-600">unique shoppers</span>
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">Unique browser sessions today</p>
+              <p className="mt-2 text-[11px] text-slate-500">Unique devices / shoppers today</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
