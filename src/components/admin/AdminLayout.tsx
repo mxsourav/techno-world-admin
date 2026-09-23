@@ -78,6 +78,43 @@ export default function AdminLayout() {
     try { return localStorage.getItem('tw_admin_dark_mode') === 'true'; } catch { return false; }
   });
 
+  // Sidebar collapse state with localStorage persistence
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('tw_admin_sidebar_collapsed');
+      if (saved !== null) return saved === 'true';
+      return false;
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('tw_admin_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || (e.target as HTMLElement)?.isContentEditable) {
+          return;
+        }
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Instantaneous theme toggle - All 3 parts flip colors simultaneously at once
   const toggleDarkMode = () => {
     const nextMode = !isDarkMode;
@@ -321,21 +358,34 @@ export default function AdminLayout() {
         />
       </div>
 
+      {/* Mobile Backdrop Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-30 md:hidden transition-opacity duration-300 ${
+          !isSidebarCollapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsSidebarCollapsed(true)}
+      />
+
       {/* Sidebar - Apple macOS Authentic Frosted Glass with Traffic Lights */}
-      <aside className={`w-72 flex-shrink-0 macos-sidebar flex flex-col h-full relative z-20 overflow-x-hidden overflow-y-hidden shadow-xs ${
-        isDarkMode ? 'dark-sidebar' : ''
-      }`}>
+      <aside className={`fixed md:relative inset-y-0 left-0 z-40 md:z-20 flex-shrink-0 macos-sidebar flex flex-col h-full overflow-x-hidden overflow-y-hidden shadow-xs transition-all duration-300 ease-in-out ${
+        isSidebarCollapsed
+          ? '-translate-x-full md:translate-x-0 md:w-[76px]'
+          : 'translate-x-0 w-72'
+      } ${isDarkMode ? 'dark-sidebar' : ''}`}>
         {/* macOS Traffic Lights + Sidebar Panel Toggle */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
-            <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
-            <span className="w-3.5 h-3.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
-          </div>
+        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-5 pt-5 pb-3 transition-all`}>
+          {!isSidebarCollapsed && (
+            <div className="flex items-center gap-2.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs inline-block" />
+              <span className="w-3.5 h-3.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs inline-block" />
+              <span className="w-3.5 h-3.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs inline-block" />
+            </div>
+          )}
           <button
             type="button"
-            title="Toggle Sidebar"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors"
+            onClick={toggleSidebar}
+            title={isSidebarCollapsed ? "Expand Sidebar (Ctrl+B)" : "Collapse Sidebar (Ctrl+B)"}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
           >
             <PanelLeft className="w-4.5 h-4.5" />
           </button>
@@ -344,26 +394,42 @@ export default function AdminLayout() {
         {/* Store Info Banner with Techno World Black Logo & Bold Super Admin Label */}
         <Link
           to="/admin/dashboard"
-          className="px-5 py-3.5 mx-3 flex flex-col items-start gap-1 border-b border-slate-200/60 dark:border-white/[0.06] flex-shrink-0 group hover:opacity-90 transition-opacity"
-          title="Go to Admin Dashboard"
+          className={`py-3.5 mx-2.5 flex flex-col ${
+            isSidebarCollapsed ? 'items-center px-1' : 'items-start px-3.5 gap-1'
+          } border-b border-slate-200/60 dark:border-white/[0.06] flex-shrink-0 group hover:opacity-90 transition-all`}
+          title={isSidebarCollapsed ? "Techno World Super Admin" : "Go to Admin Dashboard"}
         >
-          <img
-            src="/techno_world_black.png"
-            alt="Techno World"
-            className="h-8 w-auto max-w-[195px] object-contain object-left dark:brightness-0 dark:invert transition-transform group-hover:scale-[1.01]"
-          />
-          <span className="text-[13px] font-bold text-black dark:text-white tracking-tight leading-none mt-1">
-            Super Admin
-          </span>
+          {isSidebarCollapsed ? (
+            <div className="w-9 h-9 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 border border-blue-500/25 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-xs tracking-tight shadow-xs">
+              TW
+            </div>
+          ) : (
+            <>
+              <img
+                src="/techno_world_black.png"
+                alt="Techno World"
+                className="h-8 w-auto max-w-[195px] object-contain object-left dark:brightness-0 dark:invert transition-transform group-hover:scale-[1.01]"
+              />
+              <span className="text-[13px] font-bold text-black dark:text-white tracking-tight leading-none mt-1">
+                Super Admin
+              </span>
+            </>
+          )}
         </Link>
 
         {/* Navigation Sections */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3.5 px-3 space-y-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-3.5 space-y-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+          isSidebarCollapsed ? 'px-2' : 'px-3'
+        }`}>
           {TAB_SECTIONS.map((section) => (
             <div key={section.title} className="space-y-1">
-              <div className="text-[11.5px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider px-3.5 pt-1.5 pb-1 select-none">
-                {section.title}
-              </div>
+              {!isSidebarCollapsed ? (
+                <div className="text-[11.5px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider px-3.5 pt-1.5 pb-1 select-none">
+                  {section.title}
+                </div>
+              ) : (
+                <div className="w-full my-2 border-t border-slate-200/40 dark:border-white/[0.06]" />
+              )}
               {section.tabs.map((t) => {
                 const isActive = currentTab === t.id || (t.id === 'analytics' && currentTab === 'reports');
                 const hasFlyout = t.id in flyoutRefMap;
@@ -396,17 +462,22 @@ export default function AdminLayout() {
                   >
                     <Link
                       to={linkTo}
-                      className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 outline-none focus:outline-none focus:ring-0 ${
+                      title={isSidebarCollapsed ? t.name : undefined}
+                      className={`flex items-center ${
+                        isSidebarCollapsed ? 'justify-center px-0 py-2.5' : 'justify-between px-3.5 py-2.5'
+                      } rounded-xl text-[14px] font-medium transition-all duration-150 outline-none focus:outline-none focus:ring-0 ${
                         isActive
                           ? 'macos-tab-active font-semibold'
                           : 'macos-tab-inactive'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 min-w-0'}`}>
                         <t.icon className="h-5 w-5 shrink-0" strokeWidth={2} />
-                        <span className="truncate">{t.name}</span>
+                        {!isSidebarCollapsed && (
+                          <span className="truncate">{t.name}</span>
+                        )}
                       </div>
-                      {hasFlyout && (
+                      {!isSidebarCollapsed && hasFlyout && (
                         <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-40" />
                       )}
                     </Link>
@@ -418,13 +489,16 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-3.5 border-t border-slate-200/70 dark:border-white/[0.08] flex-shrink-0">
+        <div className={`p-3.5 border-t border-slate-200/70 dark:border-white/[0.08] flex-shrink-0 ${isSidebarCollapsed ? 'flex justify-center' : ''}`}>
           <button
             onClick={logout}
-            className="flex items-center gap-3.5 w-full px-3.5 py-2.5 rounded-xl text-[14px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 dark:text-neutral-400 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors outline-none focus:outline-none focus:ring-0"
+            title={isSidebarCollapsed ? "Logout" : undefined}
+            className={`flex items-center ${
+              isSidebarCollapsed ? 'justify-center px-0' : 'gap-3.5 w-full px-3.5'
+            } py-2.5 rounded-xl text-[14px] font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 dark:text-neutral-400 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors outline-none focus:outline-none focus:ring-0 cursor-pointer`}
           >
             <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} />
-            Logout
+            {!isSidebarCollapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
@@ -439,8 +513,18 @@ export default function AdminLayout() {
             ? 'bg-[#0a0a0c]/65 backdrop-blur-2xl border-b border-white/[0.08]'
             : 'bg-white/50 backdrop-blur-2xl border-b border-white/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
         }`}>
-          {/* Breadcrumbs */}
+          {/* Breadcrumbs & Header Sidebar Toggle */}
           <div className="flex items-center text-sm font-medium min-w-0 pr-4">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title={isSidebarCollapsed ? "Expand Sidebar (Ctrl+B)" : "Collapse Sidebar (Ctrl+B)"}
+              className={`w-8 h-8 mr-2.5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0 ${
+                isSidebarCollapsed ? 'flex' : 'flex md:hidden'
+              }`}
+            >
+              <PanelLeft className="w-4.5 h-4.5" />
+            </button>
             <span className={isDarkMode ? 'text-neutral-400 shrink-0' : 'text-slate-400 shrink-0'}>Admin</span>
             <ChevronRight className={`h-4 w-4 mx-1.5 shrink-0 ${isDarkMode ? 'text-neutral-600' : 'text-slate-300'}`} />
             <span className={`font-bold truncate max-w-[180px] lg:max-w-[260px] ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tabName}</span>
