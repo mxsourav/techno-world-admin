@@ -42,7 +42,17 @@ export function generateAndPrintInvoice(order: any) {
   const customerEmail = order.pickupEmail || order.customerEmail || order.address?.email || order.user?.email || 'N/A';
   const paymentMethod = (order.paymentMethod || 'PREPAID').toUpperCase();
 
-  const items = Array.isArray(order.items) ? order.items : [];
+  let items = Array.isArray(order.items) ? [...order.items] : [];
+  if (Array.isArray(order.orders) && order.orders.length > 0) {
+    items = [];
+    order.orders.forEach((o: any) => {
+      if (Array.isArray(o.items)) items.push(...o.items);
+    });
+  } else if (Array.isArray(order.childOrders) && order.childOrders.length > 0) {
+    order.childOrders.forEach((c: any) => {
+      if (Array.isArray(c.items)) items.push(...c.items);
+    });
+  }
   let totalConsignmentWeightGrams = 0;
 
   const itemsHtml = items.map((it: any, idx: number) => {

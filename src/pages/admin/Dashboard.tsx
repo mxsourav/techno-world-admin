@@ -1021,7 +1021,7 @@ export default function Dashboard() {
         orderCount: grp.orders.length,
         dimensions,
         weight: `${totalWeightKg}kg`,
-        packaging: totalBookCount > 1 ? `Consignment Box (${totalBookCount} Books in ${grp.orders.length} Orders)` : 'Standard Book Sleeve',
+        packaging: grp.items.length > 1 ? `Consignment Box (${grp.items.length} Books in ${grp.orders.length} Orders)` : 'Standard Book Sleeve',
         priceDisplay: `₹${grp.totalAmount}`,
       };
     });
@@ -2592,7 +2592,7 @@ admin@technoworld.com`
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-extrabold text-blue-700 shadow-sm">
                                           <Box className="h-3 w-3" />
-                                          {grp.totalBookCount} {grp.totalBookCount === 1 ? 'Book in Package' : 'Books Combined in Package'}
+                                          {grp.items.length} {grp.items.length === 1 ? 'Book in Package' : 'Books Combined in Package'}
                                         </span>
                                         <button
                                           onClick={() => {
@@ -2891,8 +2891,8 @@ admin@technoworld.com`
                                            <Link2 className="h-3 w-3" /> Merge
                                          </button>
                                        )}
-                                        onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
                                       <button
+                                        onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
                                         className="h-7 px-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
                                       >
                                         <Mail className="h-3 w-3" /> Delay
