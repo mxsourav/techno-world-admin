@@ -862,7 +862,11 @@ export default function Dashboard() {
 
     setIsSubmittingPoints(true);
     try {
-      const res = await adminService.adjustCustomerPoints(pointsModalCustomer.id, {
+      const targetIdentifier = pointsModalCustomer.id || pointsModalCustomer.email;
+      const res = await adminService.adjustCustomerPoints(targetIdentifier, {
+        id: pointsModalCustomer.id,
+        email: pointsModalCustomer.email,
+        userId: pointsModalCustomer.id,
         points: pts,
         type: pointsType,
         reason: pointsReason.trim() || undefined,
@@ -981,17 +985,26 @@ export default function Dashboard() {
           state: ord.address?.state || 'West Bengal',
           pincode: isSelfPickup ? '700007' : (ord.address?.pincode || '700001'),
           items: [...items],
-          totalAmount: ord.totalAmount,
+          totalAmount: ord.totalAmount || 0,
           pickupSlots: ord.pickupSlots,
           selectedPickupSlot: ord.selectedPickupSlot,
           pickupStatus: ord.pickupStatus || 'NONE',
         };
       } else {
         // Customer placed multiple orders in the same 2 PM batch to the same delivery address!
-        groupMap[groupKey].orders.push(ord);
-        groupMap[groupKey].orderNumbers.push(ord.orderNumber);
-        groupMap[groupKey].items.push(...items);
-        groupMap[groupKey].totalAmount += ord.totalAmount;
+        if (!groupMap[groupKey].orders.some((o: any) => o.id === ord.id)) {
+          // Avoid pushing empty shell orders that have no items and no total amount
+          const hasItems = items.length > 0;
+          const hasAmount = typeof ord.totalAmount === 'number' && ord.totalAmount > 0;
+          if (hasItems || hasAmount) {
+            groupMap[groupKey].orders.push(ord);
+            if (ord.orderNumber && !groupMap[groupKey].orderNumbers.includes(ord.orderNumber)) {
+              groupMap[groupKey].orderNumbers.push(ord.orderNumber);
+            }
+            groupMap[groupKey].items.push(...items);
+            groupMap[groupKey].totalAmount += (ord.totalAmount || 0);
+          }
+        }
       }
     });
 
@@ -2567,7 +2580,7 @@ admin@technoworld.com`
                                     </span>
                                     {grp.isMultiOrder && (
                                       <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                                        <Package className="h-3 w-3 text-emerald-700 inline mr-1" /> {grp.orderCount} Orders Bundled
+                                        <Package className="h-3 w-3 text-emerald-700 inline mr-1" /> {grp.totalBookCount || grp.items?.length || grp.orderCount} Books Bundled ({grp.orders?.length || grp.orderCount} Orders)
                                       </span>
                                     )}
                                     <span
@@ -2868,7 +2881,7 @@ admin@technoworld.com`
                                         <>
                                           <button
                                             title="Download Official Tax Invoice (PDF)"
-                                            onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
+                                            onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, { ...ord, group: grp, orders: grp?.orders })}
                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                           >
                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoice
@@ -3243,7 +3256,7 @@ admin@technoworld.com`
                                                      : '📦 Book Post'}
                                                </span>
                                                <span className="ml-0.5 rounded-full bg-white/20 px-1 py-0.2 text-[9px] font-black uppercase tracking-tight">
-                                                 Bundle ({entry.group.orders.length})
+                                                 Bundle ({entry.group.totalBookCount || entry.group.items?.length || entry.group.orders?.length})
                                                </span>
                                              </button>
                                            ) : ord.shippingMethod === 'SPEED_POST' ? (
@@ -3315,7 +3328,7 @@ admin@technoworld.com`
                                          <>
                                            <button
                                              title="Download Official Tax Invoice (PDF)"
-                                             onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, ord)}
+                                             onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, { ...ord, group: entry.group, orders: entry.group?.orders })}
                                              className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
                                            >
                                              <FileText className="h-3 w-3 text-emerald-700" /> Invoice

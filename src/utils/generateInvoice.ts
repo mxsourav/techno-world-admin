@@ -42,15 +42,34 @@ export function generateAndPrintInvoice(order: any) {
   const customerEmail = order.pickupEmail || order.customerEmail || order.address?.email || order.user?.email || 'N/A';
   const paymentMethod = (order.paymentMethod || 'PREPAID').toUpperCase();
 
-  let items = Array.isArray(order.items) ? [...order.items] : [];
-  if (Array.isArray(order.orders) && order.orders.length > 0) {
-    items = [];
+  let items: any[] = [];
+  const seenItemKeys = new Set<string>();
+
+  const addItemSafely = (it: any, ordId?: string) => {
+    const k = `${ordId || ''}_${it.id || it.bookId || it.title || ''}`;
+    if (!seenItemKeys.has(k)) {
+      seenItemKeys.add(k);
+      items.push(it);
+    }
+  };
+
+  if (order.group && Array.isArray(order.group.items) && order.group.items.length > 0) {
+    order.group.items.forEach((it: any) => addItemSafely(it, it.orderId || order.id));
+  } else if (Array.isArray(order.orders) && order.orders.length > 0) {
     order.orders.forEach((o: any) => {
-      if (Array.isArray(o.items)) items.push(...o.items);
+      if (Array.isArray(o.items)) {
+        o.items.forEach((it: any) => addItemSafely(it, o.id));
+      }
     });
-  } else if (Array.isArray(order.childOrders) && order.childOrders.length > 0) {
+  } else if (Array.isArray(order.items) && order.items.length > 0) {
+    order.items.forEach((it: any) => addItemSafely(it, order.id));
+  }
+
+  if (Array.isArray(order.childOrders) && order.childOrders.length > 0) {
     order.childOrders.forEach((c: any) => {
-      if (Array.isArray(c.items)) items.push(...c.items);
+      if (Array.isArray(c.items)) {
+        c.items.forEach((it: any) => addItemSafely(it, c.id));
+      }
     });
   }
   let totalConsignmentWeightGrams = 0;
@@ -103,6 +122,16 @@ export function generateAndPrintInvoice(order: any) {
 
   const totalWeightKg = (totalConsignmentWeightGrams / 1000).toFixed(2);
   const totalWeightDisplay = `${totalWeightKg} kg (${totalConsignmentWeightGrams}g)`;
+
+  const computedSubtotal = items.reduce((sum: number, it: any) => {
+    const qty = it.quantity || it.qty || 1;
+    const price = it.priceAtPurchase || it.unitPrice || it.price || 0;
+    return sum + (qty * price);
+  }, 0);
+  const displaySubtotal = computedSubtotal > 0 ? computedSubtotal : (order.subtotal || order.totalAmount || 0);
+  const shippingVal = order.shippingCharge || 0;
+  const discountVal = order.discountAmount || 0;
+  const displayTotal = Math.max(0, displaySubtotal + shippingVal - discountVal);
 
   const html = `
     <!DOCTYPE html>
@@ -217,16 +246,16 @@ export function generateAndPrintInvoice(order: any) {
             <div style="width: 280px; font-size: 13px;">
               <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
                 <span>Subtotal:</span>
-                <span>${formatINR(order.subtotal || order.totalAmount || 0)}</span>
+                <span>${formatINR(displaySubtotal)}</span>
               </div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
                 <span>Shipping (SAC 9968):</span>
-                <span style="font-weight: 700; color: #047857;">${(order.shippingCharge || 0) === 0 ? 'FREE' : formatINR(order.shippingCharge)}</span>
+                <span style="font-weight: 700; color: #047857;">${shippingVal === 0 ? 'FREE' : formatINR(shippingVal)}</span>
               </div>
-              ${order.discountAmount ? `
+              ${discountVal > 0 ? `
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #047857;">
                   <span>Discount:</span>
-                  <span>- ${formatINR(order.discountAmount)}</span>
+                  <span>- ${formatINR(discountVal)}</span>
                 </div>
               ` : ''}
               <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
@@ -235,7 +264,7 @@ export function generateAndPrintInvoice(order: any) {
               </div>
               <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 2px solid #e2e8f0; margin-top: 4px; font-weight: 900; font-size: 15px; color: #0f172a;">
                 <span>Grand Total:</span>
-                <span>${formatINR(order.totalAmount || 0)}</span>
+                <span>${formatINR(displayTotal)}</span>
               </div>
             </div>
           </div>

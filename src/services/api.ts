@@ -358,8 +358,13 @@ export const adminService = {
   getCustomers: (params?: { search?: string; status?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
   toggleCustomerStatus: (id: string, data: { isActive?: boolean; reason?: string }) =>
     api.patch<any>(`/admin/customers/${id}/status`, data),
-  adjustCustomerPoints: (id: string, data: { points: number; type: 'CREDIT' | 'DEBIT'; reason?: string }) =>
-    api.post<any>(`/admin/customers/${id}/points`, data),
+  adjustCustomerPoints: (id: string, data: { points: number; type: 'CREDIT' | 'DEBIT'; reason?: string; id?: string; email?: string; userId?: string }) => {
+    const targetId = (id || data.id || data.email || '').trim();
+    if (targetId && targetId !== 'undefined' && targetId !== 'null') {
+      return api.post<any>(`/admin/customers/${encodeURIComponent(targetId)}/points`, data);
+    }
+    return api.post<any>('/admin/customers/points', data);
+  },
   getCustomerDetails: (id: string) => api.get<any>(`/admin/customers/${id}/details`),
   exportCustomers: async (format: 'csv' | 'sql'): Promise<void> => {
     const res = await fetchWithAuth(`${API_URL}/admin/customers/export?format=${format}`);
