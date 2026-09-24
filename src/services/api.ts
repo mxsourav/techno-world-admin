@@ -5,13 +5,13 @@ const getApiUrl = (): string => {
     if (envUrl && envUrl.startsWith('https://')) {
       return envUrl;
     }
-    return 'https://techno-world-api-qw4j.onrender.com/api/v1';
+    return 'https://api.technoworldbooks.in/api/v1';
   }
   if (import.meta.env.PROD) {
     if (envUrl && envUrl.startsWith('https://')) {
       return envUrl;
     }
-    return 'https://techno-world-api-qw4j.onrender.com/api/v1';
+    return 'https://api.technoworldbooks.in/api/v1';
   }
   return envUrl || 'http://localhost:5000/api/v1';
 };
