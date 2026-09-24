@@ -2155,35 +2155,31 @@ admin@technoworld.com`
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-black tracking-tight text-slate-900">Forward Orders</h2>
 
-                    {/* Auto-Accept Toggle Switch Button */}
+                    {/* Auto-Accept Toggle Switch Button (Apple macOS style) */}
                     <button
                       type="button"
                       onClick={handleToggleAutoAccept}
                       disabled={isLoadingAutoAccept}
                       title="Auto-Accept Orders: When ON (Default), newly placed orders automatically move to 'To Pack'. India Post shipment booking remains manual."
-                      className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs border cursor-pointer ${
-                        autoAcceptEnabled
-                          ? 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400'
-                          : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
-                      }`}
+                      className="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                     >
                       {isLoadingAutoAccept ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
                       ) : (
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full transition-all ${
-                            autoAcceptEnabled
-                              ? 'bg-emerald-500 shadow-sm shadow-emerald-500 ring-2 ring-emerald-300 animate-pulse'
-                              : 'bg-slate-400'
+                        <div
+                          className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                            autoAcceptEnabled ? 'bg-[#34c759]' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
-                        />
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                              autoAcceptEnabled ? 'translate-x-3.5' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </div>
                       )}
                       <span>Auto-Accept:</span>
-                      <span
-                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
-                          autoAcceptEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700'
-                        }`}
-                      >
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                         {autoAcceptEnabled ? 'ON' : 'OFF'}
                       </span>
                     </button>
@@ -2316,75 +2312,75 @@ admin@technoworld.com`
                   </div>
 
                   {/* Right View Switcher & Actions */}
-                  <div className="flex items-center gap-3">
-                    {/* View Switcher: Smart Groups vs Order ID */}
-                    <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+                  <div className="flex items-center gap-2.5">
+                    {/* View Switcher: Smart Groups vs Order ID (macOS Segmented Control) */}
+                    <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/60 dark:bg-slate-800/80 dark:border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
                       <button
                         onClick={() => setOrderViewMode('smart_groups')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs transition-all ${
                           orderViewMode === 'smart_groups'
-                            ? 'glass-tab-active font-extrabold'
-                            : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-slate-700 dark:text-white font-semibold'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
                         }`}
                       >
-                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
+                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
                         <span>Smart Groups</span>
                       </button>
 
                       <button
                         onClick={() => setOrderViewMode('order_id')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs transition-all ${
                           orderViewMode === 'order_id'
-                            ? 'glass-tab-active font-extrabold'
-                            : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-slate-700 dark:text-white font-semibold'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
                         }`}
                       >
-                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                        <Box className="h-3.5 w-3.5 text-slate-400" />
                         <span>Order ID</span>
                       </button>
                     </div>
 
-                    {/* Quick Invoices Download Action */}
+                    {/* Quick Invoices Download Action (macOS style) */}
                     <button
                       onClick={() => handleDownloadBatchInvoices()}
                       disabled={isDownloadingInvoices || activeStageOrders.length === 0}
-                      className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-sm transition-all disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       title={selectedOrderIds.size > 0 ? `Download merged PDF for ${selectedOrderIds.size} selected order(s)` : `Download merged PDF for all ${activeStageOrders.length} order(s) in this stage`}
                     >
                       {isDownloadingInvoices ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-700" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
                       ) : (
-                        <FileText className="h-3.5 w-3.5 text-emerald-700" />
+                        <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       )}
                       <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
                     </button>
 
-                    {/* Quick Shipping Labels Print Action */}
+                    {/* Quick Shipping Labels Print Action (macOS style) */}
                     <button
                       onClick={() => handleBatchPrintStickers()}
                       disabled={activeStageOrders.length === 0}
-                      className="flex items-center gap-1.5 rounded-xl border border-red-300 bg-red-50 px-3.5 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       title={selectedOrderIds.size > 0 ? `Print shipping labels for ${selectedOrderIds.size} selected order(s)` : `Print shipping labels for all ${activeStageOrders.length} order(s) in this stage`}
                     >
-                      <Tag className="h-3.5 w-3.5 text-red-700" />
-                      <span>{selectedOrderIds.size > 0 ? `Print Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
+                      <Tag className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <span>{selectedOrderIds.size > 0 ? `Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
                     </button>
 
-                    {/* India Post Handover Manifest Button */}
+                    {/* India Post Handover Manifest Button (macOS style) */}
                     <button
                       onClick={() => setIsManifestModalOpen(true)}
-                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-1.5 text-xs font-bold text-blue-800 hover:bg-blue-100 shadow-sm transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       title="Generate and print India Post Despatch Manifest / Handover Journal for today's booked articles"
                     >
-                      <FileText className="h-3.5 w-3.5 text-blue-700" />
+                      <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       <span>Postal Manifest</span>
                     </button>
 
-                    {/* Other Actions Dropdown */}
+                    {/* Other Actions Dropdown (macOS style) */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
                         onClick={() => setIsOtherActionsOpen(!isOtherActionsOpen)}
-                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       >
                         <span>Other Actions</span>
                         <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
@@ -2480,15 +2476,15 @@ admin@technoworld.com`
                       )}
                     </div>
 
-                    {/* Accept Orders Primary Action */}
+                    {/* Accept Orders Primary Action (macOS Accent Button) */}
                     {forwardStage === 'to_accept' && (
                       <button
                         onClick={handleBatchAcceptSelected}
                         disabled={isBatchAccepting || (selectedGroupKeys.size === 0 && selectedOrderIds.size === 0)}
-                        className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-extrabold text-white hover:bg-blue-700 shadow transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] active:bg-[#0064c8] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-all disabled:opacity-40"
                       >
                         {isBatchAccepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                        Accept Orders
+                        <span>Accept Orders</span>
                       </button>
                     )}
                   </div>
