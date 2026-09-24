@@ -2128,10 +2128,10 @@ admin@technoworld.com`
                       type="button"
                       onClick={handlePasteAndLookup}
                       disabled={isLookingUpOrder}
-                      className="flex items-center gap-1.5 rounded-xl border border-blue-300 dark:border-blue-500/30 bg-blue-100/90 dark:bg-blue-500/20 px-3 py-2 text-xs font-extrabold text-blue-900 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-500/30 transition-all shadow-2xs shrink-0 disabled:opacity-50"
+                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all shrink-0 disabled:opacity-50 cursor-pointer"
                       title="Paste from clipboard and search immediately"
                     >
-                      <Clipboard className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+                      <Clipboard className="h-3.5 w-3.5 text-slate-500" />
                       <span className="hidden sm:inline">Paste & Inspect</span>
                       <span className="sm:hidden">Paste</span>
                     </button>
@@ -2140,7 +2140,7 @@ admin@technoworld.com`
                       type="button"
                       onClick={() => handleUniversalLookup(universalOrderSearch)}
                       disabled={isLookingUpOrder || !universalOrderSearch.trim()}
-                      className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-all shadow-sm shrink-0 disabled:opacity-50"
+                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-b from-[#0077ed] to-[#0062c4] hover:from-[#0080ff] hover:to-[#006ad8] border border-blue-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),_0_2px_5px_rgba(0,102,204,0.3)] active:scale-[0.98] transition-all shrink-0 disabled:opacity-50 cursor-pointer"
                     >
                       {isLookingUpOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
                       <span>Lookup</span>
@@ -2155,13 +2155,13 @@ admin@technoworld.com`
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-black tracking-tight text-slate-900">Forward Orders</h2>
 
-                    {/* Auto-Accept Toggle Switch Button (Apple macOS style) */}
+                    {/* Auto-Accept Toggle Switch Button (Glass Pill with Light Reflection) */}
                     <button
                       type="button"
                       onClick={handleToggleAutoAccept}
                       disabled={isLoadingAutoAccept}
                       title="Auto-Accept Orders: When ON (Default), newly placed orders automatically move to 'To Pack'. India Post shipment booking remains manual."
-                      className="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                      className="relative inline-flex items-center gap-2 rounded-full px-3 py-1 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] transition-all cursor-pointer backdrop-blur-md dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                     >
                       {isLoadingAutoAccept ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
@@ -2178,8 +2178,8 @@ admin@technoworld.com`
                           />
                         </div>
                       )}
-                      <span>Auto-Accept:</span>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">Auto-Accept:</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                         {autoAcceptEnabled ? 'ON' : 'OFF'}
                       </span>
                     </button>
@@ -2297,7 +2297,7 @@ admin@technoworld.com`
                     <select
                       value={selectedLogisticsFilter}
                       onChange={(e) => setSelectedLogisticsFilter(e.target.value)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 px-3.5 py-1.5 text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.05)] transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                     >
                       <option value="ALL">All Logistics Partners</option>
                       <option value="INDIA_POST">Logistics Partner: India Post (All)</option>
@@ -2306,21 +2306,21 @@ admin@technoworld.com`
                       <option value="LOCAL">Kolkata Local Courier</option>
                     </select>
 
-                    <span className="rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-black text-slate-700">
+                    <span className="rounded-full bg-slate-100/90 border border-slate-200/70 px-3.5 py-1 text-xs font-bold text-slate-600 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:bg-slate-800 dark:border-white/10 dark:text-slate-300">
                       # Total {orderViewMode === 'smart_groups' ? `${smartGroups.length} groups (${totalOrdersInActiveStage} orders)` : `${totalOrdersInActiveStage} orders`}
                     </span>
                   </div>
 
                   {/* Right View Switcher & Actions */}
                   <div className="flex items-center gap-2.5">
-                    {/* View Switcher: Smart Groups vs Order ID (macOS Segmented Control) */}
-                    <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/60 dark:bg-slate-800/80 dark:border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+                    {/* View Switcher: Smart Groups vs Order ID (Glass Segmented Control) */}
+                    <div className="inline-flex items-center rounded-full bg-slate-200/60 p-1 border border-slate-300/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] backdrop-blur-md dark:bg-slate-800/80 dark:border-white/10">
                       <button
                         onClick={() => setOrderViewMode('smart_groups')}
-                        className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs transition-all ${
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs transition-all cursor-pointer ${
                           orderViewMode === 'smart_groups'
-                            ? 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-slate-700 dark:text-white font-semibold'
-                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+                            ? 'bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-900 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.08)] dark:bg-slate-700 dark:text-white font-semibold'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium hover:bg-white/40'
                         }`}
                       >
                         <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
@@ -2329,22 +2329,22 @@ admin@technoworld.com`
 
                       <button
                         onClick={() => setOrderViewMode('order_id')}
-                        className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs transition-all ${
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs transition-all cursor-pointer ${
                           orderViewMode === 'order_id'
-                            ? 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:bg-slate-700 dark:text-white font-semibold'
-                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'
+                            ? 'bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-900 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.08)] dark:bg-slate-700 dark:text-white font-semibold'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium hover:bg-white/40'
                         }`}
                       >
-                        <Box className="h-3.5 w-3.5 text-slate-400" />
+                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-blue-600' : 'text-slate-400'}`} />
                         <span>Order ID</span>
                       </button>
                     </div>
 
-                    {/* Quick Invoices Download Action (macOS style) */}
+                    {/* Quick Invoices Download Action (Glass Pill with Light Reflection) */}
                     <button
                       onClick={() => handleDownloadBatchInvoices()}
                       disabled={isDownloadingInvoices || activeStageOrders.length === 0}
-                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                       title={selectedOrderIds.size > 0 ? `Download merged PDF for ${selectedOrderIds.size} selected order(s)` : `Download merged PDF for all ${activeStageOrders.length} order(s) in this stage`}
                     >
                       {isDownloadingInvoices ? (
@@ -2355,39 +2355,39 @@ admin@technoworld.com`
                       <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
                     </button>
 
-                    {/* Quick Shipping Labels Print Action (macOS style) */}
+                    {/* Quick Shipping Labels Print Action (Glass Pill with Light Reflection) */}
                     <button
                       onClick={() => handleBatchPrintStickers()}
                       disabled={activeStageOrders.length === 0}
-                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                       title={selectedOrderIds.size > 0 ? `Print shipping labels for ${selectedOrderIds.size} selected order(s)` : `Print shipping labels for all ${activeStageOrders.length} order(s) in this stage`}
                     >
                       <Tag className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       <span>{selectedOrderIds.size > 0 ? `Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
                     </button>
 
-                    {/* India Post Handover Manifest Button (macOS style) */}
+                    {/* India Post Handover Manifest Button (Glass Pill with Light Reflection) */}
                     <button
                       onClick={() => setIsManifestModalOpen(true)}
-                      className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                       title="Generate and print India Post Despatch Manifest / Handover Journal for today's booked articles"
                     >
                       <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       <span>Postal Manifest</span>
                     </button>
 
-                    {/* Other Actions Dropdown (macOS style) */}
+                    {/* Other Actions Dropdown (Glass Pill with Light Reflection) */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
                         onClick={() => setIsOtherActionsOpen(!isOtherActionsOpen)}
-                        className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 active:bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <span>Other Actions</span>
                         <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                       </button>
 
                       {isOtherActionsOpen && (
-                        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl z-30 py-1 text-xs font-semibold text-slate-700">
+                        <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xl z-30 py-1.5 text-xs font-semibold text-slate-700">
                           <button
                             onClick={async () => {
                               try {
@@ -2435,18 +2435,18 @@ admin@technoworld.com`
                               setIsOtherActionsOpen(false);
                               handleDownloadBatchInvoices();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-800 font-bold"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700 font-semibold"
                           >
-                            <FileText className="h-3.5 w-3.5 text-emerald-700" /> Download Invoices (Merged PDF)
+                            <FileText className="h-3.5 w-3.5 text-slate-500" /> Download Invoices (Merged PDF)
                           </button>
                           <button
                             onClick={() => {
                               setIsOtherActionsOpen(false);
                               handleBatchPrintStickers();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-800 font-bold"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700 font-semibold"
                           >
-                            <Tag className="h-3.5 w-3.5 text-red-700" /> Print Shipping Labels (Thermal / A6 / A5)
+                            <Tag className="h-3.5 w-3.5 text-slate-500" /> Print Shipping Labels (Thermal / A6 / A5)
                           </button>
                           <button
                             disabled={isBatchGeneratingInvoices}
@@ -2454,12 +2454,12 @@ admin@technoworld.com`
                               setIsOtherActionsOpen(false);
                               handleBatchGenerateInvoices();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-blue-700 font-bold disabled:opacity-50"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700 font-semibold disabled:opacity-50"
                           >
                             {isBatchGeneratingInvoices ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
                             ) : (
-                              <Zap className="h-3.5 w-3.5 text-blue-600" />
+                              <Zap className="h-3.5 w-3.5 text-slate-500" />
                             )}
                             <span>{isBatchGeneratingInvoices ? 'Generating Invoices...' : 'Generate Batch Invoices (Now)'}</span>
                           </button>
@@ -2468,20 +2468,20 @@ admin@technoworld.com`
                               setIsOtherActionsOpen(false);
                               handleBatchAcceptSelected();
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-emerald-700 font-bold border-t border-slate-100 mt-1 pt-1"
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-900 font-bold border-t border-slate-100 mt-1 pt-1"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Accept All Selected
+                            <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" /> Accept All Selected
                           </button>
                         </div>
                       )}
                     </div>
 
-                    {/* Accept Orders Primary Action (macOS Accent Button) */}
+                    {/* Accept Orders Primary Action (Blue Glass Pill with Light Reflection) */}
                     {forwardStage === 'to_accept' && (
                       <button
                         onClick={handleBatchAcceptSelected}
                         disabled={isBatchAccepting || (selectedGroupKeys.size === 0 && selectedOrderIds.size === 0)}
-                        className="flex items-center gap-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] active:bg-[#0064c8] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)] active:scale-[0.98] transition-all disabled:opacity-40"
+                        className="relative inline-flex items-center gap-1.5 rounded-full px-5 py-1.5 text-xs font-semibold text-white bg-gradient-to-b from-[#0077ed] to-[#0062c4] hover:from-[#0080ff] hover:to-[#006ad8] border border-blue-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),_inset_0_-1px_1px_rgba(0,0,0,0.1),_0_2px_5px_rgba(0,102,204,0.3)] active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer"
                       >
                         {isBatchAccepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                         <span>Accept Orders</span>
@@ -2845,15 +2845,15 @@ admin@technoworld.com`
                                         <>
                                           <button
                                             onClick={() => openShippingLabel(ord.id)}
-                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <Printer className="h-3 w-3" /> Label
+                                            <Printer className="h-3 w-3 text-slate-500" /> Label
                                           </button>
                                           <button
                                             onClick={() => openTrackingModal(ord.trackingNumber || ord.orderNumber)}
-                                            className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <Truck className="h-3 w-3" /> Track
+                                            <Truck className="h-3 w-3 text-slate-500" /> Track
                                           </button>
                                         </>
                                       )}
@@ -2862,16 +2862,16 @@ admin@technoworld.com`
                                           <button
                                             title="Download Invoices for all orders in this consignment group (PDF)"
                                             onClick={() => handleDownloadBatchInvoices(grp.orders.map((o: any) => o.id))}
-                                            className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                            <FileText className="h-3 w-3 text-slate-500" /> Invoices
                                           </button>
                                           <button
                                             title="Print Official India Post Shipping Labels for all orders in this bundle"
                                             onClick={() => handleOpenStickers(grp.orders)}
-                                            className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <Tag className="h-3 w-3 text-red-700" /> Shipping Labels
+                                            <Tag className="h-3 w-3 text-slate-500" /> Shipping Labels
                                           </button>
                                         </>
                                       ) : (
@@ -2879,16 +2879,16 @@ admin@technoworld.com`
                                           <button
                                             title="Download Official Tax Invoice (PDF)"
                                             onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, { ...ord, group: grp, orders: grp?.orders })}
-                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                            <FileText className="h-3 w-3 text-slate-500" /> Invoice
                                           </button>
                                           <button
                                             title="Print Official India Post Shipping Label (Thermal / A6 / A5)"
                                             onClick={() => handleOpenStickers(ord)}
-                                            className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                            className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                           >
-                                            <Tag className="h-3 w-3 text-red-700" /> Shipping Label
+                                            <Tag className="h-3 w-3 text-slate-500" /> Shipping Label
                                           </button>
                                         </>
                                       )}
@@ -3292,15 +3292,15 @@ admin@technoworld.com`
                                          <>
                                            <button
                                              onClick={() => openShippingLabel(ord.id)}
-                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <Printer className="h-3 w-3" /> Label
+                                             <Printer className="h-3 w-3 text-slate-500" /> Label
                                            </button>
                                            <button
                                              onClick={() => openTrackingModal(ord.trackingNumber || ord.orderNumber)}
-                                             className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <Truck className="h-3 w-3" /> Track
+                                             <Truck className="h-3 w-3 text-slate-500" /> Track
                                            </button>
                                          </>
                                        )}
@@ -3309,16 +3309,16 @@ admin@technoworld.com`
                                            <button
                                              title="Download Invoices for all orders in this bundle (PDF)"
                                              onClick={() => handleDownloadBatchInvoices(entry.group.orders.map((o: any) => o.id))}
-                                             className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoices
+                                             <FileText className="h-3 w-3 text-slate-500" /> Invoices
                                            </button>
                                            <button
                                              title="Print Official India Post Shipping Labels for all orders in this bundle"
                                              onClick={() => handleOpenStickers(entry.group.orders)}
-                                             className="h-7 px-2.5 rounded-lg border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <Tag className="h-3 w-3 text-red-700" /> Shipping Labels
+                                             <Tag className="h-3 w-3 text-slate-500" /> Shipping Labels
                                            </button>
                                          </>
                                        ) : (
@@ -3326,16 +3326,16 @@ admin@technoworld.com`
                                            <button
                                              title="Download Official Tax Invoice (PDF)"
                                              onClick={() => handleDownloadSingleInvoice(ord.id, ord.orderNumber, { ...ord, group: entry.group, orders: entry.group?.orders })}
-                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <FileText className="h-3 w-3 text-emerald-700" /> Invoice
+                                             <FileText className="h-3 w-3 text-slate-500" /> Invoice
                                            </button>
                                            <button
                                              title="Print Official India Post Shipping Label (Thermal / A6 / A5)"
                                              onClick={() => handleOpenStickers(ord)}
-                                             className="h-7 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center justify-center gap-1 shadow-sm transition-all"
+                                             className="h-7 px-3 rounded-full border border-slate-200/80 bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-700 hover:text-slate-900 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1px_2px_rgba(0,0,0,0.04)] text-xs font-semibold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer"
                                            >
-                                             <Tag className="h-3 w-3 text-red-700" /> Shipping Label
+                                             <Tag className="h-3 w-3 text-slate-500" /> Shipping Label
                                            </button>
                                          </>
                                        )}
