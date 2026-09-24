@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Save, Copy, Eye, Settings2, Users, PackageOpen, AlertCircle, ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react';
 import { promotionService, categoryService } from '@/services/api';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 const PROMO_DRAFT_KEY = 'tw_promotion_draft';
 
@@ -282,9 +283,16 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative bg-slate-50/50 dark:bg-[#080d1a]">
           
           {/* Mobile Tabs */}
-          <div className="flex lg:hidden border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c1222]">
-            <button onClick={() => setActiveTab('form')} className={`flex-1 py-2 text-xs font-bold ${activeTab === 'form' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500'}`}>Configuration</button>
-            <button onClick={() => setActiveTab('preview')} className={`flex-1 py-2 text-xs font-bold ${activeTab === 'preview' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500'}`}>Live Preview</button>
+          <div className="flex lg:hidden p-2 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c1222] justify-center">
+            <AnimatedGlassTabs
+              tabs={[
+                { id: 'form', label: 'Configuration' },
+                { id: 'preview', label: 'Live Preview' },
+              ]}
+              activeTab={activeTab}
+              onChange={(id) => setActiveTab(id as 'form' | 'preview')}
+              size="sm"
+            />
           </div>
 
           {/* Left Column: Form */}
@@ -664,7 +672,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
 
         {/* Footer Actions */}
         <div className="border-t border-slate-200 dark:border-white/[0.08] p-3 sm:p-4 bg-white dark:bg-[#0c1222] flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <button type="button" onClick={onClose} className="w-full sm:w-auto px-4 py-2 text-sm font-bold text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <button type="button" onClick={onClose} className="glass-action-button w-full sm:w-auto">
             Cancel
           </button>
           
@@ -673,7 +681,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
               type="button" 
               onClick={() => handleSave('DRAFT', false)}
               disabled={loading || !formData.name}
-              className="px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-neutral-300 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="glass-action-button disabled:opacity-50"
             >
               <Save className="h-4 w-4" /> Save Draft
             </button>
@@ -681,7 +689,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
               type="button" 
               onClick={() => handleSave('PAUSED', false)}
               disabled={loading || !formData.name}
-              className="px-3 py-2 text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-950/60 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="glass-action-button text-amber-700 dark:text-amber-300 disabled:opacity-50"
             >
               <AlertCircle className="h-4 w-4" /> Save as Paused
             </button>
@@ -689,7 +697,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
               type="button" 
               onClick={() => handleSave('DRAFT', true)}
               disabled={loading || !formData.name}
-              className="px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-neutral-300 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.08] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="glass-action-button disabled:opacity-50"
             >
               <Copy className="h-4 w-4" /> Save Template
             </button>
@@ -697,7 +705,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
               type="button" 
               onClick={() => handleSave('ACTIVE', false)}
               disabled={loading || !formData.name || (formData.discountType !== 'FREE_SHIPPING' && !formData.discountValue)}
-              className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="glass-action-button-primary disabled:opacity-50"
             >
               <Save className="h-4 w-4" /> {promotion?.id ? 'Update & Activate' : 'Publish & Go Live'}
             </button>

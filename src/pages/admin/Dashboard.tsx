@@ -94,6 +94,7 @@ import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
 import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
 import CategoryOrderManager from '@/components/admin/cms/CategoryOrderManager';
 import SalesReportWorkspace from '@/components/admin/sales/SalesReportWorkspace';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -2314,31 +2315,38 @@ admin@technoworld.com`
                   {/* Right View Switcher & Actions */}
                   <div className="flex items-center gap-3">
                     {/* View Switcher: Smart Groups vs Order ID */}
-                    <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1">
-                      <button
-                        onClick={() => setOrderViewMode('smart_groups')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                          orderViewMode === 'smart_groups'
-                            ? 'glass-tab-active font-extrabold'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
-                        <span>Smart Groups</span>
-                      </button>
-
-                      <button
-                        onClick={() => setOrderViewMode('order_id')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                          orderViewMode === 'order_id'
-                            ? 'glass-tab-active font-extrabold'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-emerald-600' : 'text-slate-500'}`} />
-                        <span>Order ID</span>
-                      </button>
-                    </div>
+                    <AnimatedGlassTabs
+                      activeTab={orderViewMode}
+                      onChange={(id) => setOrderViewMode(id as 'smart_groups' | 'order_id')}
+                      tabs={[
+                        {
+                          id: 'smart_groups',
+                          label: 'Smart Groups',
+                          icon: (
+                            <Star
+                              className={`h-3.5 w-3.5 ${
+                                orderViewMode === 'smart_groups'
+                                  ? 'fill-blue-600 text-blue-600'
+                                  : 'text-slate-400'
+                              }`}
+                            />
+                          ),
+                        },
+                        {
+                          id: 'order_id',
+                          label: 'Order ID',
+                          icon: (
+                            <Box
+                              className={`h-3.5 w-3.5 ${
+                                orderViewMode === 'order_id'
+                                  ? 'text-blue-600'
+                                  : 'text-slate-500'
+                              }`}
+                            />
+                          ),
+                        },
+                      ]}
+                    />
 
                     {/* Quick Invoices Download Action */}
                     <button
@@ -4108,63 +4116,54 @@ admin@technoworld.com`
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                  {/* Export Dropdown */}
-                  <div className="inline-flex rounded-xl shadow-2xs border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.06] p-1 gap-1">
-                    <button
-                      type="button"
-                      disabled={isExportingCustomers}
-                      onClick={() => handleExportCustomers('csv')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors disabled:opacity-50"
-                      title="Export customer list to Excel / CSV"
-                    >
-                      <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Excel / CSV</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isExportingCustomers}
-                      onClick={() => handleExportCustomers('sql')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors disabled:opacity-50"
-                      title="Export customer records as SQL insert dump"
-                    >
-                      <Database className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>SQL Dump</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    disabled={isExportingCustomers}
+                    onClick={() => handleExportCustomers('csv')}
+                    className="glass-action-button"
+                    title="Export customer list to Excel / CSV"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5" />
+                    <span>Excel / CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isExportingCustomers}
+                    onClick={() => handleExportCustomers('sql')}
+                    className="glass-action-button"
+                    title="Export customer records as SQL insert dump"
+                  >
+                    <Database className="h-3.5 w-3.5" />
+                    <span>SQL Dump</span>
+                  </button>
 
                   {/* Refresh Button */}
                   <button
                     type="button"
                     onClick={() => fetchCustomers()}
-                    className="p-2 rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.06] text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-white/[0.1] transition-colors"
+                    className="glass-action-button"
                     title="Refresh Customers"
                   >
-                    <RefreshCw className={`h-4 w-4 ${isLoadingCustomers ? 'animate-spin text-blue-600' : ''}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 ${isLoadingCustomers ? 'animate-spin text-blue-600' : ''}`} />
                   </button>
                 </div>
               </div>
 
               {/* Filters & Search Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
-                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06]">
-                  {(['ALL', 'ACTIVE', 'BLACKLISTED'] as const).map((st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => {
-                        setCustomerStatusFilter(st);
-                        fetchCustomers(undefined, st);
-                      }}
-                      className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
-                        customerStatusFilter === st
-                          ? 'bg-white dark:bg-white/[0.15] text-slate-900 dark:text-white shadow-xs'
-                          : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'
-                      }`}
-                    >
-                      {st === 'ALL' ? 'All Patrons' : st === 'ACTIVE' ? 'Active' : 'Blacklisted'}
-                    </button>
-                  ))}
-                </div>
+                <AnimatedGlassTabs
+                  activeTab={customerStatusFilter}
+                  onChange={(st) => {
+                    setCustomerStatusFilter(st as any);
+                    fetchCustomers(undefined, st as any);
+                  }}
+                  tabs={[
+                    { id: 'ALL', label: 'All Patrons' },
+                    { id: 'ACTIVE', label: 'Active' },
+                    { id: 'BLACKLISTED', label: 'Blacklisted' },
+                  ]}
+                />
 
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -4239,7 +4238,7 @@ admin@technoworld.com`
                                     {c.name || 'Anonymous User'}
                                   </span>
                                   <span className="text-[11px] text-slate-400 dark:text-neutral-500 block font-mono truncate" title={c.email}>
-                                    {c.email}
+                                    {c.email ? c.email.replace(/@example\.com/g, '@technoworldbooks.in') : 'patron@technoworldbooks.in'}
                                   </span>
                                 </div>
                               </div>
@@ -4299,10 +4298,10 @@ admin@technoworld.com`
                                     setPointsType('CREDIT');
                                     setPointsReason('');
                                   }}
-                                  className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs font-extrabold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 shadow-2xs transition-all inline-flex items-center gap-1"
+                                  className="glass-action-button text-xs"
                                   title="Assign or Deduct Loyalty TechnoPoints"
                                 >
-                                  <Award className="h-3 w-3 text-amber-600" />
+                                  <Award className="h-3.5 w-3.5" />
                                   <span>Points</span>
                                 </button>
 
@@ -4313,21 +4312,17 @@ admin@technoworld.com`
                                     setStatusModalCustomer(c);
                                     setStatusReason('');
                                   }}
-                                  className={`rounded-lg border px-2 py-1 text-xs font-extrabold shadow-2xs transition-all inline-flex items-center gap-1 ${
-                                    isBlacklisted
-                                      ? 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100'
-                                      : 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 hover:bg-rose-100'
-                                  }`}
+                                  className="glass-action-button text-xs"
                                   title={isBlacklisted ? 'Re-activate Patron' : 'Blacklist Patron'}
                                 >
                                   {isBlacklisted ? (
                                     <>
-                                      <UserCheck className="h-3 w-3 text-emerald-600" />
+                                      <UserCheck className="h-3.5 w-3.5" />
                                       <span>Whitelist</span>
                                     </>
                                   ) : (
                                     <>
-                                      <UserX className="h-3 w-3 text-rose-600" />
+                                      <UserX className="h-3.5 w-3.5 text-rose-600" />
                                       <span>Blacklist</span>
                                     </>
                                   )}
@@ -4337,7 +4332,7 @@ admin@technoworld.com`
                                 <button
                                   type="button"
                                   onClick={() => handleOpenCustomerDetails(c)}
-                                  className="rounded-lg border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-white/[0.14] shadow-2xs transition-all"
+                                  className="glass-action-button text-xs"
                                 >
                                   View Details
                                 </button>
@@ -4436,7 +4431,7 @@ admin@technoworld.com`
                     <button
                       type="button"
                       onClick={() => setPointsModalCustomer(null)}
-                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
+                      className="glass-action-button"
                     >
                       Cancel
                     </button>
@@ -4444,7 +4439,7 @@ admin@technoworld.com`
                       type="button"
                       disabled={isSubmittingPoints}
                       onClick={handlePointsSubmit}
-                      className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 text-xs font-extrabold shadow-md inline-flex items-center gap-1.5 transition-all disabled:opacity-50"
+                      className="glass-action-button-primary"
                     >
                       {isSubmittingPoints ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                       <span>Apply Points Adjustment</span>
@@ -4510,7 +4505,7 @@ admin@technoworld.com`
                     <button
                       type="button"
                       onClick={() => setStatusModalCustomer(null)}
-                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
+                      className="glass-action-button"
                     >
                       Cancel
                     </button>
@@ -4518,9 +4513,7 @@ admin@technoworld.com`
                       type="button"
                       disabled={isSubmittingStatus}
                       onClick={handleStatusChangeSubmit}
-                      className={`rounded-xl text-white px-5 py-2 text-xs font-extrabold shadow-md inline-flex items-center gap-1.5 transition-all disabled:opacity-50 ${
-                        statusModalCustomer.isActive !== false ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
-                      }`}
+                      className="glass-action-button-primary"
                     >
                       {isSubmittingStatus ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                       <span>{statusModalCustomer.isActive !== false ? 'Confirm Blacklist' : 'Confirm Whitelist'}</span>
@@ -4549,7 +4542,9 @@ admin@technoworld.com`
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
                           )}
                         </div>
-                        <span className="text-xs text-slate-500 dark:text-neutral-400 font-mono">{selectedCustomerDetail.email}</span>
+                        <span className="text-xs text-slate-500 dark:text-neutral-400 font-mono">
+                          {selectedCustomerDetail.email ? selectedCustomerDetail.email.replace(/@example\.com/g, '@technoworldbooks.in') : ''}
+                        </span>
                       </div>
                     </div>
                     <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl font-bold">&times;</button>
@@ -4707,7 +4702,7 @@ admin@technoworld.com`
                     <span className="text-[11px] text-slate-400">Customer since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}</span>
                     <button
                       onClick={() => setSelectedCustomerDetail(null)}
-                      className="rounded-xl border border-slate-200 dark:border-white/[0.12] bg-white dark:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 hover:bg-slate-100"
+                      className="glass-action-button"
                     >
                       Close
                     </button>
@@ -4781,65 +4776,56 @@ admin@technoworld.com`
               </div>
 
               {/* Sub-Tab Navigation: Reviews vs Questions vs Requests */}
-              <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4">
-                <button
-                  type="button"
-                  onClick={() => setReviewSubTab('reviews')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    reviewSubTab === 'reviews'
-                      ? 'glass-tab-active'
-                      : 'glass-tab-inactive'
-                  }`}
-                >
-                  <Star className={`h-3.5 w-3.5 ${reviewSubTab === 'reviews' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
-                  <span>Customer Reviews</span>
-                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                    reviewSubTab === 'reviews' ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
-                  }`}>
-                    {adminReviews.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setReviewSubTab('questions')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    reviewSubTab === 'questions'
-                      ? 'glass-tab-active'
-                      : 'glass-tab-inactive'
-                  }`}
-                >
-                  <HelpCircle className={`h-3.5 w-3.5 ${reviewSubTab === 'questions' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                  <span>Questions & Answers (Q&A)</span>
-                  {adminQuestions.filter(q => q.status === 'PENDING').length > 0 && (
-                    <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
-                      {adminQuestions.filter(q => q.status === 'PENDING').length} Pending
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setReviewSubTab('requests')}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    reviewSubTab === 'requests'
-                      ? 'glass-tab-active'
-                      : 'glass-tab-inactive'
-                  }`}
-                >
-                  <BookOpen className={`h-3.5 w-3.5 ${reviewSubTab === 'requests' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                  <span>Book Sourcing Requests</span>
-                  <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                    reviewSubTab === 'requests' ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
-                  }`}>
-                    {adminBookRequests.length}
-                  </span>
-                  {adminBookRequests.filter(r => r.status === 'PENDING').length > 0 && (
-                    <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
-                      {adminBookRequests.filter(r => r.status === 'PENDING').length} New
-                    </span>
-                  )}
-                </button>
+              <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-white/10 pb-4">
+                <AnimatedGlassTabs
+                  activeTab={reviewSubTab}
+                  onChange={(t) => setReviewSubTab(t as any)}
+                  tabs={[
+                    {
+                      id: 'reviews',
+                      label: (
+                        <span className="flex items-center gap-1.5">
+                          <span>Customer Reviews</span>
+                          <span className="ml-1 rounded-full bg-slate-200/70 dark:bg-white/15 px-2 py-0.5 text-[10px] font-black">
+                            {adminReviews.length}
+                          </span>
+                        </span>
+                      ),
+                      icon: <Star className="h-3.5 w-3.5 text-blue-600 fill-blue-600" />,
+                    },
+                    {
+                      id: 'questions',
+                      label: (
+                        <span className="flex items-center gap-1.5">
+                          <span>Questions & Answers (Q&A)</span>
+                          {adminQuestions.filter((q) => q.status === 'PENDING').length > 0 && (
+                            <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
+                              {adminQuestions.filter((q) => q.status === 'PENDING').length} Pending
+                            </span>
+                          )}
+                        </span>
+                      ),
+                      icon: <HelpCircle className="h-3.5 w-3.5 text-blue-600" />,
+                    },
+                    {
+                      id: 'requests',
+                      label: (
+                        <span className="flex items-center gap-1.5">
+                          <span>Book Sourcing Requests</span>
+                          <span className="ml-1 rounded-full bg-slate-200/70 dark:bg-white/15 px-2 py-0.5 text-[10px] font-black">
+                            {adminBookRequests.length}
+                          </span>
+                          {adminBookRequests.filter((r) => r.status === 'PENDING').length > 0 && (
+                            <span className="ml-1 rounded-full bg-amber-400/90 text-amber-950 px-2 py-0.5 text-[10px] font-black shadow-xs">
+                              {adminBookRequests.filter((r) => r.status === 'PENDING').length} New
+                            </span>
+                          )}
+                        </span>
+                      ),
+                      icon: <BookOpen className="h-3.5 w-3.5 text-blue-600" />,
+                    },
+                  ]}
+                />
               </div>
 
               {/* Filter Toolbar */}
@@ -4972,7 +4958,7 @@ admin@technoworld.com`
                               <span className="font-bold text-slate-700 flex items-center gap-1">
                                 👤 {r.userName}
                               </span>
-                              {r.userEmail && <span>✉️ {r.userEmail}</span>}
+                              {r.userEmail && <span>✉️ {r.userEmail.replace(/@example\.com/g, '@technoworldbooks.in')}</span>}
                               <span>•</span>
                               <span>🕒 {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
@@ -4984,31 +4970,23 @@ admin@technoworld.com`
                           <button
                             type="button"
                             onClick={() => handleToggleVerifiedReview(r.id, r.isVerified)}
-                            className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition-colors shadow-sm flex items-center gap-1 ${
-                              r.isVerified
-                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
-                            }`}
+                            className="glass-action-button"
                             title={r.isVerified ? 'Click to remove Verified Buyer badge' : 'Click to grant Verified Buyer badge'}
                           >
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                            <ShieldCheck className="h-3.5 w-3.5" />
                             {r.isVerified ? 'Verified' : 'Make Verified'}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleToggleApproveReview(r.id, r.isApproved)}
-                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors shadow-sm ${
-                              r.isApproved
-                                ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
-                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                            }`}
+                            className={r.isApproved ? "glass-action-button" : "glass-action-button-primary"}
                           >
                             {r.isApproved ? 'Hide Review' : 'Approve Review'}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteReview(r.id)}
-                            className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="glass-action-button text-rose-600"
                             title="Delete review"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -5133,14 +5111,14 @@ admin@technoworld.com`
                                         setReplyingQuestionId(null);
                                         setReplyText('');
                                       }}
-                                      className="rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                                      className="glass-action-button"
                                     >
                                       Cancel
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => handlePublishAnswer(q.id)}
-                                      className="rounded-lg bg-purple-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-purple-700 shadow-sm"
+                                      className="glass-action-button-primary"
                                     >
                                       Publish Answer
                                     </button>
@@ -5159,14 +5137,14 @@ admin@technoworld.com`
                               setReplyingQuestionId(q.id);
                               setReplyText(q.answer || '');
                             }}
-                            className="rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors shadow-sm"
+                            className="glass-action-button"
                           >
                             {q.status === 'ANSWERED' ? 'Edit Answer' : 'Reply & Publish'}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteQuestion(q.id)}
-                            className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="glass-action-button text-rose-600"
                             title="Delete question"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -5344,8 +5322,8 @@ admin@technoworld.com`
 
                             {/* Email Reply */}
                             <a
-                              href={`mailto:${req.email}?subject=${mailSubject}`}
-                              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                              href={`mailto:${req.email ? req.email.replace(/@example\.com/g, '@technoworldbooks.in') : ''}?subject=${mailSubject}`}
+                              className="glass-action-button w-full justify-center"
                             >
                               <Mail className="h-3.5 w-3.5 text-blue-600" />
                               <span>Email Requester</span>
@@ -5368,7 +5346,7 @@ admin@technoworld.com`
                               <button
                                 type="button"
                                 onClick={() => handleDeleteBookRequest(req.id)}
-                                className="rounded-xl border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                                className="glass-action-button text-rose-600 shrink-0"
                                 title="Delete request record"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -5630,7 +5608,7 @@ admin@technoworld.com`
                   type="button"
                   onClick={fetchSiteMedia}
                   disabled={isLoadingSiteMedia}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                  className="glass-action-button"
                   title="Refresh media list"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isLoadingSiteMedia ? 'animate-spin' : ''}`} />
@@ -5640,7 +5618,7 @@ admin@technoworld.com`
                 <button
                   type="button"
                   onClick={() => setIsSiteMediaModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                  className="glass-action-button-primary"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Upload New Asset</span>
@@ -5651,40 +5629,29 @@ admin@technoworld.com`
             {/* Filter Bar & Search */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               {/* Category Pills */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { key: 'ALL', label: 'All Media', folder: 'Home/site/' },
-                  { key: 'BANNER', label: 'Banners', folder: 'Home/site/banners' },
-                  { key: 'PROMOTIONAL', label: 'Promotional', folder: 'Home/site/promotional' },
-                  { key: 'FIXED', label: 'Fixed Assets', folder: 'Home/site/fixed' },
-                  { key: 'VIDEO', label: 'Videos', folder: 'Home/site/videos' },
-                ].map((cat) => {
-                  const isActive = selectedMediaCategory === cat.key;
-                  return (
-                    <button
-                      key={cat.key}
-                      type="button"
-                      onClick={() => setSelectedMediaCategory(cat.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                        isActive
-                          ? 'bg-emerald-700 text-white shadow-2xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
+              <AnimatedGlassTabs
+                activeTab={selectedMediaCategory}
+                onChange={(cat) => setSelectedMediaCategory(cat as any)}
+                tabs={[
+                  { key: 'ALL', label: 'All Media' },
+                  { key: 'BANNER', label: 'Banners' },
+                  { key: 'PROMOTIONAL', label: 'Promotional' },
+                  { key: 'FIXED', label: 'Fixed Assets' },
+                  { key: 'VIDEO', label: 'Videos' },
+                ].map((cat) => ({
+                  id: cat.key,
+                  label: (
+                    <span className="flex items-center gap-1.5">
                       <span>{cat.label}</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                          isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 text-slate-700'
-                        }`}
-                      >
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono bg-slate-200/70 dark:bg-white/10 text-slate-700 dark:text-neutral-300">
                         {cat.key === 'ALL'
                           ? siteMediaItems.length
                           : siteMediaItems.filter((m) => m.type === cat.key).length}
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
+                    </span>
+                  ),
+                }))}
+              />
 
               {/* Search Bar */}
               <div className="relative w-full md:w-64">
@@ -5715,7 +5682,7 @@ admin@technoworld.com`
                 <button
                   type="button"
                   onClick={() => setIsSiteMediaModalOpen(true)}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                  className="glass-action-button-primary mt-4"
                 >
                   <Plus className="h-3.5 w-3.5" /> Upload Asset
                 </button>
@@ -5882,11 +5849,7 @@ admin@technoworld.com`
                                   toast.error('Failed to toggle status');
                                 }
                               }}
-                              className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${
-                                media.isActive
-                                  ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              }`}
+                              className="glass-action-button text-[10px] py-1 px-2"
                             >
                               {media.isActive ? 'Pause' : 'Activate'}
                             </button>
@@ -5904,7 +5867,7 @@ admin@technoworld.com`
                                   }
                                 }
                               }}
-                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition"
+                              className="glass-action-button text-rose-600 p-1.5"
                               title="Delete from Cloudinary"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -6452,7 +6415,7 @@ admin@technoworld.com`
                 <h2 className="text-lg font-bold text-slate-900">Promotions & Campaigns</h2>
                 <p className="text-sm text-slate-500">Create and manage your promotional rules and discount codes</p>
               </div>
-              <button onClick={() => setEditingPromotion({})} className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors">
+              <button onClick={() => setEditingPromotion({})} className="glass-action-button-primary">
                 <Plus className="h-3.5 w-3.5" /> New Promotion
               </button>
             </div>
@@ -6520,7 +6483,7 @@ admin@technoworld.com`
                                       toast.error('Failed to pause promotion');
                                     }
                                   }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+                                  className="glass-action-button"
                                   title="Pause / Snooze this code"
                                 >
                                   <Pause className="h-3 w-3" /> Snooze
@@ -6538,7 +6501,7 @@ admin@technoworld.com`
                                       toast.error('Failed to activate promotion');
                                     }
                                   }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                                  className="glass-action-button"
                                   title="Activate and make code live"
                                 >
                                   <Play className="h-3 w-3" /> Go Live
@@ -6547,7 +6510,7 @@ admin@technoworld.com`
                               
                               <button 
                                 onClick={() => setEditingPromotion(promo)} 
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                className="glass-action-button"
                                 title="Edit promotion details"
                               >
                                 <Edit3 className="h-3 w-3" /> Edit
@@ -6566,7 +6529,7 @@ admin@technoworld.com`
                                     }
                                   }
                                 }} 
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="glass-action-button text-rose-600"
                                 title="Delete coupon"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -6694,10 +6657,10 @@ admin@technoworld.com`
                   <button
                     type="button"
                     onClick={() => {
-                      setTestEmailTo(adminProfile.email || 'customer@example.com');
+                      setTestEmailTo(adminProfile.email || 'customer@technoworldbooks.in');
                       setIsTestEmailModalOpen(true);
                     }}
-                    className="apple-pill-btn px-3.5 py-1.5 text-xs font-bold"
+                    className="glass-action-button"
                   >
                     🚀 Test SMTP
                   </button>

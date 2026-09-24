@@ -222,7 +222,7 @@ export default function HeroBookCoverManager() {
             <button
               onClick={handleResetToDefault}
               disabled={isDeleting || isUploading}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50 cursor-pointer"
+              className="glass-action-button text-rose-700 hover:text-rose-800"
             >
               {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
               Reset to Default Mockup
@@ -337,7 +337,7 @@ export default function HeroBookCoverManager() {
                       setPreviewUrl(null);
                     }
                   }}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="glass-action-button"
                 >
                   Cancel Selection
                 </button>
@@ -346,7 +346,7 @@ export default function HeroBookCoverManager() {
                   type="button"
                   onClick={handleUpload}
                   disabled={isUploading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-800 transition-all disabled:opacity-50 cursor-pointer"
+                  className="glass-action-button-primary"
                 >
                   {isUploading ? (
                     <>

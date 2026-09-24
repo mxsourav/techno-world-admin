@@ -26,6 +26,7 @@ import {
   printSingleShippingSticker,
   printBatchShippingStickers
 } from '@/utils/generateShippingLabel';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface ShippingStickerModalProps {
   isOpen: boolean;
@@ -230,39 +231,24 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
         </div>
 
         {/* Navigation Tabs for Remapping */}
-        <div className="px-6 py-2 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
-          <div className="flex items-center gap-1.5">
-            {[
-              { id: 'layout', label: 'Layout & Options', icon: Sliders },
-              { id: 'consignee', label: 'Consignee (Ship To)', icon: User },
-              { id: 'manifest', label: 'Order Manifest', icon: BookOpen },
-              { id: 'sender', label: 'Return Address', icon: Building },
-              { id: 'carrier', label: 'Carrier & AWB', icon: Truck },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer ${
-                    isActive
-                      ? 'bg-white text-emerald-800 shadow-xs border border-slate-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-                  }`}
-                >
-                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-emerald-700' : 'text-slate-500'}`} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="px-6 py-2 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
+          <AnimatedGlassTabs
+            tabs={[
+              { id: 'layout', label: 'Layout & Options', icon: <Sliders className="h-3.5 w-3.5" /> },
+              { id: 'consignee', label: 'Consignee (Ship To)', icon: <User className="h-3.5 w-3.5" /> },
+              { id: 'manifest', label: 'Order Manifest', icon: <BookOpen className="h-3.5 w-3.5" /> },
+              { id: 'sender', label: 'Return Address', icon: <Building className="h-3.5 w-3.5" /> },
+              { id: 'carrier', label: 'Carrier & AWB', icon: <Truck className="h-3.5 w-3.5" /> },
+            ]}
+            activeTab={activeTab}
+            onChange={(id) => setActiveTab(id as TabType)}
+            size="sm"
+          />
 
           <button
             type="button"
             onClick={() => populateDefaultsFromOrder(currentOrder)}
-            className="px-2.5 py-1 text-xs font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg inline-flex items-center gap-1 transition cursor-pointer shadow-2xs shrink-0"
+            className="glass-action-button text-amber-800 shrink-0"
             title="Discard changes and reload original order values"
           >
             <RotateCcw className="h-3 w-3 text-amber-700" />
@@ -758,14 +744,14 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+              className="glass-action-button"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handlePrint}
-              className="px-6 py-2 text-xs font-extrabold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md inline-flex items-center gap-2 transition cursor-pointer"
+              className="glass-action-button-primary"
             >
               <Printer className="h-4 w-4" />
               {isBatch ? `Print All ${orders.length} Shipping Labels (${size})` : `Print Shipping Label (${size})`}

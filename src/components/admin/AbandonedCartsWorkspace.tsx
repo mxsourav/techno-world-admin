@@ -95,7 +95,7 @@ export const AbandonedCartsWorkspace: React.FC = () => {
               type="button"
               onClick={fetchAbandonedCarts}
               disabled={isLoading}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
+              className="glass-action-button"
             >
               <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -258,11 +258,7 @@ export const AbandonedCartsWorkspace: React.FC = () => {
                             type="button"
                             onClick={() => handleSendWhatsApp(cart)}
                             disabled={!cart.cleanPhone}
-                            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer ${
-                              hasNudgeSent
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
-                                : 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40'
-                            }`}
+                            className={hasNudgeSent ? 'glass-action-button text-emerald-700' : 'glass-action-button-primary'}
                             title="Send pre-filled WhatsApp reminder"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />

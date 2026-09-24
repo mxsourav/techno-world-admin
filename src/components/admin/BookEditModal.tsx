@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 
 function renderBookDescriptionPreview(text: string) {
@@ -834,22 +835,15 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
               </div>
 
               {/* Edit / Preview Tabs */}
-              <div className="flex items-center rounded-lg bg-slate-100 p-0.5 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => setDescTab('edit')}
-                  className={`px-3 py-1 rounded-md transition-all ${descTab === 'edit' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  Write / Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDescTab('preview')}
-                  className={`px-3 py-1 rounded-md transition-all ${descTab === 'preview' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  Live Preview
-                </button>
-              </div>
+              <AnimatedGlassTabs
+                tabs={[
+                  { id: 'edit', label: 'Write / Edit' },
+                  { id: 'preview', label: 'Live Preview' },
+                ]}
+                activeTab={descTab}
+                onChange={(id) => setDescTab(id as 'edit' | 'preview')}
+                size="sm"
+              />
             </div>
 
             {/* Quick-Insert Formatting Chips */}
@@ -1003,8 +997,8 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         </form>
 
         <div className="border-t border-slate-100 p-4 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
-          <button onClick={onClose} className="rounded-lg px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cancel</button>
-          <button onClick={handleSubmit} disabled={loading} className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50">
+          <button onClick={onClose} className="glass-action-button">Cancel</button>
+          <button onClick={handleSubmit} disabled={loading} className="glass-action-button-primary disabled:opacity-50">
             {loading ? 'Saving Book...' : 'Save Book & Description'}
           </button>
         </div>

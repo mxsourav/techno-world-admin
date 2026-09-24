@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
 import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check } from 'lucide-react';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 export default function ProductsWorkspace() {
   const location = useLocation();
@@ -147,10 +148,10 @@ export default function ProductsWorkspace() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="glass-btn flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+          <button className="glass-action-button">
             <Download className="h-4 w-4" /> Export
           </button>
-          <button onClick={() => setEditingBook({})} className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700">
+          <button onClick={() => setEditingBook({})} className="glass-action-button-primary">
             <Plus className="h-4 w-4" /> Add Product
           </button>
         </div>
@@ -160,21 +161,14 @@ export default function ProductsWorkspace() {
       <div className="flex-1 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl overflow-hidden flex flex-col shadow-xs dark:bg-[#0d1324]/75 dark:border-white/[0.08]">
         {/* Tabs */}
         <div className="border-b border-slate-200/60 px-6 py-3 bg-white/40 backdrop-blur-md dark:bg-white/[0.03] dark:border-white/[0.08]">
-          <div className="flex gap-2 overflow-x-auto py-0.5">
-            {['all', 'published', 'draft', 'low_stock', 'out_of_stock', 'archived'].map(t => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === t
-                    ? 'glass-tab-active'
-                    : 'glass-tab-inactive'
-                }`}
-              >
-                {t === 'archived' ? 'Inactive' : t.replace('_', ' ')}
-              </button>
-            ))}
-          </div>
+          <AnimatedGlassTabs
+            activeTab={activeTab}
+            onChange={(t) => setActiveTab(t)}
+            tabs={['all', 'published', 'draft', 'low_stock', 'out_of_stock', 'archived'].map(t => ({
+              id: t,
+              label: t === 'archived' ? 'Inactive' : t.replace('_', ' '),
+            }))}
+          />
         </div>
 
         {/* Filter Bar */}
@@ -190,18 +184,18 @@ export default function ProductsWorkspace() {
                 className="w-80 rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white dark:placeholder-neutral-500"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-neutral-200 dark:hover:bg-white/[0.10]">
+            <button className="glass-action-button">
               <Settings2 className="h-4 w-4" /> More Filters
             </button>
           </div>
           
           <div className="flex items-center gap-3">
             {selectedIds.size > 0 && (
-              <button onClick={handleDeleteSelected} className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-bold text-rose-700 hover:bg-rose-100 transition-colors dark:border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300">
+              <button onClick={handleDeleteSelected} className="glass-action-button !text-rose-600 dark:!text-rose-400">
                 <Trash2 className="h-4 w-4" /> Delete ({selectedIds.size})
               </button>
             )}
-            <button onClick={handleDeleteAll} className="flex items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20">
+            <button onClick={handleDeleteAll} className="glass-action-button !text-rose-600 dark:!text-rose-400">
               <AlertCircle className="h-4 w-4" /> Delete All
             </button>
           </div>
@@ -315,10 +309,10 @@ export default function ProductsWorkspace() {
 
 
                     <td className="px-6 py-4 align-top text-right" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setViewingBook(book)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="View Details"><Eye className="h-4 w-4" /></button>
-                        <button onClick={(e) => { e.stopPropagation(); setEditingBook(book); }} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded" title="Edit"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={(e) => handleSingleDelete(book.id, e)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                      <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => setViewingBook(book)} className="glass-action-button !p-1.5" title="View Details"><Eye className="h-4 w-4" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingBook(book); }} className="glass-action-button !p-1.5" title="Edit"><Edit2 className="h-4 w-4" /></button>
+                        <button onClick={(e) => handleSingleDelete(book.id, e)} className="glass-action-button !p-1.5 !text-rose-600 dark:!text-rose-400" title="Delete"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -337,8 +331,8 @@ export default function ProductsWorkspace() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Product Details</h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setEditingBook(viewingBook); setViewingBook(null); }} className="rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 text-sm font-bold hover:bg-emerald-200 dark:hover:bg-emerald-900/50">Edit</button>
-                <button onClick={() => setViewingBook(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-600 dark:hover:text-white"><X className="h-5 w-5" /></button>
+                <button onClick={() => { setEditingBook(viewingBook); setViewingBook(null); }} className="glass-action-button-primary">Edit</button>
+                <button onClick={() => setViewingBook(null)} className="glass-action-button !p-1.5"><X className="h-5 w-5" /></button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -470,7 +464,7 @@ export default function ProductsWorkspace() {
                         <button
                           type="button"
                           onClick={() => setEditingDescId(null)}
-                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                          className="glass-action-button"
                         >
                           Cancel
                         </button>
@@ -491,7 +485,7 @@ export default function ProductsWorkspace() {
                               setIsSavingDesc(false);
                             }
                           }}
-                          className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                          className="glass-action-button-primary disabled:opacity-50"
                         >
                           {isSavingDesc ? 'Saving...' : 'Save Description'}
                         </button>
@@ -511,7 +505,7 @@ export default function ProductsWorkspace() {
                             setEditingDescId(viewingBook.id);
                             setDescInput('');
                           }}
-                          className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 px-3 py-1 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                          className="glass-action-button"
                         >
                           + Add Description Now
                         </button>
@@ -588,7 +582,7 @@ export default function ProductsWorkspace() {
                       <button
                         type="button"
                         onClick={() => setEditingKeywordsId(null)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                        className="glass-action-button"
                       >
                         Cancel
                       </button>
@@ -609,7 +603,7 @@ export default function ProductsWorkspace() {
                             setIsSavingKeywords(false);
                           }
                         }}
-                        className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        className="glass-action-button-primary disabled:opacity-50"
                       >
                         {isSavingKeywords ? 'Saving...' : 'Save Keywords'}
                       </button>
@@ -640,7 +634,7 @@ export default function ProductsWorkspace() {
                                 setEditingKeywordsId(viewingBook.id);
                                 setKeywordsInput('');
                               }}
-                              className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50 px-3 py-1 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                              className="glass-action-button"
                             >
                               + Add SEO Keywords
                             </button>

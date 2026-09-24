@@ -828,7 +828,7 @@ export default function Checkout() {
                     <input
                       value={pickupForm.email}
                       onChange={(e) => setPickupForm({ ...pickupForm, email: e.target.value })}
-                      placeholder="youremail@example.com"
+                      placeholder="youremail@technoworldbooks.in"
                       type="email"
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500"
                     />

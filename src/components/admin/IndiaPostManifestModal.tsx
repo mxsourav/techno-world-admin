@@ -193,7 +193,7 @@ export const IndiaPostManifestModal: React.FC<IndiaPostManifestModalProps> = ({
               type="button"
               onClick={handleExportCsv}
               disabled={items.length === 0}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs disabled:opacity-40 cursor-pointer"
+              className="glass-action-button disabled:opacity-40"
               title="Download CSV report"
             >
               <Download className="h-3.5 w-3.5 text-slate-600" />
@@ -204,7 +204,7 @@ export const IndiaPostManifestModal: React.FC<IndiaPostManifestModalProps> = ({
               type="button"
               onClick={handlePrint}
               disabled={items.length === 0}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-40 cursor-pointer"
+              className="glass-action-button-primary disabled:opacity-40"
               title="Print official handover document"
             >
               <Printer className="h-3.5 w-3.5" />

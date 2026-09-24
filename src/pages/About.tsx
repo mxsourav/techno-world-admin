@@ -225,7 +225,7 @@ export default function About() {
                     required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="you@example.com"
+                    placeholder="you@technoworldbooks.in"
                     className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-500"
                   />
                 </div>

@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { salesReportService, type SalesReportParams } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface MonthData {
   month: string;
@@ -231,34 +232,22 @@ export default function SalesReportWorkspace() {
 
       {/* Period Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1">
-          <span className="flex items-center gap-1 px-2.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" /> Range:
-          </span>
-          {(['1month', '3months', '6months', '1year', 'custom'] as const).map((p) => {
-            const labels: Record<string, string> = {
-              '1month': 'Last 30 Days',
-              '3months': '3 Months',
-              '6months': '6 Months',
-              '1year': '1 Year',
-              custom: 'Custom Range',
-            };
-            const active = period === p;
-            return (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                  active
-                    ? 'glass-tab-active font-extrabold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {labels[p]}
-              </button>
-            );
-          })}
-        </div>
+        <AnimatedGlassTabs
+          prefix={
+            <>
+              <Calendar className="h-3.5 w-3.5 text-slate-400" /> Range:
+            </>
+          }
+          activeTab={period}
+          onChange={(newPeriod) => setPeriod(newPeriod as any)}
+          tabs={[
+            { id: '1month', label: 'Last 30 Days' },
+            { id: '3months', label: '3 Months' },
+            { id: '6months', label: '6 Months' },
+            { id: '1year', label: '1 Year' },
+            { id: 'custom', label: 'Custom Range' },
+          ]}
+        />
 
         {period === 'custom' && (
           <div className="flex flex-wrap items-center gap-2">
@@ -277,7 +266,7 @@ export default function SalesReportWorkspace() {
             />
             <button
               onClick={handleCustomApply}
-              className="rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 dark:bg-emerald-700 dark:hover:bg-emerald-800"
+              className="glass-action-button"
             >
               Apply
             </button>

@@ -217,7 +217,7 @@ export default function Contact() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder="you@technoworldbooks.in"
                       className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-500"
                     />
                   </div>

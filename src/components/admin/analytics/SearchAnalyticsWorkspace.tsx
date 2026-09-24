@@ -7,6 +7,7 @@ import {
 import { adminService, analyticsService , getImageUrl} from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 const DEFAULT_ANALYTICS_DATA = {
   summary: {
@@ -204,66 +205,47 @@ export default function SearchAnalyticsWorkspace() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-100 p-1.5">
-            <button
-              onClick={() => setActiveMainTab('live')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeMainTab === 'live'
-                  ? 'bg-white text-emerald-900 shadow-xs ring-1 ring-emerald-600/20'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Live Traffic</span>
-              <span className="rounded-full bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-black">
-                {liveData.activeNow ?? 0}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveMainTab('blog')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeMainTab === 'blog'
-                  ? 'bg-white text-blue-900 shadow-xs ring-1 ring-blue-600/20'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <BookOpen className="h-3.5 w-3.5 text-blue-600" />
-              <span>Blog & Reading Stats</span>
-              {blogData.overview?.totalBookClicks > 0 && (
-                <span className="rounded-full bg-blue-100 text-blue-800 px-1.5 py-0.2 text-[10px] font-black">
-                  {blogData.overview.totalBookClicks} Clicks
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveMainTab('search')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeMainTab === 'search'
-                  ? 'bg-white text-amber-900 shadow-xs ring-1 ring-amber-600/20'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Search className="h-3.5 w-3.5 text-amber-600" />
-              <span>Exam & Search Trends</span>
-            </button>
-
-            <button
-              onClick={() => setActiveMainTab('sales')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeMainTab === 'sales'
-                  ? 'bg-white text-indigo-900 shadow-xs ring-1 ring-indigo-600/20'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <ShoppingCart className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Sales & Conversions</span>
-            </button>
-          </div>
+          <AnimatedGlassTabs
+            activeTab={activeMainTab}
+            onChange={(t) => setActiveMainTab(t as any)}
+            tabs={[
+              {
+                id: 'live',
+                label: 'Live Traffic',
+                icon: (
+                  <span className="relative flex h-2 w-2 mr-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                ),
+                badge: (
+                  <span className="rounded-full bg-emerald-100 text-emerald-800 px-1.5 py-0.2 text-[10px] font-black ml-1">
+                    {liveData.activeNow ?? 0}
+                  </span>
+                ),
+              },
+              {
+                id: 'blog',
+                label: 'Blog & Reading Stats',
+                icon: <BookOpen className="h-3.5 w-3.5 text-blue-600" />,
+                badge: blogData.overview?.totalBookClicks > 0 ? (
+                  <span className="rounded-full bg-blue-100 text-blue-800 px-1.5 py-0.2 text-[10px] font-black ml-1">
+                    {blogData.overview.totalBookClicks} Clicks
+                  </span>
+                ) : undefined,
+              },
+              {
+                id: 'search',
+                label: 'Exam & Search Trends',
+                icon: <Search className="h-3.5 w-3.5 text-amber-600" />,
+              },
+              {
+                id: 'sales',
+                label: 'Sales & Conversions',
+                icon: <ShoppingCart className="h-3.5 w-3.5 text-indigo-600" />,
+              },
+            ]}
+          />
         </div>
       </div>
 
@@ -304,9 +286,9 @@ export default function SearchAnalyticsWorkspace() {
               <button
                 onClick={() => fetchLiveAnalytics(true)}
                 disabled={isLiveLoading}
-                className={`flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-2xs disabled:opacity-50`}
+                className="glass-action-button"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLiveLoading ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isLiveLoading ? 'animate-spin' : ''}`} />
                 <span>Refresh Now</span>
               </button>
             </div>
@@ -528,9 +510,9 @@ export default function SearchAnalyticsWorkspace() {
               <button
                 onClick={fetchBlogAnalytics}
                 disabled={isBlogLoading}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+                className="glass-action-button"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isBlogLoading ? 'animate-spin text-blue-600' : 'text-slate-500'}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isBlogLoading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </button>
             </div>
@@ -661,35 +643,24 @@ export default function SearchAnalyticsWorkspace() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
-                {[
-                  { label: '7 Days', val: '7d' },
-                  { label: '30 Days', val: '30d' },
-                  { label: '90 Days', val: '90d' },
-                  { label: 'Custom', val: 'custom' },
-                ].map((t) => (
-                  <button
-                    key={t.val}
-                    type="button"
-                    onClick={() => setPeriod(t.val)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                      period === t.val
-                        ? 'bg-white text-emerald-800 shadow-xs ring-1 ring-emerald-600/20'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+              <AnimatedGlassTabs
+                activeTab={period}
+                onChange={(p) => setPeriod(p)}
+                tabs={[
+                  { id: '7d', label: '7 Days' },
+                  { id: '30d', label: '30 Days' },
+                  { id: '90d', label: '90 Days' },
+                  { id: 'custom', label: 'Custom' },
+                ]}
+              />
 
               <button
                 type="button"
                 onClick={() => fetchSearchAnalytics(period)}
                 disabled={searchLoading}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 shadow-2xs"
+                className="glass-action-button"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${searchLoading ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${searchLoading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </button>
             </div>
@@ -717,7 +688,7 @@ export default function SearchAnalyticsWorkspace() {
               <button
                 type="submit"
                 disabled={searchLoading}
-                className="rounded-xl bg-emerald-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 transition-all shadow-xs"
+                className="glass-action-button-primary"
               >
                 Apply Range
               </button>
@@ -827,30 +798,15 @@ export default function SearchAnalyticsWorkspace() {
 
             <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setActiveBookTab('searched')}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                      activeBookTab === 'searched'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    Top Searched Books
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveBookTab('bought')}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                      activeBookTab === 'bought'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    Top Bought Books
-                  </button>
-                </div>
+                <AnimatedGlassTabs
+                  tabs={[
+                    { id: 'searched', label: 'Top Searched Books' },
+                    { id: 'bought', label: 'Top Bought Books' },
+                  ]}
+                  activeTab={activeBookTab}
+                  onChange={(id) => setActiveBookTab(id as 'searched' | 'bought')}
+                  size="sm"
+                />
               </div>
 
               {activeBookTab === 'searched' ? (

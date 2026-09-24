@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cmsService } from '@/services/api';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface VisualCmsEditorProps {
   onClose?: () => void;
@@ -348,30 +349,15 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         </div>
 
         {/* Center: Device Presets (Strictly Phone and Tablet only) */}
-        <div className="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-          <button
-            onClick={() => setDevicePreset('phone')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-              devicePreset === 'phone'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-            }`}
-          >
-            <Smartphone className="h-3.5 w-3.5" />
-            <span>Phone</span>
-          </button>
-          <button
-            onClick={() => setDevicePreset('tablet')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-              devicePreset === 'tablet'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-            }`}
-          >
-            <Tablet className="h-3.5 w-3.5" />
-            <span>Tablet</span>
-          </button>
-        </div>
+        <AnimatedGlassTabs
+          tabs={[
+            { id: 'phone', label: 'Phone', icon: <Smartphone className="h-3.5 w-3.5" /> },
+            { id: 'tablet', label: 'Tablet', icon: <Tablet className="h-3.5 w-3.5" /> },
+          ]}
+          activeTab={devicePreset}
+          onChange={(id) => setDevicePreset(id as 'phone' | 'tablet')}
+          size="sm"
+        />
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
@@ -406,7 +392,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
           <button
             onClick={handlePublish}
             disabled={isPublishing}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all shadow-xs disabled:opacity-50"
+            className="glass-action-button-primary disabled:opacity-50"
           >
             <Save className="h-3.5 w-3.5" />
             <span>{isPublishing ? 'Publishing...' : 'Publish'}</span>
@@ -604,7 +590,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                 <button
                   onClick={handlePublish}
                   disabled={isPublishing}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
+                  className="glass-action-button-primary w-full py-2 justify-center disabled:opacity-50"
                 >
                   <Save className="h-3.5 w-3.5" />
                   <span>Publish {modifiedCount} Unsaved {modifiedCount === 1 ? 'Change' : 'Changes'}</span>

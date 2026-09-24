@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { categoryService } from '@/services/api';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface CategoryItem {
   id: string;
@@ -235,7 +236,7 @@ export const CategoryOrderManager: React.FC = () => {
             type="button"
             onClick={sortAlphabetically}
             disabled={loading || saving}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-700 transition shadow-sm cursor-pointer disabled:opacity-50"
+            className="glass-action-button"
             title="Sort all categories alphabetically from A to Z"
           >
             <ArrowUpDown className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -247,7 +248,7 @@ export const CategoryOrderManager: React.FC = () => {
             type="button"
             onClick={moveCompetitiveToTop}
             disabled={loading || saving}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-700 transition shadow-sm cursor-pointer disabled:opacity-50"
+            className="glass-action-button"
             title="Move Competitive Exam to #1 position"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
@@ -260,7 +261,7 @@ export const CategoryOrderManager: React.FC = () => {
               type="button"
               onClick={resetOrder}
               disabled={loading || saving}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-100 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700 transition cursor-pointer"
+              className="glass-action-button"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Reset</span>
@@ -272,11 +273,7 @@ export const CategoryOrderManager: React.FC = () => {
             type="button"
             onClick={handleSaveOrder}
             disabled={loading || saving || !hasChanges}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md transition cursor-pointer ${
-              hasChanges
-                ? 'bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/30'
-                : 'bg-slate-300 dark:bg-neutral-800 text-slate-500 dark:text-neutral-500 cursor-not-allowed shadow-none'
-            }`}
+            className="glass-action-button-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? (
               <>
@@ -456,32 +453,15 @@ export const CategoryOrderManager: React.FC = () => {
                   Live Storefront Preview
                 </span>
               </div>
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-neutral-800 p-0.5 rounded-lg text-[11px] font-medium">
-                <button
-                  type="button"
-                  onClick={() => setPreviewDevice('mobile')}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md transition cursor-pointer ${
-                    previewDevice === 'mobile'
-                      ? 'bg-white dark:bg-neutral-700 text-slate-900 dark:text-white shadow-xs font-bold'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400'
-                  }`}
-                >
-                  <Smartphone className="h-3 w-3" />
-                  <span>Mobile Drawer</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewDevice('desktop')}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md transition cursor-pointer ${
-                    previewDevice === 'desktop'
-                      ? 'bg-white dark:bg-neutral-700 text-slate-900 dark:text-white shadow-xs font-bold'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400'
-                  }`}
-                >
-                  <BookOpen className="h-3 w-3" />
-                  <span>Navbar Pills</span>
-                </button>
-              </div>
+              <AnimatedGlassTabs
+                tabs={[
+                  { id: 'mobile', label: 'Mobile Drawer', icon: <Smartphone className="h-3 w-3" /> },
+                  { id: 'desktop', label: 'Navbar Pills', icon: <BookOpen className="h-3 w-3" /> },
+                ]}
+                activeTab={previewDevice}
+                onChange={(id) => setPreviewDevice(id as 'mobile' | 'desktop')}
+                size="sm"
+              />
             </div>
 
             {/* Mobile Drawer Preview */}

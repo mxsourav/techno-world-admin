@@ -29,6 +29,7 @@ import {
 import { blogService, bookService, mediaService, getImageUrl } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface BlogPost {
   id: string;
@@ -542,7 +543,7 @@ export default function BlogWorkspace() {
           <button
             type="button"
             onClick={fetchPosts}
-            className="flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/20 transition-all"
+            className="glass-action-button"
             title="Refresh Feed"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -551,7 +552,7 @@ export default function BlogWorkspace() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-black text-slate-950 hover:bg-emerald-400 shadow-md shadow-emerald-500/20 transition-all"
+            className="glass-action-button-primary"
           >
             <Plus className="h-4 w-4" />
             Create Social Post
@@ -562,37 +563,60 @@ export default function BlogWorkspace() {
       {/* Filter Tabs & Search Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         {/* Status Filter Tabs */}
-        <div className="flex flex-wrap gap-1.5">
-          {[
-            { id: 'all', label: 'All Posts', count: counts.all },
-            { id: 'active', label: 'Live Active', count: counts.active },
-            { id: 'scheduled', label: 'Scheduled', count: counts.scheduled },
-            { id: 'expired', label: 'Expired', count: counts.expired },
-            { id: 'hidden', label: 'Hidden / Drafts', count: counts.hidden },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                searchParams.set('filter', tab.id);
-                setSearchParams(searchParams);
-              }}
-              className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
-                filterParam === tab.id
-                  ? 'glass-tab-active'
-                  : 'glass-tab-inactive'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  filterParam === tab.id ? 'bg-emerald-600/15 text-emerald-800' : 'bg-slate-200/60 text-slate-700'
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
+        <AnimatedGlassTabs
+          activeTab={filterParam}
+          onChange={(id) => {
+            searchParams.set('filter', id);
+            setSearchParams(searchParams);
+          }}
+          tabs={[
+            {
+              id: 'all',
+              label: 'All Posts',
+              badge: (
+                <span className="rounded-full px-1.5 py-0.2 text-[10px] font-bold bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-neutral-300 ml-1">
+                  {counts.all}
+                </span>
+              ),
+            },
+            {
+              id: 'active',
+              label: 'Live Active',
+              badge: (
+                <span className="rounded-full px-1.5 py-0.2 text-[10px] font-bold bg-emerald-600/15 text-emerald-800 dark:text-emerald-300 ml-1">
+                  {counts.active}
+                </span>
+              ),
+            },
+            {
+              id: 'scheduled',
+              label: 'Scheduled',
+              badge: (
+                <span className="rounded-full px-1.5 py-0.2 text-[10px] font-bold bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-neutral-300 ml-1">
+                  {counts.scheduled}
+                </span>
+              ),
+            },
+            {
+              id: 'expired',
+              label: 'Expired',
+              badge: (
+                <span className="rounded-full px-1.5 py-0.2 text-[10px] font-bold bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-neutral-300 ml-1">
+                  {counts.expired}
+                </span>
+              ),
+            },
+            {
+              id: 'hidden',
+              label: 'Hidden / Drafts',
+              badge: (
+                <span className="rounded-full px-1.5 py-0.2 text-[10px] font-bold bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-neutral-300 ml-1">
+                  {counts.hidden}
+                </span>
+              ),
+            },
+          ]}
+        />
 
         {/* Search & Category Filter */}
         <div className="flex flex-wrap items-center gap-2.5">
@@ -796,20 +820,20 @@ export default function BlogWorkspace() {
                     </span>
                   </label>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => setSelectedArticleForAnalytics(post)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                      className="glass-action-button !px-2.5 !py-1 !text-xs"
                       title="View Article Engagement & Analytics"
                     >
-                      <BarChart2 className="h-3.5 w-3.5 text-emerald-700" /> Stats
+                      <BarChart2 className="h-3.5 w-3.5" /> Stats
                     </button>
                     <a
                       href={`/blog/${post.slug}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+                      className="glass-action-button !p-1.5"
                       title="View live post on bookstore"
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -817,7 +841,7 @@ export default function BlogWorkspace() {
                     <button
                       type="button"
                       onClick={() => openEditModal(post)}
-                      className="p-1.5 text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="glass-action-button !p-1.5"
                       title="Edit Post"
                     >
                       <Edit2 className="h-4 w-4" />
@@ -825,7 +849,7 @@ export default function BlogWorkspace() {
                     <button
                       type="button"
                       onClick={() => handleDeletePost(post.id, post.title)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="glass-action-button !p-1.5 !text-rose-600 dark:!text-rose-400"
                       title="Delete Post"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -862,7 +886,7 @@ export default function BlogWorkspace() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:bg-slate-200 rounded-lg"
+                className="glass-action-button !p-1.5 leading-none"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1072,7 +1096,7 @@ export default function BlogWorkspace() {
                     <button
                       type="button"
                       onClick={handlePasteFromClipboard}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
+                      className="glass-action-button-primary"
                       title="Paste article text directly from clipboard"
                     >
                       <Clipboard className="h-3.5 w-3.5" /> Paste from Clipboard
@@ -1082,33 +1106,21 @@ export default function BlogWorkspace() {
                     <button
                       type="button"
                       onClick={handleCleanAiIntro}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 shadow-xs transition-colors cursor-pointer"
+                      className="glass-action-button"
                       title="Clean AI conversational greetings like 'Sure! Here is your blog post...'"
                     >
                       <Sparkles className="h-3 w-3 text-amber-500" /> Clean AI Intro
                     </button>
 
                     {/* Write vs Preview toggle */}
-                    <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => setActiveContentTab('write')}
-                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                          activeContentTab === 'write' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        Write
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveContentTab('preview')}
-                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                          activeContentTab === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        Live Preview
-                      </button>
-                    </div>
+                    <AnimatedGlassTabs
+                      activeTab={activeContentTab}
+                      onChange={(t) => setActiveContentTab(t as any)}
+                      tabs={[
+                        { id: 'write', label: 'Write' },
+                        { id: 'preview', label: 'Live Preview' },
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -1470,30 +1482,14 @@ export default function BlogWorkspace() {
                   {/* Schedule Release */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-700">Release Schedule</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setScheduleType('NOW')}
-                        className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                          scheduleType === 'NOW'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        Publish Now
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setScheduleType('LATER')}
-                        className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                          scheduleType === 'LATER'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        Schedule Date
-                      </button>
-                    </div>
+                    <AnimatedGlassTabs
+                      activeTab={scheduleType}
+                      onChange={(t) => setScheduleType(t as any)}
+                      tabs={[
+                        { id: 'NOW', label: 'Publish Now' },
+                        { id: 'LATER', label: 'Schedule Date' },
+                      ]}
+                    />
 
                     {scheduleType === 'LATER' && (
                       <input
@@ -1508,41 +1504,15 @@ export default function BlogWorkspace() {
                   {/* Expiration & Duration */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-700">Duration / Expiry</label>
-                    <div className="flex gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setExpiryType('NEVER')}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
-                          expiryType === 'NEVER'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        No Expiry
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setExpiryType('PRESET')}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
-                          expiryType === 'PRESET'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        Preset
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setExpiryType('CUSTOM')}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
-                          expiryType === 'CUSTOM'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-white border border-slate-200 text-slate-700'
-                        }`}
-                      >
-                        Date
-                      </button>
-                    </div>
+                    <AnimatedGlassTabs
+                      activeTab={expiryType}
+                      onChange={(t) => setExpiryType(t as any)}
+                      tabs={[
+                        { id: 'NEVER', label: 'No Expiry' },
+                        { id: 'PRESET', label: 'Preset' },
+                        { id: 'CUSTOM', label: 'Date' },
+                      ]}
+                    />
 
                     {expiryType === 'PRESET' && (
                       <div className="flex gap-1.5 mt-1.5">
@@ -1595,14 +1565,14 @@ export default function BlogWorkspace() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="glass-action-button"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                  className="glass-action-button-primary disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {editingPost ? 'Save Changes' : 'Publish Post'}
@@ -1634,7 +1604,7 @@ export default function BlogWorkspace() {
               <button
                 type="button"
                 onClick={() => setSelectedArticleForAnalytics(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 cursor-pointer"
+                className="glass-action-button !p-1.5 leading-none"
               >
                 <X className="h-4 w-4" />
               </button>

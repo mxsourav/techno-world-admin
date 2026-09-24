@@ -16,7 +16,6 @@ import {
   Wallet,
   FileText,
   ExternalLink,
-  ChevronLeft,
   ChevronRight,
   Sparkles,
   Info
@@ -24,6 +23,7 @@ import {
 import { paymentService } from '@/services/api';
 import { formatINR } from '@/utils/helpers';
 import { toast } from 'sonner';
+import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 interface PaymentsWorkspaceProps {
   onPreviewOrder?: (order: any) => void;
@@ -34,22 +34,6 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const subTab = searchParams.get('sub') || 'overview';
-  const tabBarRef = React.useRef<HTMLDivElement>(null);
-
-  const scrollTabs = (direction: 'left' | 'right') => {
-    if (tabBarRef.current) {
-      tabBarRef.current.scrollBy({ left: direction === 'left' ? -220 : 220, behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    if (tabBarRef.current) {
-      const activeBtn = tabBarRef.current.querySelector(`[data-tab="${subTab}"]`) as HTMLElement;
-      if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-      }
-    }
-  }, [subTab]);
 
   const [overview, setOverview] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -276,16 +260,16 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
           <button
             onClick={() => loadData(true)}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-neutral-200 bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            className="glass-action-button"
             title="Refresh payments data"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-emerald-600 dark:text-emerald-400' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-xs cursor-pointer"
+            className="glass-action-button-primary"
           >
             <Download className="h-3.5 w-3.5" />
             Export CSV
@@ -294,115 +278,53 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="relative flex items-center border border-slate-200/60 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.03] backdrop-blur-md rounded-2xl p-1 mb-4 shadow-2xs">
-        <button
-          type="button"
-          onClick={() => scrollTabs('left')}
-          className="flex items-center justify-center p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100/70 rounded-xl shrink-0 cursor-pointer transition-colors"
-          title="Scroll tabs left"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        <div
-          ref={tabBarRef}
-          className="flex-1 flex items-center gap-1.5 overflow-x-auto scroll-smooth py-1 px-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300"
-        >
-          <button
-            data-tab="overview"
-            onClick={() => setSubTab('overview')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'overview'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <Building2 className={`h-4 w-4 ${subTab === 'overview' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            Payments Overview
-          </button>
-
-          <button
-            data-tab="earnings"
-            onClick={() => setSubTab('earnings')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'earnings'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <TrendingUp className={`h-4 w-4 ${subTab === 'earnings' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            <span>Earnings Summary</span>
-            <span className="bg-[#c2185b] text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-xs">
-              New
-            </span>
-          </button>
-
-          <button
-            data-tab="settlements"
-            onClick={() => setSubTab('settlements')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'settlements'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <Search className={`h-4 w-4 ${subTab === 'settlements' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            Search Order-wise Settlements
-          </button>
-
-          <button
-            data-tab="refunds"
-            onClick={() => setSubTab('refunds')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'refunds'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <RotateCcw className={`h-4 w-4 ${subTab === 'refunds' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            Refunds Monitoring
-            {overview?.counts?.refunded > 0 && (
-              <span className="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
-                {overview.counts.refunded}
-              </span>
-            )}
-          </button>
-
-          <button
-            data-tab="transactions"
-            onClick={() => setSubTab('transactions')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'transactions'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <FileText className={`h-4 w-4 ${subTab === 'transactions' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            Services Transaction History
-          </button>
-
-          <button
-            data-tab="spf"
-            onClick={() => setSubTab('spf')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-              subTab === 'spf'
-                ? 'glass-tab-active'
-                : 'glass-tab-inactive'
-            }`}
-          >
-            <ShieldCheck className={`h-4 w-4 ${subTab === 'spf' ? 'text-emerald-600' : 'text-slate-400'}`} />
-            Seller Protection Fund (SPF)
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => scrollTabs('right')}
-          className="flex items-center justify-center p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg shrink-0 cursor-pointer transition-colors"
-          title="Scroll tabs right"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+      <div className="overflow-x-auto pb-1">
+        <AnimatedGlassTabs
+          activeTab={subTab}
+          onChange={(tab) => setSubTab(tab)}
+          tabs={[
+            {
+              id: 'overview',
+              label: 'Payments Overview',
+              icon: <Building2 className="h-4 w-4" />,
+            },
+            {
+              id: 'earnings',
+              label: 'Earnings Summary',
+              icon: <TrendingUp className="h-4 w-4" />,
+              badge: (
+                <span className="bg-[#c2185b] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded shadow-xs ml-1">
+                  New
+                </span>
+              ),
+            },
+            {
+              id: 'settlements',
+              label: 'Search Order-wise Settlements',
+              icon: <Search className="h-4 w-4" />,
+            },
+            {
+              id: 'refunds',
+              label: 'Refunds Monitoring',
+              icon: <RotateCcw className="h-4 w-4" />,
+              badge: overview?.counts?.refunded > 0 ? (
+                <span className="bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ml-1">
+                  {overview.counts.refunded}
+                </span>
+              ) : undefined,
+            },
+            {
+              id: 'transactions',
+              label: 'Services Transaction History',
+              icon: <FileText className="h-4 w-4" />,
+            },
+            {
+              id: 'spf',
+              label: 'Seller Protection Fund (SPF)',
+              icon: <ShieldCheck className="h-4 w-4" />,
+            },
+          ]}
+        />
       </div>
 
       {isLoading ? (
@@ -749,7 +671,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                                 const fullTx = transactions.find((t) => t.id === tx.id) || tx;
                                 openStatusModal(fullTx);
                               }}
-                              className="text-xs font-bold text-slate-700 hover:text-emerald-700 hover:underline cursor-pointer"
+                              className="glass-action-button !text-xs !py-1 !px-2.5"
                             >
                               Update Status
                             </button>
@@ -785,21 +707,16 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               </div>
 
               {/* Timeframe selector */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                {(['today', 'week', 'month', 'lifetime'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setEarningsTimeframe(t)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
-                      earningsTimeframe === t
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              <AnimatedGlassTabs
+                activeTab={earningsTimeframe}
+                onChange={(t) => setEarningsTimeframe(t as any)}
+                tabs={[
+                  { id: 'today', label: 'Today' },
+                  { id: 'week', label: 'Week' },
+                  { id: 'month', label: 'Month' },
+                  { id: 'lifetime', label: 'Lifetime' },
+                ]}
+              />
             </div>
 
             {/* Payout Projection Banner */}
@@ -926,27 +843,19 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
             </div>
 
             {/* Status Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 border-t border-slate-100 pt-3">
-              {[
-                { id: 'ALL', label: 'All Transactions' },
-                { id: 'PAID', label: 'Successful (Paid)' },
-                { id: 'PENDING', label: 'Pending' },
-                { id: 'FAILED', label: 'Failed' },
-                { id: 'REFUNDED', label: 'Refunded' },
-              ].map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setStatusFilter(s.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    statusFilter === s.id
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-              <span className="ml-auto text-xs text-slate-400 font-semibold">
+            <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 border-t border-slate-100 dark:border-white/[0.08] pt-3">
+              <AnimatedGlassTabs
+                activeTab={statusFilter}
+                onChange={(s) => setStatusFilter(s)}
+                tabs={[
+                  { id: 'ALL', label: 'All Transactions' },
+                  { id: 'PAID', label: 'Successful (Paid)' },
+                  { id: 'PENDING', label: 'Pending' },
+                  { id: 'FAILED', label: 'Failed' },
+                  { id: 'REFUNDED', label: 'Refunded' },
+                ]}
+              />
+              <span className="text-xs text-slate-400 font-semibold">
                 Showing {filteredTransactions.length} records
               </span>
             </div>
@@ -1069,7 +978,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                           <td className="px-5 py-3.5 text-right space-x-2 whitespace-nowrap">
                             <button
                               onClick={() => openStatusModal(tx)}
-                              className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                              className="glass-action-button !text-xs !py-1 !px-2.5"
                               title="Update payment status or record refund"
                             >
                               Update Status
@@ -1176,7 +1085,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                           <td className="px-5 py-3.5 text-right">
                             <button
                               onClick={() => openStatusModal(tx)}
-                              className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                              className="glass-action-button !text-xs !py-1 !px-2.5"
                             >
                               View Notes
                             </button>
@@ -1249,7 +1158,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
 
               <button
                 onClick={() => setIsSpfModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-colors shadow-xs cursor-pointer"
+                className="glass-action-button-primary"
               >
                 <ShieldCheck className="h-4 w-4" />
                 File New SPF Claim
@@ -1297,7 +1206,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               </div>
               <button
                 onClick={() => setSelectedTx(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="glass-action-button !p-1.5 leading-none"
               >
                 ✕
               </button>
@@ -1404,7 +1313,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               <button
                 type="button"
                 onClick={() => setSelectedTx(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="glass-action-button"
               >
                 Cancel
               </button>
@@ -1413,7 +1322,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                 type="button"
                 onClick={handleSavePaymentStatus}
                 disabled={isUpdating}
-                className="px-5 py-2 text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                className="glass-action-button-primary disabled:opacity-50"
               >
                 {isUpdating ? 'Saving...' : 'Confirm & Save'}
               </button>
@@ -1436,7 +1345,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               <button
                 type="button"
                 onClick={() => setIsSpfModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="glass-action-button !p-1.5 leading-none"
               >
                 ✕
               </button>
@@ -1484,13 +1393,13 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               <button
                 type="button"
                 onClick={() => setIsSpfModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="glass-action-button"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-sm cursor-pointer"
+                className="glass-action-button-primary"
               >
                 Submit SPF Claim
               </button>
