@@ -30,6 +30,7 @@ import {
   Moon,
   MessageSquare,
   PanelLeft,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
@@ -43,6 +44,7 @@ const TAB_SECTIONS = [
       { id: 'orders', name: 'Orders', icon: ShoppingCart },
       { id: 'products', name: 'Products', icon: Package },
       { id: 'payments', name: 'Payments', icon: CreditCard },
+      { id: 'sales_report', name: 'Sales Report', icon: TrendingUp },
     ],
   },
   {

@@ -93,6 +93,7 @@ import BlogWorkspace from '@/components/admin/blog/BlogWorkspace';
 import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
 import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
 import CategoryOrderManager from '@/components/admin/cms/CategoryOrderManager';
+import SalesReportWorkspace from '@/components/admin/sales/SalesReportWorkspace';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -1767,7 +1768,7 @@ admin@technoworld.com`
 
   return (
     <div className={`mx-auto w-full max-w-[1600px] px-2 sm:px-4 lg:px-6 ${tab === 'cms' ? 'py-0' : 'py-6 sm:py-8'}`}>
-      {tab !== 'cms' && (
+      {tab !== 'cms' && tab !== 'sales_report' && (
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900 capitalize">{tab.replace('-', ' ')}</h1>
           {['dashboard', 'products', 'inventory'].includes(tab) && (
@@ -7044,6 +7045,10 @@ admin@technoworld.com`
 
         {(tab === 'analytics' || tab === 'reports') && (
           <SearchAnalyticsWorkspace />
+        )}
+
+        {tab === 'sales_report' && (
+          <SalesReportWorkspace />
         )}
       </div>
 

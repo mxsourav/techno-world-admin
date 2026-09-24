@@ -721,6 +721,43 @@ export const analyticsService = {
   getOverview: () => api.get<any>('/analytics/overview'),
 };
 
+export interface SalesReportParams {
+  period?: '1month' | '3months' | '6months' | '1year' | 'custom';
+  startDate?: string;
+  endDate?: string;
+}
+
+export const salesReportService = {
+  getReport: (params?: SalesReportParams) =>
+    api.get<any>('/admin/sales-report', params as any),
+  getMonthlySummary: () =>
+    api.get<any>('/admin/sales-report/monthly-summary'),
+  refreshSnapshots: (months = 12) =>
+    api.post<any>(`/admin/sales-report/refresh-snapshots?months=${months}`, {}),
+  downloadTallyCSV: async (params?: SalesReportParams): Promise<void> => {
+    const search = new URLSearchParams();
+    if (params?.period) search.set('period', params.period);
+    if (params?.startDate) search.set('startDate', params.startDate);
+    if (params?.endDate) search.set('endDate', params.endDate);
+    const query = search.toString();
+    const res = await fetchWithAuth(`${API_URL}/admin/sales-report/export${query ? `?${query}` : ''}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to export sales report');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `Tally_Sales_Report_${params?.period || 'custom'}_${dateStr}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+};
+
 export const contactService = {
   submitMessage: (data: { name: string; email: string; orderNumber?: string; message: string }) =>
     api.post<any>('/contact', data),
