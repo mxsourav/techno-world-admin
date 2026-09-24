@@ -211,17 +211,17 @@ export default function SalesReportWorkspace() {
           <button
             onClick={handleRefreshSnapshots}
             disabled={refreshing}
-            className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+            className="glass-action-button"
             title="Recalculate and persist monthly snapshots"
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Sync Snapshots</span>
           </button>
 
           <button
             onClick={handleExportTally}
             disabled={exporting || loading}
-            className="relative inline-flex items-center gap-1.5 rounded-full px-5 py-1.5 text-xs font-semibold text-white bg-gradient-to-b from-[#0077ed] to-[#0062c4] hover:from-[#0080ff] hover:to-[#006ad8] border border-blue-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),_inset_0_-1px_1px_rgba(0,0,0,0.1),_0_2px_5px_rgba(0,102,204,0.3)] active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer"
+            className="glass-action-button-primary"
           >
             <Download className="h-3.5 w-3.5" />
             <span>{exporting ? 'Exporting...' : 'Export for Tally (CSV)'}</span>
@@ -229,10 +229,10 @@ export default function SalesReportWorkspace() {
         </div>
       </div>
 
-      {/* Period Filter Bar (Glass Segmented Control) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-md p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-white/[0.08] dark:bg-[#0f172a]">
-        <div className="inline-flex flex-wrap items-center gap-1 rounded-full bg-slate-200/60 p-1 border border-slate-300/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] backdrop-blur-md dark:bg-slate-800/80 dark:border-white/10">
-          <span className="flex items-center gap-1 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">
+      {/* Period Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+          <span className="flex items-center gap-1 px-2.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
             <Calendar className="h-3.5 w-3.5 text-slate-400" /> Range:
           </span>
           {(['1month', '3months', '6months', '1year', 'custom'] as const).map((p) => {
@@ -248,10 +248,10 @@ export default function SalesReportWorkspace() {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`rounded-full px-3.5 py-1 text-xs transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
                   active
-                    ? 'bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-900 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.08)] dark:bg-slate-700 dark:text-white font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium hover:bg-white/40'
+                    ? 'glass-tab-active font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {labels[p]}

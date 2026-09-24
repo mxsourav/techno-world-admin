@@ -2128,10 +2128,10 @@ admin@technoworld.com`
                       type="button"
                       onClick={handlePasteAndLookup}
                       disabled={isLookingUpOrder}
-                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all shrink-0 disabled:opacity-50 cursor-pointer"
+                      className="glass-action-button"
                       title="Paste from clipboard and search immediately"
                     >
-                      <Clipboard className="h-3.5 w-3.5 text-slate-500" />
+                      <Clipboard className="h-3.5 w-3.5 text-blue-600" />
                       <span className="hidden sm:inline">Paste & Inspect</span>
                       <span className="sm:hidden">Paste</span>
                     </button>
@@ -2140,7 +2140,7 @@ admin@technoworld.com`
                       type="button"
                       onClick={() => handleUniversalLookup(universalOrderSearch)}
                       disabled={isLookingUpOrder || !universalOrderSearch.trim()}
-                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-b from-[#0077ed] to-[#0062c4] hover:from-[#0080ff] hover:to-[#006ad8] border border-blue-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),_0_2px_5px_rgba(0,102,204,0.3)] active:scale-[0.98] transition-all shrink-0 disabled:opacity-50 cursor-pointer"
+                      className="glass-action-button-primary"
                     >
                       {isLookingUpOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
                       <span>Lookup</span>
@@ -2155,20 +2155,20 @@ admin@technoworld.com`
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-xl font-black tracking-tight text-slate-900">Forward Orders</h2>
 
-                    {/* Auto-Accept Toggle Switch Button (Glass Pill with Light Reflection) */}
+                    {/* Auto-Accept Toggle Switch Button */}
                     <button
                       type="button"
                       onClick={handleToggleAutoAccept}
                       disabled={isLoadingAutoAccept}
                       title="Auto-Accept Orders: When ON (Default), newly placed orders automatically move to 'To Pack'. India Post shipment booking remains manual."
-                      className="relative inline-flex items-center gap-2 rounded-full px-3 py-1 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] transition-all cursor-pointer backdrop-blur-md dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                      className="glass-action-button"
                     >
                       {isLoadingAutoAccept ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <div
                           className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                            autoAcceptEnabled ? 'bg-[#34c759]' : 'bg-slate-300 dark:bg-slate-600'
+                            autoAcceptEnabled ? 'bg-[#34c759]' : 'bg-slate-300'
                           }`}
                         >
                           <span
@@ -2178,8 +2178,8 @@ admin@technoworld.com`
                           />
                         </div>
                       )}
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">Auto-Accept:</span>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      <span>Auto-Accept:</span>
+                      <span className="text-[10px] font-extrabold uppercase">
                         {autoAcceptEnabled ? 'ON' : 'OFF'}
                       </span>
                     </button>
@@ -2312,75 +2312,75 @@ admin@technoworld.com`
                   </div>
 
                   {/* Right View Switcher & Actions */}
-                  <div className="flex items-center gap-2.5">
-                    {/* View Switcher: Smart Groups vs Order ID (Glass Segmented Control) */}
-                    <div className="inline-flex items-center rounded-full bg-slate-200/60 p-1 border border-slate-300/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] backdrop-blur-md dark:bg-slate-800/80 dark:border-white/10">
+                  <div className="flex items-center gap-3">
+                    {/* View Switcher: Smart Groups vs Order ID */}
+                    <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1">
                       <button
                         onClick={() => setOrderViewMode('smart_groups')}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs transition-all cursor-pointer ${
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
                           orderViewMode === 'smart_groups'
-                            ? 'bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-900 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.08)] dark:bg-slate-700 dark:text-white font-semibold'
-                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium hover:bg-white/40'
+                            ? 'glass-tab-active font-extrabold'
+                            : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
+                        <Star className={`h-3.5 w-3.5 ${orderViewMode === 'smart_groups' ? 'fill-emerald-600 text-emerald-600' : 'text-slate-400'}`} />
                         <span>Smart Groups</span>
                       </button>
 
                       <button
                         onClick={() => setOrderViewMode('order_id')}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs transition-all cursor-pointer ${
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
                           orderViewMode === 'order_id'
-                            ? 'bg-gradient-to-b from-white via-white/95 to-slate-50/90 text-slate-900 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_1.5px_3px_rgba(0,0,0,0.08)] dark:bg-slate-700 dark:text-white font-semibold'
-                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium hover:bg-white/40'
+                            ? 'glass-tab-active font-extrabold'
+                            : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <Box className={`h-3.5 w-3.5 ${orderViewMode === 'order_id' ? 'text-emerald-600' : 'text-slate-500'}`} />
                         <span>Order ID</span>
                       </button>
                     </div>
 
-                    {/* Quick Invoices Download Action (Glass Pill with Light Reflection) */}
+                    {/* Quick Invoices Download Action */}
                     <button
                       onClick={() => handleDownloadBatchInvoices()}
                       disabled={isDownloadingInvoices || activeStageOrders.length === 0}
-                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                      className="glass-action-button"
                       title={selectedOrderIds.size > 0 ? `Download merged PDF for ${selectedOrderIds.size} selected order(s)` : `Download merged PDF for all ${activeStageOrders.length} order(s) in this stage`}
                     >
                       {isDownloadingInvoices ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
                       ) : (
-                        <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                        <FileText className="h-3.5 w-3.5" />
                       )}
                       <span>{selectedOrderIds.size > 0 ? `Invoices (${selectedOrderIds.size})` : 'Download Invoices'}</span>
                     </button>
 
-                    {/* Quick Shipping Labels Print Action (Glass Pill with Light Reflection) */}
+                    {/* Quick Shipping Labels Print Action */}
                     <button
                       onClick={() => handleBatchPrintStickers()}
                       disabled={activeStageOrders.length === 0}
-                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer disabled:opacity-40 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                      className="glass-action-button"
                       title={selectedOrderIds.size > 0 ? `Print shipping labels for ${selectedOrderIds.size} selected order(s)` : `Print shipping labels for all ${activeStageOrders.length} order(s) in this stage`}
                     >
-                      <Tag className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <Tag className="h-3.5 w-3.5" />
                       <span>{selectedOrderIds.size > 0 ? `Shipping Labels (${selectedOrderIds.size})` : 'Print Shipping Labels'}</span>
                     </button>
 
-                    {/* India Post Handover Manifest Button (Glass Pill with Light Reflection) */}
+                    {/* India Post Handover Manifest Button */}
                     <button
                       onClick={() => setIsManifestModalOpen(true)}
-                      className="relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                      className="glass-action-button"
                       title="Generate and print India Post Despatch Manifest / Handover Journal for today's booked articles"
                     >
-                      <FileText className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                      <FileText className="h-3.5 w-3.5" />
                       <span>Postal Manifest</span>
                     </button>
 
-                    {/* Other Actions Dropdown (Glass Pill with Light Reflection) */}
+                    {/* Other Actions Dropdown */}
                     <div className="relative" ref={otherActionsRef}>
                       <button
                         onClick={() => setIsOtherActionsOpen(!isOtherActionsOpen)}
-                        className="relative inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white via-white/95 to-slate-50/90 border border-slate-200/80 shadow-[inset_0_1px_1px_rgba(255,255,255,1),_inset_0_-1px_1px_rgba(0,0,0,0.02),_0_1.5px_3px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,1),_0_2px_5px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all backdrop-blur-md cursor-pointer dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                        className="glass-action-button"
                       >
                         <span>Other Actions</span>
                         <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
@@ -2476,12 +2476,12 @@ admin@technoworld.com`
                       )}
                     </div>
 
-                    {/* Accept Orders Primary Action (Blue Glass Pill with Light Reflection) */}
+                    {/* Accept Orders Primary Action */}
                     {forwardStage === 'to_accept' && (
                       <button
                         onClick={handleBatchAcceptSelected}
                         disabled={isBatchAccepting || (selectedGroupKeys.size === 0 && selectedOrderIds.size === 0)}
-                        className="relative inline-flex items-center gap-1.5 rounded-full px-5 py-1.5 text-xs font-semibold text-white bg-gradient-to-b from-[#0077ed] to-[#0062c4] hover:from-[#0080ff] hover:to-[#006ad8] border border-blue-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),_inset_0_-1px_1px_rgba(0,0,0,0.1),_0_2px_5px_rgba(0,102,204,0.3)] active:scale-[0.98] transition-all disabled:opacity-40 cursor-pointer"
+                        className="glass-action-button-primary"
                       >
                         {isBatchAccepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                         <span>Accept Orders</span>
