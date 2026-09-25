@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ExternalLink,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
@@ -156,7 +155,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
 
   const [formData, setFormData] = useState<any>({
     title: book?.title || '',
-    publicationDate: book?.publicationDate ? new Date(book.publicationDate).toISOString().split('T')[0] : '',
+    publicationDate: book?.publicationDate ? new Date(book.publicationDate).toISOString().slice(0, 7) : '',
     isbn13: book?.isbn13 || '',
     isbn10: book?.isbn10 || '',
     sku: book?.sku || '',
@@ -238,15 +237,19 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
   }, []);
 
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
 
   // Cloudinary Media Management State
   const [galleryImages, setGalleryImages] = useState<BookImageItem[]>([]);
   const [currentCoverUrl, setCurrentCoverUrl] = useState<string | null>(book?.coverUrl || null);
   const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(book?.previewPdfUrl || null);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+
+  // Staged media for new books or uncommitted files
+  const [stagedImages, setStagedImages] = useState<{ id: string; file: File; previewUrl: string }[]>([]);
+  const [stagedPdf, setStagedPdf] = useState<File | null>(null);
+  const [stagedPdfUrl, setStagedPdfUrl] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Fetch existing gallery images for this book
   useEffect(() => {
@@ -256,74 +259,141 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         .then((res: any) => {
           if (res?.data && Array.isArray(res.data)) {
             setGalleryImages(res.data);
+            const cover = res.data.find((img: any) => img.isCover);
+            if (cover) setCurrentCoverUrl(cover.secureUrl);
           }
         })
         .catch((err) => console.error('Failed to load book images:', err));
     }
   }, [book?.id]);
 
-  // Handle Cover Replacement
-  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (!selected) return;
+  // Handle Multi-Image Selection from PC
+  const handleSelectFilesFromPC = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []).slice(0, 8);
+    if (!selectedFiles.length) return;
 
-    if (!book?.id) {
-      setFile(selected);
-      return;
-    }
+    if (book?.id) {
+      setIsUploadingGallery(true);
+      try {
+        const res = await bookMediaService.uploadGallery(book.id, selectedFiles);
+        toast.success(`${res.data.length} image(s) uploaded successfully!`);
 
-    setIsUploadingCover(true);
-    try {
-      const res = await bookMediaService.uploadCover(book.id, selected);
-      const newUrl = res.data?.book?.coverUrl || res.data?.image?.secureUrl;
-      setCurrentCoverUrl(newUrl);
-      toast.success('Cover image uploaded to Cloudinary!');
-
-      const imgRes = await bookMediaService.getImages(book.id);
-      if (imgRes.data) setGalleryImages(imgRes.data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload cover');
-    } finally {
-      setIsUploadingCover(false);
-    }
-  };
-
-  // Handle Multi-Image Gallery Upload
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (!selectedFiles.length || !book?.id) return;
-
-    setIsUploadingGallery(true);
-    try {
-      const res = await bookMediaService.uploadGallery(book.id, selectedFiles);
-      toast.success(`${res.data.length} gallery image(s) uploaded to Cloudinary!`);
-
-      const imgRes = await bookMediaService.getImages(book.id);
-      if (imgRes.data) setGalleryImages(imgRes.data);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload gallery images');
-    } finally {
-      setIsUploadingGallery(false);
+        const imgRes = await bookMediaService.getImages(book.id);
+        if (imgRes.data && Array.isArray(imgRes.data)) {
+          setGalleryImages(imgRes.data);
+          const cover = imgRes.data.find((img: any) => img.isCover);
+          if (cover) setCurrentCoverUrl(cover.secureUrl);
+        }
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to upload images');
+      } finally {
+        setIsUploadingGallery(false);
+        e.target.value = '';
+      }
+    } else {
+      const newStaged = selectedFiles.map((f, i) => ({
+        id: `staged-${Date.now()}-${i}`,
+        file: f,
+        previewUrl: URL.createObjectURL(f),
+      }));
+      setStagedImages((prev) => [...prev, ...newStaged].slice(0, 8));
+      toast.success(`${selectedFiles.length} image(s) selected from PC`);
       e.target.value = '';
     }
   };
 
-  // Handle Set Cover
-  const handleSetCover = async (imageId: string) => {
-    if (!book?.id) return;
-    try {
-      const res = await bookMediaService.setCover(book.id, imageId);
-      setCurrentCoverUrl(res.data.coverUrl);
-      setGalleryImages((prev) =>
-        prev.map((img) => ({ ...img, isCover: img.id === imageId }))
-      );
-      toast.success('Cover image updated!');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to set cover');
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    if (book?.id) {
+      const newItems = [...galleryImages];
+      const [moved] = newItems.splice(draggedIndex, 1);
+      newItems.splice(dropIndex, 0, moved);
+
+      // The 1st image automatically becomes primary cover
+      const updatedWithCover = newItems.map((item, idx) => ({
+        ...item,
+        isCover: idx === 0,
+        sortOrder: idx,
+      }));
+
+      setGalleryImages(updatedWithCover);
+      if (updatedWithCover[0]) {
+        setCurrentCoverUrl(updatedWithCover[0].secureUrl);
+      }
+      setDraggedIndex(null);
+
+      try {
+        await bookMediaService.reorderImages(
+          book.id,
+          updatedWithCover.map((img) => img.id)
+        );
+        toast.success(dropIndex === 0 ? 'Image moved to 1st position & set as primary cover!' : 'Image order updated!');
+      } catch (err: any) {
+        toast.error('Failed to update image order');
+      }
+    } else {
+      const newStaged = [...stagedImages];
+      const [moved] = newStaged.splice(draggedIndex, 1);
+      newStaged.splice(dropIndex, 0, moved);
+      setStagedImages(newStaged);
+      setDraggedIndex(null);
+      toast.success(dropIndex === 0 ? 'Image moved to 1st position (Primary Cover)!' : 'Image order updated!');
     }
   };
 
-  // Handle Delete Gallery Image
+  // Accessible move left/right
+  const handleMoveImage = async (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (book?.id) {
+      if (targetIndex < 0 || targetIndex >= galleryImages.length) return;
+      const newOrder = [...galleryImages];
+      const [moved] = newOrder.splice(index, 1);
+      newOrder.splice(targetIndex, 0, moved);
+      const updatedWithCover = newOrder.map((item, idx) => ({
+        ...item,
+        isCover: idx === 0,
+        sortOrder: idx,
+      }));
+      setGalleryImages(updatedWithCover);
+      if (updatedWithCover[0]) setCurrentCoverUrl(updatedWithCover[0].secureUrl);
+
+      try {
+        await bookMediaService.reorderImages(
+          book.id,
+          updatedWithCover.map((img) => img.id)
+        );
+        if (targetIndex === 0) {
+          toast.success('Moved to 1st position & set as primary cover!');
+        }
+      } catch (err: any) {
+        toast.error('Failed to update image order');
+      }
+    } else {
+      if (targetIndex < 0 || targetIndex >= stagedImages.length) return;
+      const newStaged = [...stagedImages];
+      const [moved] = newStaged.splice(index, 1);
+      newStaged.splice(targetIndex, 0, moved);
+      setStagedImages(newStaged);
+    }
+  };
+
+  // Handle Delete Image
   const handleDeleteImage = async (imageId: string) => {
     if (!book?.id) return;
     try {
@@ -342,56 +412,51 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     }
   };
 
-  // Handle Reorder Gallery Images
-  const handleMoveImage = async (index: number, direction: 'left' | 'right') => {
-    if (!book?.id) return;
-    const targetIndex = direction === 'left' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= galleryImages.length) return;
-
-    const newOrder = [...galleryImages];
-    const [moved] = newOrder.splice(index, 1);
-    newOrder.splice(targetIndex, 0, moved);
-    setGalleryImages(newOrder);
-
-    try {
-      await bookMediaService.reorderImages(
-        book.id,
-        newOrder.map((img) => img.id)
-      );
-    } catch (err: any) {
-      toast.error('Failed to update image order');
-    }
+  const handleDeleteStagedImage = (index: number) => {
+    setStagedImages((prev) => prev.filter((_, i) => i !== index));
+    toast.info('Image removed');
   };
 
   // Handle Preview PDF Upload
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (!selected || !book?.id) return;
+    if (!selected) return;
 
-    setIsUploadingPdf(true);
-    try {
-      const res = await bookMediaService.uploadPdf(book.id, selected);
-      setCurrentPdfUrl(res.data.previewPdfUrl);
-      toast.success('Preview PDF uploaded to Cloudinary documents!');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to upload preview PDF');
-    } finally {
-      setIsUploadingPdf(false);
+    if (book?.id) {
+      setIsUploadingPdf(true);
+      try {
+        const res = await bookMediaService.uploadPdf(book.id, selected);
+        setCurrentPdfUrl(res.data.previewPdfUrl);
+        toast.success('Preview PDF uploaded successfully!');
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to upload preview PDF');
+      } finally {
+        setIsUploadingPdf(false);
+        e.target.value = '';
+      }
+    } else {
+      setStagedPdf(selected);
+      setStagedPdfUrl(URL.createObjectURL(selected));
+      toast.success('Preview PDF selected!');
       e.target.value = '';
     }
   };
 
   // Handle Preview PDF Delete
   const handleDeletePdf = async () => {
-    if (!book?.id) return;
-    if (!confirm('Are you sure you want to remove the preview PDF from this book?')) return;
-
-    try {
-      await bookMediaService.deletePdf(book.id);
-      setCurrentPdfUrl(null);
-      toast.success('Preview PDF removed from Cloudinary');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to remove PDF');
+    if (book?.id) {
+      if (!confirm('Are you sure you want to remove the preview PDF from this book?')) return;
+      try {
+        await bookMediaService.deletePdf(book.id);
+        setCurrentPdfUrl(null);
+        toast.success('Preview PDF removed from Cloudinary');
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to remove PDF');
+      }
+    } else {
+      setStagedPdf(null);
+      setStagedPdfUrl(null);
+      toast.info('Preview PDF removed');
     }
   };
 
@@ -399,19 +464,31 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     e.preventDefault();
     setLoading(true);
     try {
+      const payload = { ...formData };
+      if (payload.publicationDate && payload.publicationDate.length === 7) {
+        payload.publicationDate = `${payload.publicationDate}-01T00:00:00.000Z`;
+      }
       let bookId = book?.id;
       if (book?.id) {
-        await adminService.updateBook(book.id, formData);
+        await adminService.updateBook(book.id, payload);
         toast.success(`"${formData.title}" updated successfully!`);
       } else {
-        const newBook = await adminService.createBook(formData);
+        const newBook = await adminService.createBook(payload);
         bookId = newBook.data.id;
         toast.success(`"${formData.title}" created successfully!`);
       }
       
-      if (file && bookId) {
-        await bookMediaService.uploadCover(bookId, file);
-        toast.success('Cover image uploaded to Cloudinary!');
+      // Upload staged images / PDF if creating a new book
+      if (!book?.id && bookId) {
+        if (stagedImages.length > 0) {
+          await bookMediaService.uploadCover(bookId, stagedImages[0].file);
+          if (stagedImages.length > 1) {
+            await bookMediaService.uploadGallery(bookId, stagedImages.slice(1).map((s) => s.file));
+          }
+        }
+        if (stagedPdf) {
+          await bookMediaService.uploadPdf(bookId, stagedPdf);
+        }
       }
       onSaved();
     } catch (err: any) {
@@ -464,7 +541,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             </div>
           )}
           
-          {/* Cloudinary Media Management Section */}
+          {/* Media & Documents (Multi-Image Drag-and-Drop & PDF Preview) */}
           <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
               <div className="flex items-center gap-2">
@@ -472,124 +549,82 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                   <ImageIcon className="h-3.5 w-3.5" />
                 </span>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                  Media & Documents (Cloudinary Managed)
+                  Book Images & Gallery
                 </h3>
               </div>
-              <span className="text-[10px] font-semibold text-slate-500">
-                Auto-folder: Home/books/{'{slug}'}/
-              </span>
-            </div>
-
-            {/* 1. Primary Cover Image */}
-            <div className="flex gap-4 items-start bg-white p-3 rounded-lg border border-slate-200/80 shadow-2xs">
-              <div className="relative w-20 h-28 shrink-0 rounded-md bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center">
-                {file ? (
-                  <img
-                    src={URL.createObjectURL(file)}
-                    className="w-full h-full object-cover"
-                    alt="New Cover Preview"
-                  />
-                ) : currentCoverUrl ? (
-                  <img
-                    src={getImageUrl(currentCoverUrl)}
-                    className="w-full h-full object-cover"
-                    alt="Book Cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="text-[10px] text-slate-400 font-bold text-center p-1">
-                    No Cover
-                  </div>
-                )}
-                {isUploadingCover && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-white" />
-                  </div>
-                )}
-                <span className="absolute bottom-1 left-1 bg-emerald-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-xs">
-                  Cover
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold text-slate-500">
+                  1st image is always the Primary Cover Thumbnail
                 </span>
-              </div>
-
-              <div className="flex-1 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800">
-                    Primary Cover Thumbnail
-                  </label>
-                  {currentCoverUrl && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      <CheckCircle2 className="h-2.5 w-2.5" /> Synced
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  disabled={isUploadingCover}
-                  onChange={handleCoverChange}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
-                />
-                <p className="text-[10px] text-slate-400">
-                  Target: <code className="font-mono text-slate-600">Home/books/{'{slug}'}/images/cover_*</code>. Supports JPG, PNG, WEBP.
-                </p>
+                {currentCoverUrl && (
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Cover Synced
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* 2. Multi-Image Gallery */}
-            {book?.id ? (
-              <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-2xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-800">
-                      Multi-Image Gallery ({galleryImages.length} images)
-                    </label>
-                    <p className="text-[10px] text-slate-400">
-                      Reorder views, set primary cover, or upload additional pages
-                    </p>
-                  </div>
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer transition shadow-2xs">
-                    {isUploadingGallery ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Upload className="h-3.5 w-3.5" />
-                    )}
-                    <span>{isUploadingGallery ? 'Uploading...' : 'Add Images'}</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      disabled={isUploadingGallery}
-                      onChange={handleGalleryUpload}
-                      className="hidden"
-                    />
+            {/* Drag & Drop Multi-Image Selection & Gallery */}
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-2xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800">
+                    Book Media & Views ({book?.id ? galleryImages.length : stagedImages.length} images)
                   </label>
+                  <p className="text-[11px] text-slate-500">
+                    Drag and drop images to rearrange. The 1st image automatically serves as the primary cover thumbnail.
+                  </p>
                 </div>
+                <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer transition shadow-2xs shrink-0 self-start sm:self-auto">
+                  {isUploadingGallery ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" />
+                  )}
+                  <span>{isUploadingGallery ? 'Uploading...' : 'Select Images from PC'}</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    disabled={isUploadingGallery}
+                    onChange={handleSelectFilesFromPC}
+                    className="hidden"
+                  />
+                </label>
+              </div>
 
-                {galleryImages.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 pt-1">
-                    {galleryImages.map((img, idx) => (
+              {/* Image Grid or Empty Placeholder */}
+              {(book?.id ? galleryImages.length > 0 : stagedImages.length > 0) ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-1">
+                  {(book?.id ? galleryImages : stagedImages).map((img: any, idx: number) => {
+                    const imgSrc = book?.id ? getImageUrl(img.secureUrl) : img.previewUrl;
+                    const isCover = idx === 0 || img.isCover;
+                    return (
                       <div
-                        key={img.id}
-                        className={`group relative rounded-lg border overflow-hidden bg-slate-50 flex flex-col ${
-                          img.isCover ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200'
-                        }`}
+                        key={img.id || idx}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, idx)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, idx)}
+                        className={`group relative rounded-lg border overflow-hidden bg-slate-50 flex flex-col cursor-grab active:cursor-grabbing transition-all select-none ${
+                          isCover ? 'border-emerald-500 ring-2 ring-emerald-500/25 shadow-xs' : 'border-slate-200 hover:border-slate-300'
+                        } ${draggedIndex === idx ? 'opacity-40 scale-95 border-dashed border-emerald-500' : ''}`}
                       >
                         <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-100">
                           <img
-                            src={getImageUrl(img.secureUrl)}
-                            alt={img.altText || `Gallery image ${idx + 1}`}
-                            className="w-full h-full object-cover"
+                            src={imgSrc}
+                            alt={`Book view ${idx + 1}`}
+                            className="w-full h-full object-cover pointer-events-none"
                           />
-                          {img.isCover && (
+                          {isCover ? (
                             <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs flex items-center gap-0.5">
-                              <Star className="h-2.5 w-2.5 fill-current" /> Cover
+                              <Star className="h-2.5 w-2.5 fill-current" /> Cover Thumbnail
+                            </span>
+                          ) : (
+                            <span className="absolute top-1 left-1 bg-black/60 text-white text-[9px] font-mono px-1 rounded">
+                              #{idx + 1}
                             </span>
                           )}
-                          <span className="absolute top-1 right-1 bg-black/60 text-white text-[9px] font-mono px-1 rounded">
-                            #{idx + 1}
-                          </span>
                         </div>
 
                         {/* Controls */}
@@ -600,36 +635,32 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                               title="Move Left"
                               disabled={idx === 0}
                               onClick={() => handleMoveImage(idx, 'left')}
-                              className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30"
+                              className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30 rounded hover:bg-slate-100"
                             >
                               <ChevronLeft className="h-3 w-3" />
                             </button>
                             <button
                               type="button"
                               title="Move Right"
-                              disabled={idx === galleryImages.length - 1}
+                              disabled={idx === (book?.id ? galleryImages.length - 1 : stagedImages.length - 1)}
                               onClick={() => handleMoveImage(idx, 'right')}
-                              className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30"
+                              className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30 rounded hover:bg-slate-100"
                             >
                               <ChevronRight className="h-3 w-3" />
                             </button>
                           </div>
 
                           <div className="flex items-center gap-0.5">
-                            {!img.isCover && (
-                              <button
-                                type="button"
-                                title="Set as primary cover"
-                                onClick={() => handleSetCover(img.id)}
-                                className="p-1 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded"
-                              >
-                                <Star className="h-3 w-3" />
-                              </button>
-                            )}
                             <button
                               type="button"
-                              title="Delete from Cloudinary"
-                              onClick={() => handleDeleteImage(img.id)}
+                              title="Delete Image"
+                              onClick={() => {
+                                if (book?.id) {
+                                  handleDeleteImage(img.id);
+                                } else {
+                                  handleDeleteStagedImage(idx);
+                                }
+                              }}
                               className="p-1 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded"
                             >
                               <Trash2 className="h-3 w-3" />
@@ -637,71 +668,77 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-4 text-center border border-dashed border-slate-200 rounded-lg text-slate-400 text-xs">
-                    No gallery images yet. Click "Add Images" to upload multiple angles, sample pages, or back cover.
-                  </div>
-                )}
-              </div>
-            ) : null}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-6 text-center border-2 border-dashed border-slate-200 rounded-lg text-slate-400 text-xs flex flex-col items-center justify-center gap-1.5">
+                  <ImageIcon className="h-6 w-6 text-slate-300" />
+                  <p className="font-semibold text-slate-600">No images selected yet</p>
+                  <p className="text-[11px] text-slate-400">
+                    Click "Select Images from PC" to pick book photos. You can drag and drop to arrange pages.
+                  </p>
+                </div>
+              )}
+            </div>
 
-            {/* 3. Preview PDF Document */}
-            {book?.id ? (
-              <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-rose-600" />
-                    <div>
-                      <label className="block text-xs font-bold text-slate-800">
-                        Preview PDF Document (Sample Chapter / Index)
-                      </label>
-                      <p className="text-[10px] text-slate-400">
-                        Stored under <code className="font-mono text-slate-600">Home/books/{'{slug}'}/documents/</code> as raw asset
-                      </p>
-                    </div>
+            {/* Preview PDF Document */}
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200/80 shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-rose-600" />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800">
+                      Sample Chapter / Index PDF
+                    </label>
+                    <p className="text-[10px] text-slate-400">
+                      Upload PDF document to display live preview pages to customers
+                    </p>
                   </div>
-
-                  {currentPdfUrl ? (
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={currentPdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md border border-emerald-200"
-                      >
-                        <ExternalLink className="h-3 w-3" /> View PDF
-                      </a>
-                      <button
-                        type="button"
-                        onClick={handleDeletePdf}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md border border-rose-200"
-                      >
-                        <Trash2 className="h-3 w-3" /> Remove
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
 
-                {!currentPdfUrl && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      disabled={isUploadingPdf}
-                      onChange={handlePdfUpload}
-                      className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
-                    />
-                    {isUploadingPdf && <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />}
+                {(currentPdfUrl || stagedPdfUrl) ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={currentPdfUrl || stagedPdfUrl!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md border border-emerald-200"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Open in New Tab
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleDeletePdf}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md border border-rose-200"
+                    >
+                      <Trash2 className="h-3 w-3" /> Remove PDF
+                    </button>
                   </div>
-                )}
+                ) : null}
               </div>
-            ) : (
-              <p className="text-[11px] text-slate-400 italic">
-                💡 Note: Save this book first to manage multi-image gallery & preview PDF documents in Cloudinary.
-              </p>
-            )}
+
+              {(currentPdfUrl || stagedPdfUrl) ? (
+                <div className="relative rounded-lg overflow-hidden border border-slate-200 bg-slate-100 h-72 sm:h-96 w-full">
+                  <iframe
+                    src={`${currentPdfUrl || stagedPdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                    className="w-full h-full border-0"
+                    title="PDF Sample Pages Preview"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    disabled={isUploadingPdf}
+                    onChange={handlePdfUpload}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+                  />
+                  {isUploadingPdf && <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />}
+                </div>
+              )}
+            </div>
           </div>
 
           
@@ -712,8 +749,8 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
               <input required name="title" value={formData.title} onChange={handleChange} placeholder="e.g. WBSSC Group C & Group D Cracker" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Publication Date</label>
-              <input type="date" name="publicationDate" value={formData.publicationDate || ''} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <label className="block text-xs font-bold text-slate-700 mb-1">Publication Month & Year</label>
+              <input type="month" name="publicationDate" value={formData.publicationDate || ''} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
             </div>
           </div>
 
