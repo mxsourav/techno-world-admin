@@ -6606,7 +6606,7 @@ admin@technoworld.com`
                       type="text"
                       value={adminProfile.phone}
                       onChange={(e) => setAdminProfile({ ...adminProfile, phone: e.target.value })}
-                      placeholder="9876543210"
+                      placeholder="7479135626"
                       className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
@@ -7778,7 +7778,7 @@ admin@technoworld.com`
                   type="text"
                   value={expressAgentPhone}
                   onChange={(e) => setExpressAgentPhone(e.target.value)}
-                  placeholder="e.g. 9876543210"
+                  placeholder="e.g. 7479135626"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-500"
                 />
               </div>

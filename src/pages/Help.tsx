@@ -30,17 +30,17 @@ export default function Help() {
 
       {/* contact cards */}
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl bg-emerald-600 p-4 text-white shadow-sm hover:bg-emerald-500">
+        <a href="https://wa.me/917479135626?text=Hi%20Techno%20World%20Books!%20I%20need%20assistance." target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl bg-emerald-600 p-4 text-white shadow-sm hover:bg-emerald-500">
           <MessageCircle className="h-7 w-7" />
-          <span><b className="block text-sm">WhatsApp Chat</b><span className="text-xs opacity-90">Fastest — replies in minutes</span></span>
+          <span><b className="block text-sm">WhatsApp Chat</b><span className="text-xs opacity-90">+91 74791 35626 — fast reply</span></span>
         </a>
         <button onClick={() => toast.success('Live chat connected! An agent will join shortly.')} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm border border-slate-100 hover:shadow-md text-left">
           <MessageCircle className="h-7 w-7 text-emerald-700" />
           <span><b className="block text-sm text-slate-800">Live Chat</b><span className="text-xs text-slate-500">Chat with a support agent</span></span>
         </button>
-        <a href="tel:18002662665" className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md">
+        <a href="tel:03322196115" className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md">
           <Phone className="h-7 w-7 text-emerald-700" />
-          <span><b className="block text-sm text-slate-800">1800-266-BOOK</b><span className="text-xs text-slate-500">Toll-free, 9 AM – 9 PM</span></span>
+          <span><b className="block text-sm text-slate-800">033 2219 6115</b><span className="text-xs text-slate-500">Store Landline, 9 AM – 8 PM</span></span>
         </a>
       </div>
 

@@ -360,7 +360,7 @@ export default function Header() {
           <Link to="/track" className="hover:text-white">Track Order</Link>
           <Link to="/help" className="hover:text-white">Help Center</Link>
           <Link to="/admin" className="hover:text-white">Seller/Admin</Link>
-          <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white">
+          <a href="https://wa.me/917479135626?text=Hi%20Techno%20World%20Books!%20I%20need%20assistance." target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white">
             <MessageCircle className="h-3 w-3" /> WhatsApp Support
           </a>
         </div>

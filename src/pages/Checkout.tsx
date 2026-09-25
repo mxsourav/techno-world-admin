@@ -106,7 +106,7 @@ export default function Checkout() {
     if (fulfillmentMode === 'PICKUP') {
       return {
         fullName: pickupForm.name || user?.name || 'Valued Customer',
-        phone: pickupForm.phone || user?.phone || '9876543210',
+        phone: pickupForm.phone || user?.phone || '',
         email: pickupForm.email || user?.email || '',
         addressLine1: 'Techno World Books Takeaway Desk, 90/6A Mahatma Gandhi Rd',
         pincode: '700007',
@@ -624,7 +624,7 @@ export default function Checkout() {
         address: {
           fullName: address.name || (address as any).fullName || form.name || 'Valued Customer',
           email: userEmail,
-          phone: address.phone || form.phone || '9876543210',
+          phone: address.phone || form.phone || user?.phone || '',
           addressLine1: address.line1 || (address as any).addressLine1 || form.line1 || 'Delivery Address',
           addressLine2: (address as any).line2 || (address as any).addressLine2 || null,
           postOffice: (address as any).postOffice || form.postOffice || 'Local Post Office',

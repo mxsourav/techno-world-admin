@@ -238,7 +238,7 @@ export default function About() {
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="e.g. 9876543210 (For WhatsApp updates)"
+                    placeholder="e.g. 7479135626 (For WhatsApp updates)"
                     className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-500"
                   />
                 </div>
