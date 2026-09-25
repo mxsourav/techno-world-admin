@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { adminService, categoryService, getImageUrl, bookMediaService, type BookImageItem } from '@/services/api';
+import { compressImageFile } from '@/utils/imageCompressor';
 import { CATEGORIES as WEBSITE_CATEGORIES } from '@/data/books';
 import {
   Upload,
@@ -269,35 +270,61 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
 
   // Handle Multi-Image Selection from PC
   const handleSelectFilesFromPC = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []).slice(0, 8);
-    if (!selectedFiles.length) return;
+    const rawFiles = Array.from(e.target.files || []).slice(0, 8);
+    if (!rawFiles.length) return;
 
-    if (book?.id) {
-      setIsUploadingGallery(true);
-      try {
-        const res = await bookMediaService.uploadGallery(book.id, selectedFiles);
-        toast.success(`${res.data.length} image(s) uploaded successfully!`);
+    setIsUploadingGallery(true);
+    try {
+      // 1. Client-side compress all selected images to prevent Nginx 413 / timeout
+      const compressedFiles = await Promise.all(rawFiles.map((f) => compressImageFile(f)));
 
-        const imgRes = await bookMediaService.getImages(book.id);
-        if (imgRes.data && Array.isArray(imgRes.data)) {
+      if (book?.id) {
+        let successCount = 0;
+        const uploadErrors: string[] = [];
+
+        // 2. Upload images individually so one failure does not break the entire set
+        for (let i = 0; i < compressedFiles.length; i++) {
+          const file = compressedFiles[i];
+          try {
+            if (!currentCoverUrl && galleryImages.length === 0 && i === 0) {
+              await bookMediaService.uploadCover(book.id, file);
+            } else {
+              await bookMediaService.uploadGallery(book.id, [file]);
+            }
+            successCount++;
+          } catch (err: any) {
+            console.error(`Image ${i + 1} upload failed:`, err);
+            uploadErrors.push(err.message || `Image ${i + 1} failed`);
+          }
+        }
+
+        // 3. Refresh live images
+        const imgRes = await bookMediaService.getImages(book.id).catch(() => null);
+        if (imgRes?.data && Array.isArray(imgRes.data)) {
           setGalleryImages(imgRes.data);
           const cover = imgRes.data.find((img: any) => img.isCover);
           if (cover) setCurrentCoverUrl(cover.secureUrl);
         }
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to upload images');
-      } finally {
-        setIsUploadingGallery(false);
-        e.target.value = '';
+
+        if (successCount > 0) {
+          toast.success(`${successCount} image(s) uploaded successfully!`);
+        }
+        if (uploadErrors.length > 0) {
+          toast.warning(`Note: ${uploadErrors.length} image(s) could not be uploaded: ${uploadErrors[0]}`);
+        }
+      } else {
+        const newStaged = compressedFiles.map((f, i) => ({
+          id: `staged-${Date.now()}-${i}`,
+          file: f,
+          previewUrl: URL.createObjectURL(f),
+        }));
+        setStagedImages((prev) => [...prev, ...newStaged].slice(0, 8));
+        toast.success(`${compressedFiles.length} image(s) selected from PC`);
       }
-    } else {
-      const newStaged = selectedFiles.map((f, i) => ({
-        id: `staged-${Date.now()}-${i}`,
-        file: f,
-        previewUrl: URL.createObjectURL(f),
-      }));
-      setStagedImages((prev) => [...prev, ...newStaged].slice(0, 8));
-      toast.success(`${selectedFiles.length} image(s) selected from PC`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to process images');
+    } finally {
+      setIsUploadingGallery(false);
       e.target.value = '';
     }
   };
@@ -487,10 +514,16 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           try {
             await bookMediaService.uploadCover(bookId, stagedImages[0].file);
             if (stagedImages.length > 1) {
-              await bookMediaService.uploadGallery(bookId, stagedImages.slice(1).map((s) => s.file));
+              for (let i = 1; i < stagedImages.length; i++) {
+                try {
+                  await bookMediaService.uploadGallery(bookId, [stagedImages[i].file]);
+                } catch (sErr: any) {
+                  console.error(`Staged gallery image ${i} error:`, sErr);
+                }
+              }
             }
           } catch (imgErr: any) {
-            console.error('Staged image upload error:', imgErr);
+            console.error('Staged cover image upload error:', imgErr);
             mediaErrors.push(`Images: ${imgErr.message || 'Upload failed'}`);
           }
         }
