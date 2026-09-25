@@ -469,18 +469,10 @@ export default function ProductsWorkspace() {
                {/* Performance / Sales */}
               <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-white dark:bg-white/[0.03]">
                  <h4 className="font-bold text-slate-800 dark:text-white mb-4">Performance</h4>
-                 <div className="grid grid-cols-3 gap-4">
+                 <div className="grid grid-cols-1 gap-4">
                    <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Lifetime Sold</p>
+                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Lifetime Sold (Units)</p>
                      <p className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">{viewingBook.lifetimeSales || 0}</p>
-                   </div>
-                   <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">In Cart</p>
-                     <p className="text-lg font-extrabold text-blue-700 dark:text-blue-400">{viewingBook.inCartCount ?? 0}</p>
-                   </div>
-                   <div className="text-center p-3 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                     <p className="text-xs text-slate-500 dark:text-neutral-400 mb-1">Wishlisted</p>
-                     <p className="text-lg font-extrabold text-rose-700 dark:text-rose-400">{viewingBook.wishlistCount ?? 0}</p>
                    </div>
                  </div>
               </div>
