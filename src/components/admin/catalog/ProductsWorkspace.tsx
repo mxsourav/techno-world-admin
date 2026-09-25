@@ -252,18 +252,21 @@ export default function ProductsWorkspace() {
                     
                     <td className="px-6 py-4">
                       <div className="flex gap-4">
-                        {(book.coverUrl || (book.images && book.images[0]?.secureUrl)) ? (
-                          <div className="h-16 w-12 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161f36] shrink-0 p-0.5 overflow-hidden flex items-center justify-center shadow-xs">
-                            <img
-                              src={getImageUrl(book.coverUrl || book.images[0]?.secureUrl)}
-                              className="h-full w-full object-contain rounded"
-                              alt={book.title}
-                              loading="lazy"
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-16 w-12 rounded bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 text-[10px] text-slate-400 font-bold">No Img</div>
-                        )}
+                        {(() => {
+                          const rowCover = book.coverUrl || book.coverImage || (book.images && book.images[0]?.secureUrl) || (Array.isArray(book.galleryUrls) ? book.galleryUrls[0] : null);
+                          return rowCover ? (
+                            <div className="h-16 w-12 rounded border border-slate-200 dark:border-white/10 bg-white shrink-0 p-0.5 overflow-hidden flex items-center justify-center shadow-xs">
+                              <img
+                                src={getImageUrl(rowCover)}
+                                className="h-full w-full object-contain rounded"
+                                alt={book.title}
+                                loading="lazy"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-16 w-12 rounded bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 text-[10px] text-slate-400 font-bold">No Img</div>
+                          );
+                        })()}
                         <div>
                           <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{book.title}</div>
                           <div className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 line-clamp-1">{book.categoryName} • {book.publisherName}</div>
@@ -371,22 +374,26 @@ export default function ProductsWorkspace() {
               
               {/* Header Info */}
               <div className="flex gap-6">
-                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161f36] shrink-0 shadow-sm flex items-center justify-center p-1">
-                  {viewingBook.coverUrl ? (
-                    <img
-                      src={getImageUrl(viewingBook.coverUrl)}
-                      className="h-full w-full object-contain rounded"
-                      alt={viewingBook.title}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-2 text-center text-slate-400 dark:text-neutral-500">
-                      <BookOpen className="h-6 w-6 text-slate-300 dark:text-neutral-600 mb-1" />
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 line-clamp-2">{viewingBook.title}</span>
+                {(() => {
+                  const coverSrc = viewingBook.coverUrl || viewingBook.coverImage || (viewingBook.images && viewingBook.images[0]?.secureUrl) || (Array.isArray(viewingBook.galleryUrls) ? viewingBook.galleryUrls[0] : null);
+                  return (
+                    <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-white shrink-0 shadow-sm flex items-center justify-center p-1">
+                      {coverSrc ? (
+                        <img
+                          src={getImageUrl(coverSrc)}
+                          className="h-full w-full object-contain rounded"
+                          alt={viewingBook.title}
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-2 text-center text-slate-300 dark:text-neutral-600">
+                          <BookOpen className="h-6 w-6 mb-1" />
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">No Image</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${viewingBook.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-neutral-300'}`}>{viewingBook.status}</span>
