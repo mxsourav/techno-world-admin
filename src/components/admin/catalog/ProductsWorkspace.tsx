@@ -252,10 +252,17 @@ export default function ProductsWorkspace() {
                     
                     <td className="px-6 py-4">
                       <div className="flex gap-4">
-                        {book.coverUrl ? (
-                          <img src={getImageUrl(book.coverUrl)} className="h-16 w-12 rounded object-cover shadow-sm bg-slate-50 dark:bg-white/5 shrink-0" alt={book.title} loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                        {(book.coverUrl || (book.images && book.images[0]?.secureUrl)) ? (
+                          <div className="h-16 w-12 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161f36] shrink-0 p-0.5 overflow-hidden flex items-center justify-center shadow-xs">
+                            <img
+                              src={getImageUrl(book.coverUrl || book.images[0]?.secureUrl)}
+                              className="h-full w-full object-contain rounded"
+                              alt={book.title}
+                              loading="lazy"
+                            />
+                          </div>
                         ) : (
-                          <div className="h-16 w-12 rounded bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 text-xs text-slate-400">No Img</div>
+                          <div className="h-16 w-12 rounded bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10 text-[10px] text-slate-400 font-bold">No Img</div>
                         )}
                         <div>
                           <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{book.title}</div>
@@ -364,23 +371,21 @@ export default function ProductsWorkspace() {
               
               {/* Header Info */}
               <div className="flex gap-6">
-                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 shrink-0 shadow-sm flex items-center justify-center">
+                <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-white dark:bg-[#161f36] shrink-0 shadow-sm flex items-center justify-center p-1">
                   {viewingBook.coverUrl ? (
                     <img
                       src={getImageUrl(viewingBook.coverUrl)}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain rounded"
                       alt={viewingBook.title}
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
                     />
-                  ) : null}
-                  <div className="absolute inset-0 -z-1 flex flex-col items-center justify-center p-2 text-center text-slate-400 dark:text-neutral-500 bg-slate-100 dark:bg-white/5">
-                    <BookOpen className="h-6 w-6 text-slate-300 dark:text-neutral-600 mb-1" />
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 line-clamp-2">{viewingBook.title}</span>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-2 text-center text-slate-400 dark:text-neutral-500">
+                      <BookOpen className="h-6 w-6 text-slate-300 dark:text-neutral-600 mb-1" />
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 line-clamp-2">{viewingBook.title}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
