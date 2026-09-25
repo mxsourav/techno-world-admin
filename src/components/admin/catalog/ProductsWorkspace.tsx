@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
-import { adminService, getImageUrl } from '@/services/api';
+import { adminService, bookService, getImageUrl } from '@/services/api';
 import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
@@ -53,13 +53,38 @@ export default function ProductsWorkspace() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await adminService.getAdminCatalog({
-        tab: activeTab,
-        search,
-      });
-      // res is ApiResponse: { success, message, data: books[], kpis: {...} }
-      setData(res.data || []);
-      setKpis((res as any).kpis || {});
+      try {
+        const res = await adminService.getAdminCatalog({
+          tab: activeTab,
+          search,
+        });
+        setData(res.data || []);
+        setKpis((res as any).kpis || {});
+      } catch (catalogErr) {
+        console.warn('Admin catalog endpoint error, falling back to standard books API:', catalogErr);
+        const fallbackRes = await bookService.getBooks({
+          limit: 100,
+          search: search || undefined,
+        });
+        const books = Array.isArray(fallbackRes.data)
+          ? fallbackRes.data
+          : ((fallbackRes as any)?.books || (fallbackRes as any)?.data?.books || []);
+        
+        let filteredBooks = books;
+        if (activeTab === 'published') filteredBooks = books.filter((b: any) => b.status === 'PUBLISHED');
+        else if (activeTab === 'draft') filteredBooks = books.filter((b: any) => b.status === 'DRAFT');
+        else if (activeTab === 'low_stock') filteredBooks = books.filter((b: any) => (b.stock || 0) > 0 && (b.stock || 0) <= 20);
+        else if (activeTab === 'out_of_stock') filteredBooks = books.filter((b: any) => (b.stock || 0) <= 0);
+
+        setData(filteredBooks);
+        setKpis({
+          total: books.length,
+          active: books.filter((b: any) => b.status === 'PUBLISHED').length,
+          draft: books.filter((b: any) => b.status === 'DRAFT').length,
+          outOfStock: books.filter((b: any) => (b.stock || 0) <= 0).length,
+          inventoryValue: books.reduce((acc: number, b: any) => acc + (b.stock || 0) * (Number(b.price) || 0), 0),
+        });
+      }
     } catch (err) {
       toast.error('Failed to load catalog');
     } finally {
