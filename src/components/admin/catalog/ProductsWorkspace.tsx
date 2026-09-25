@@ -253,7 +253,18 @@ export default function ProductsWorkspace() {
                     <td className="px-6 py-4">
                       <div className="flex gap-4">
                         {(() => {
-                          const rowCover = book.coverUrl || book.coverImage || (book.images && book.images[0]?.secureUrl) || (Array.isArray(book.galleryUrls) ? book.galleryUrls[0] : null);
+                          const getGalleryFirst = (g: any) => {
+                            if (Array.isArray(g)) return g[0];
+                            if (typeof g === 'string') {
+                              try { const p = JSON.parse(g); if (Array.isArray(p)) return p[0]; } catch {}
+                            }
+                            return null;
+                          };
+                          const isClean = (u: any) => typeof u === 'string' && u.trim() && !u.includes('placeholder-book.jpg');
+                          const rowCover = (isClean(book.coverUrl) ? book.coverUrl : null) ||
+                                           (isClean(getGalleryFirst(book.galleryUrls)) ? getGalleryFirst(book.galleryUrls) : null) ||
+                                           (book.images && isClean(book.images[0]?.secureUrl) ? book.images[0].secureUrl : null) ||
+                                           (isClean(book.coverImage) ? book.coverImage : null);
                           return rowCover ? (
                             <div className="h-16 w-12 rounded border border-slate-200 dark:border-white/10 bg-white shrink-0 p-0.5 overflow-hidden flex items-center justify-center shadow-xs">
                               <img
@@ -375,7 +386,18 @@ export default function ProductsWorkspace() {
               {/* Header Info */}
               <div className="flex gap-6">
                 {(() => {
-                  const coverSrc = viewingBook.coverUrl || viewingBook.coverImage || (viewingBook.images && viewingBook.images[0]?.secureUrl) || (Array.isArray(viewingBook.galleryUrls) ? viewingBook.galleryUrls[0] : null);
+                  const getGalleryFirst = (g: any) => {
+                    if (Array.isArray(g)) return g[0];
+                    if (typeof g === 'string') {
+                      try { const p = JSON.parse(g); if (Array.isArray(p)) return p[0]; } catch {}
+                    }
+                    return null;
+                  };
+                  const isClean = (u: any) => typeof u === 'string' && u.trim() && !u.includes('placeholder-book.jpg');
+                  const coverSrc = (isClean(viewingBook.coverUrl) ? viewingBook.coverUrl : null) ||
+                                   (isClean(getGalleryFirst(viewingBook.galleryUrls)) ? getGalleryFirst(viewingBook.galleryUrls) : null) ||
+                                   (viewingBook.images && isClean(viewingBook.images[0]?.secureUrl) ? viewingBook.images[0].secureUrl : null) ||
+                                   (isClean(viewingBook.coverImage) ? viewingBook.coverImage : null);
                   return (
                     <div className="relative h-32 w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-white shrink-0 shadow-sm flex items-center justify-center p-1">
                       {coverSrc ? (

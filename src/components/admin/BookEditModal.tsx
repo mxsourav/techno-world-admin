@@ -260,7 +260,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         .then((res: any) => {
           if (res?.data && Array.isArray(res.data)) {
             setGalleryImages(res.data);
-            const cover = res.data.find((img: any) => img.isCover);
+            const cover = res.data.find((img: any) => img.isCover) || res.data[0];
             if (cover) setCurrentCoverUrl(cover.secureUrl);
           }
         })
@@ -286,7 +286,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         for (let i = 0; i < compressedFiles.length; i++) {
           const file = compressedFiles[i];
           try {
-            if (!currentCoverUrl && galleryImages.length === 0 && i === 0) {
+            if ((!currentCoverUrl || currentCoverUrl.includes('placeholder-book.jpg')) && galleryImages.length === 0 && i === 0) {
               await bookMediaService.uploadCover(book.id, file);
             } else {
               await bookMediaService.uploadGallery(book.id, [file]);
