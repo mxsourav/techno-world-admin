@@ -469,26 +469,50 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         payload.publicationDate = `${payload.publicationDate}-01T00:00:00.000Z`;
       }
       let bookId = book?.id;
+      let isNewBook = false;
       if (book?.id) {
         await adminService.updateBook(book.id, payload);
         toast.success(`"${formData.title}" updated successfully!`);
       } else {
         const newBook = await adminService.createBook(payload);
-        bookId = newBook.data.id;
+        bookId = (newBook as any)?.data?.id || (newBook as any)?.id;
+        isNewBook = true;
         toast.success(`"${formData.title}" created successfully!`);
       }
       
       // Upload staged images / PDF if creating a new book
-      if (!book?.id && bookId) {
+      if (isNewBook && bookId) {
+        const mediaErrors: string[] = [];
         if (stagedImages.length > 0) {
-          await bookMediaService.uploadCover(bookId, stagedImages[0].file);
-          if (stagedImages.length > 1) {
-            await bookMediaService.uploadGallery(bookId, stagedImages.slice(1).map((s) => s.file));
+          try {
+            await bookMediaService.uploadCover(bookId, stagedImages[0].file);
+            if (stagedImages.length > 1) {
+              await bookMediaService.uploadGallery(bookId, stagedImages.slice(1).map((s) => s.file));
+            }
+          } catch (imgErr: any) {
+            console.error('Staged image upload error:', imgErr);
+            mediaErrors.push(`Images: ${imgErr.message || 'Upload failed'}`);
           }
         }
         if (stagedPdf) {
-          await bookMediaService.uploadPdf(bookId, stagedPdf);
+          try {
+            await bookMediaService.uploadPdf(bookId, stagedPdf);
+          } catch (pdfErr: any) {
+            console.error('Staged PDF upload error:', pdfErr);
+            mediaErrors.push(`PDF: ${pdfErr.message || 'Upload failed'}`);
+          }
         }
+
+        if (mediaErrors.length > 0) {
+          toast.warning(`Book saved, but media upload had issues: ${mediaErrors.join('; ')}`, {
+            duration: 6000,
+          });
+        }
+      }
+
+      // Clear draft on successful save
+      if (!book?.id) {
+        localStorage.removeItem('tw_book_draft_new');
       }
       onSaved();
     } catch (err: any) {
