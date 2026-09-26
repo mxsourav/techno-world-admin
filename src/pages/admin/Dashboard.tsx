@@ -13,6 +13,8 @@ import {
   Play,
   Trash2,
   Edit3,
+  BadgeCheck,
+  Key,
   Truck,
   Printer,
   ShieldCheck,
@@ -172,11 +174,27 @@ export default function Dashboard() {
   const [previewOrder, setPreviewOrder] = useState<any | null>(null);
   const [customersList, setCustomersList] = useState<any[]>([]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerPhoneQuery, setCustomerPhoneQuery] = useState('');
   const [customerStatusFilter, setCustomerStatusFilter] = useState<'ALL' | 'ACTIVE' | 'BLACKLISTED'>('ALL');
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<any | null>(null);
   const [isLoadingCustomerDetails, setIsLoadingCustomerDetails] = useState(false);
   const [isExportingCustomers, setIsExportingCustomers] = useState(false);
+
+  // Edit Customer Profile Modal State
+  const [editCustomerModalData, setEditCustomerModalData] = useState<any | null>(null);
+  const [editCustomerForm, setEditCustomerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'CUSTOMER',
+    isActive: true,
+    technoPoints: 0,
+    technoWallet: 0,
+    newPassword: '',
+  });
+  const [isSavingCustomer, setIsSavingCustomer] = useState(false);
+  const [isDeletingCustomer, setIsDeletingCustomer] = useState(false);
 
   // Points Assignment Modal State
   const [pointsModalCustomer, setPointsModalCustomer] = useState<any | null>(null);
@@ -786,12 +804,18 @@ export default function Dashboard() {
     }
   };
 
-  const fetchCustomers = (search?: string, status?: string) => {
+  const fetchCustomers = (search?: string, status?: string, phone?: string) => {
     setIsLoadingCustomers(true);
     const activeStatus = status !== undefined ? status : customerStatusFilter;
-    const queryParams: any = {
-      search: search !== undefined ? search : customerSearchQuery,
-    };
+    const activeSearch = search !== undefined ? search : customerSearchQuery;
+    const activePhone = phone !== undefined ? phone : customerPhoneQuery;
+    const queryParams: any = {};
+    if (activeSearch && activeSearch.trim()) {
+      queryParams.search = activeSearch.trim();
+    }
+    if (activePhone && activePhone.trim()) {
+      queryParams.phone = activePhone.trim();
+    }
     if (activeStatus && activeStatus !== 'ALL') {
       queryParams.status = activeStatus;
     }
@@ -806,6 +830,82 @@ export default function Dashboard() {
         toast.error('Failed to load customers');
       })
       .finally(() => setIsLoadingCustomers(false));
+  };
+
+  const handleOpenEditCustomer = (customer: any) => {
+    setEditCustomerModalData(customer);
+    setEditCustomerForm({
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      role: customer.role || 'CUSTOMER',
+      isActive: customer.isActive !== false,
+      technoPoints: customer.technoPoints || 0,
+      technoWallet: Number(customer.technoWallet || 0),
+      newPassword: '',
+    });
+  };
+
+  const handleSaveCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCustomerModalData) return;
+    if (!editCustomerForm.name.trim()) {
+      toast.error('Customer name cannot be empty');
+      return;
+    }
+    if (!editCustomerForm.email.trim()) {
+      toast.error('Customer email cannot be empty');
+      return;
+    }
+    setIsSavingCustomer(true);
+    try {
+      const payload: any = {
+        name: editCustomerForm.name.trim(),
+        email: editCustomerForm.email.trim(),
+        phone: editCustomerForm.phone.trim() || null,
+        role: editCustomerForm.role,
+        isActive: editCustomerForm.isActive,
+        technoPoints: Number(editCustomerForm.technoPoints) || 0,
+        technoWallet: Number(editCustomerForm.technoWallet) || 0,
+      };
+      if (editCustomerForm.newPassword && editCustomerForm.newPassword.trim().length >= 6) {
+        payload.password = editCustomerForm.newPassword.trim();
+      }
+      const res = await adminService.updateCustomer(editCustomerModalData.id, payload);
+      if (res.success) {
+        toast.success('Customer profile updated successfully!');
+        setEditCustomerModalData(null);
+        fetchCustomers();
+      } else {
+        toast.error(res.message || 'Failed to update customer');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update customer profile');
+    } finally {
+      setIsSavingCustomer(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!editCustomerModalData) return;
+    if (!window.confirm(`Are you sure you want to deactivate or remove customer account "${editCustomerModalData.name}"?`)) {
+      return;
+    }
+    setIsDeletingCustomer(true);
+    try {
+      const res = await adminService.deleteCustomer(editCustomerModalData.id);
+      if (res.success) {
+        toast.success(res.message || 'Customer account deactivated / deleted');
+        setEditCustomerModalData(null);
+        fetchCustomers();
+      } else {
+        toast.error(res.message || 'Failed to delete customer');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete customer');
+    } finally {
+      setIsDeletingCustomer(false);
+    }
   };
 
   const handleOpenCustomerDetails = async (customer: any) => {
@@ -4165,29 +4265,59 @@ admin@technoworld.com`
                   ]}
                 />
 
-                <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={customerSearchQuery}
-                    onChange={(e) => {
-                      setCustomerSearchQuery(e.target.value);
-                      fetchCustomers(e.target.value);
-                    }}
-                    placeholder="Search by name, email, or phone..."
-                    className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-100 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324] transition-all shadow-inner"
-                  />
-                  {customerSearchQuery && (
-                    <button
-                      onClick={() => {
-                        setCustomerSearchQuery('');
-                        fetchCustomers('');
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Dedicated Mobile Phone Search Bar */}
+                  <div className="relative w-full sm:w-60">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <input
+                      type="text"
+                      value={customerPhoneQuery}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomerPhoneQuery(val);
+                        fetchCustomers(undefined, undefined, val);
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                    >
-                      ✕
-                    </button>
-                  )}
+                      placeholder="Search by Mobile No..."
+                      className="w-full rounded-xl border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-100 placeholder-emerald-700/60 dark:placeholder-emerald-400/50 outline-none focus:border-emerald-500 focus:bg-white dark:focus:bg-[#0d1324] transition-all shadow-inner"
+                    />
+                    {customerPhoneQuery && (
+                      <button
+                        onClick={() => {
+                          setCustomerPhoneQuery('');
+                          fetchCustomers(undefined, undefined, '');
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* General Search (Name, Email, Customer ID) */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={customerSearchQuery}
+                      onChange={(e) => {
+                        setCustomerSearchQuery(e.target.value);
+                        fetchCustomers(e.target.value);
+                      }}
+                      placeholder="Search name, email, Customer ID..."
+                      className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-100 placeholder-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324] transition-all shadow-inner"
+                    />
+                    {customerSearchQuery && (
+                      <button
+                        onClick={() => {
+                          setCustomerSearchQuery('');
+                          fetchCustomers('');
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -4208,9 +4338,10 @@ admin@technoworld.com`
                   <table className="w-full text-left text-xs text-slate-700 dark:text-neutral-300 table-auto">
                     <thead className="bg-slate-50 dark:bg-[#0a0f1d] border-b border-slate-200 dark:border-white/[0.08] text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
                       <tr>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Customer ID</th>
                         <th className="px-3 py-2.5 whitespace-nowrap">Customer</th>
                         <th className="px-2.5 py-2.5 whitespace-nowrap">Status</th>
-                        <th className="px-2.5 py-2.5 whitespace-nowrap">Contact</th>
+                        <th className="px-2.5 py-2.5 whitespace-nowrap">Mobile Phone</th>
                         <th className="px-2 py-2.5 text-center whitespace-nowrap">Orders</th>
                         <th className="px-2 py-2.5 text-right whitespace-nowrap">Lifetime Spend</th>
                         <th className="px-2 py-2.5 text-center whitespace-nowrap">TechnoPoints</th>
@@ -4222,8 +4353,30 @@ admin@technoworld.com`
                       {customersList.map((c: any) => {
                         const defaultAddr = c.addresses?.[0] || {};
                         const isBlacklisted = c.isActive === false;
+                        const effectivePhone = c.phone || defaultAddr.phone;
                         return (
                           <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.04] transition-colors">
+                            {/* Unique Customer ID Column (with 1-click copy) */}
+                            <td className="px-2.5 py-3 whitespace-nowrap font-mono text-xs">
+                              {c.customerId ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(c.customerId);
+                                    toast.success(`Copied Customer ID: ${c.customerId}`);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold font-mono hover:bg-purple-100 transition-colors shadow-2xs"
+                                  title="Click to copy Customer ID"
+                                >
+                                  <BadgeCheck className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                  <span>{c.customerId}</span>
+                                </button>
+                              ) : (
+                                <span className="text-slate-400 dark:text-neutral-500 font-sans text-[11px]">Pending ID</span>
+                              )}
+                            </td>
+
+                            {/* Customer Profile Column */}
                             <td className="px-3 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-2.5">
                                 <div className={`h-8 w-8 rounded-full font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs border ${
@@ -4237,9 +4390,21 @@ admin@technoworld.com`
                                   <span className="font-bold text-slate-900 dark:text-white block truncate" title={c.name || 'Anonymous User'}>
                                     {c.name || 'Anonymous User'}
                                   </span>
-                                  <span className="text-[11px] text-slate-400 dark:text-neutral-500 block font-mono truncate" title={c.email}>
-                                    {c.email ? c.email.replace(/@example\.com/g, '@technoworldbooks.in') : 'patron@technoworldbooks.in'}
-                                  </span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    {c.authMethod === 'GOOGLE' && (
+                                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                        Google
+                                      </span>
+                                    )}
+                                    {c.authMethod === 'PHONE_OTP' && (
+                                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                        Phone OTP
+                                      </span>
+                                    )}
+                                    <span className="text-[11px] text-slate-400 dark:text-neutral-500 block font-mono truncate" title={c.email}>
+                                      {c.email ? c.email.replace(/@example\.com/g, '@technoworldbooks.in') : 'patron@technoworldbooks.in'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </td>
@@ -4257,7 +4422,18 @@ admin@technoworld.com`
                             </td>
 
                             <td className="px-2.5 py-3 font-semibold text-slate-700 dark:text-neutral-300 whitespace-nowrap font-mono text-xs">
-                              {c.phone || defaultAddr.phone || <span className="text-slate-400 dark:text-neutral-500 font-sans font-normal">No phone</span>}
+                              {effectivePhone ? (
+                                <a
+                                  href={`tel:${effectivePhone}`}
+                                  className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:underline"
+                                  title="Call customer"
+                                >
+                                  <Phone className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                  <span>{effectivePhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 dark:text-neutral-500 font-sans font-normal">No phone</span>
+                              )}
                             </td>
 
                             <td className="px-2 py-3 text-center whitespace-nowrap">
@@ -4289,6 +4465,17 @@ admin@technoworld.com`
 
                             <td className="px-3 py-3 text-right whitespace-nowrap">
                               <div className="inline-flex items-center gap-1.5">
+                                {/* Edit Customer Profile Trigger */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditCustomer(c)}
+                                  className="glass-action-button text-xs"
+                                  title="Edit full customer profile, role, points, wallet, or password"
+                                >
+                                  <Edit3 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                  <span>Edit</span>
+                                </button>
+
                                 {/* Points Modal Trigger */}
                                 <button
                                   type="button"
@@ -4301,7 +4488,7 @@ admin@technoworld.com`
                                   className="glass-action-button text-xs"
                                   title="Assign or Deduct Loyalty TechnoPoints"
                                 >
-                                  <Award className="h-3.5 w-3.5" />
+                                  <Award className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                                   <span>Points</span>
                                 </button>
 
@@ -4317,7 +4504,7 @@ admin@technoworld.com`
                                 >
                                   {isBlacklisted ? (
                                     <>
-                                      <UserCheck className="h-3.5 w-3.5" />
+                                      <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
                                       <span>Whitelist</span>
                                     </>
                                   ) : (
@@ -4346,6 +4533,188 @@ admin@technoworld.com`
                 </div>
               )}
             </div>
+
+            {/* Edit Customer Profile Modal */}
+            {editCustomerModalData && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[90vh]">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
+                        <Edit3 className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Edit Customer Profile</h3>
+                        <p className="text-[11px] text-slate-400 dark:text-neutral-500 font-mono">
+                          {editCustomerModalData.customerId ? `Customer ID: ${editCustomerModalData.customerId}` : `UUID: ${editCustomerModalData.id.slice(0, 8)}...`}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditCustomerModalData(null)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold"
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  {/* Form Body */}
+                  <form onSubmit={handleSaveCustomer} className="p-6 space-y-4 overflow-y-auto text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={editCustomerForm.name}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, name: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          Mobile Phone No
+                        </label>
+                        <input
+                          type="text"
+                          value={editCustomerForm.phone}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, phone: e.target.value })}
+                          placeholder="e.g. 9830123456"
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={editCustomerForm.email}
+                        onChange={(e) => setEditCustomerForm({ ...editCustomerForm, email: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          Role
+                        </label>
+                        <select
+                          value={editCustomerForm.role}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, role: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        >
+                          <option value="CUSTOMER">CUSTOMER</option>
+                          <option value="STAFF">STAFF</option>
+                          <option value="ORDER_MANAGER">ORDER_MANAGER</option>
+                          <option value="CONTENT_MANAGER">CONTENT_MANAGER</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          Account Status
+                        </label>
+                        <select
+                          value={editCustomerForm.isActive ? 'ACTIVE' : 'INACTIVE'}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, isActive: e.target.value === 'ACTIVE' })}
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        >
+                          <option value="ACTIVE">Active (In Good Standing)</option>
+                          <option value="INACTIVE">Deactivated / Blacklisted</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          TechnoPoints Balance
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editCustomerForm.technoPoints}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, technoPoints: parseInt(e.target.value, 10) || 0 })}
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1">
+                          TechnoWallet (INR ₹)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editCustomerForm.technoWallet}
+                          onChange={(e) => setEditCustomerForm({ ...editCustomerForm, technoWallet: parseFloat(e.target.value) || 0 })}
+                          className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-neutral-300 mb-1 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Key className="h-3.5 w-3.5 text-slate-400" />
+                          <span>Reset Password (Optional)</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-normal">Leave blank to keep existing password</span>
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Enter new password (min. 6 characters)"
+                        value={editCustomerForm.newPassword}
+                        onChange={(e) => setEditCustomerForm({ ...editCustomerForm, newPassword: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#0d1324]"
+                      />
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={handleDeleteCustomer}
+                        disabled={isDeletingCustomer}
+                        className="px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>{isDeletingCustomer ? 'Processing...' : 'Delete / Deactivate'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditCustomerModalData(null)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/[0.12] text-xs font-bold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-white/[0.04]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSavingCustomer}
+                          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all inline-flex items-center gap-1.5"
+                        >
+                          {isSavingCustomer ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                          <span>Save Changes</span>
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
             {/* Points Assignment Modal */}
             {pointsModalCustomer && (
@@ -4541,10 +4910,18 @@ admin@technoworld.com`
                           ) : (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
                           )}
+                          {selectedCustomerDetail.customerId && (
+                            <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                              {selectedCustomerDetail.customerId}
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs text-slate-500 dark:text-neutral-400 font-mono">
-                          {selectedCustomerDetail.email ? selectedCustomerDetail.email.replace(/@example\.com/g, '@technoworldbooks.in') : ''}
-                        </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-neutral-400 font-mono mt-0.5">
+                          <span>{selectedCustomerDetail.email ? selectedCustomerDetail.email.replace(/@example\.com/g, '@technoworldbooks.in') : ''}</span>
+                          {selectedCustomerDetail.phone && (
+                            <span>&bull; {selectedCustomerDetail.phone}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl font-bold">&times;</button>

@@ -355,7 +355,9 @@ export const adminService = {
     senderName?: string;
   }) => api.post<any>('/admin/smtp/test', data),
   getEmailLogs: (params?: { limit?: number }) => api.get<any[]>('/admin/emails', params),
-  getCustomers: (params?: { search?: string; status?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
+  getCustomers: (params?: { search?: string; phone?: string; status?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
+  updateCustomer: (id: string, data: any) => api.patch<any>(`/admin/customers/${id}`, data),
+  deleteCustomer: (id: string) => api.delete<any>(`/admin/customers/${id}`),
   toggleCustomerStatus: (id: string, data: { isActive?: boolean; reason?: string }) =>
     api.patch<any>(`/admin/customers/${id}/status`, data),
   adjustCustomerPoints: (id: string, data: { points: number; type: 'CREDIT' | 'DEBIT'; reason?: string; id?: string; email?: string; userId?: string }) => {
