@@ -61,6 +61,8 @@ import {
   Award,
   FileSpreadsheet,
   Database,
+  ShoppingBag,
+  Wallet,
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
@@ -1002,6 +1004,65 @@ export default function Dashboard() {
       toast.error(err.message || 'Failed to export customer records');
     } finally {
       setIsExportingCustomers(false);
+    }
+  };
+
+  const renderAppleOrderStatus = (status: string) => {
+    const norm = (status || '').toUpperCase();
+    switch (norm) {
+      case 'CONFIRMED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 backdrop-blur-sm shadow-2xs">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            Confirmed
+          </span>
+        );
+      case 'DELIVERED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 backdrop-blur-sm shadow-2xs">
+            <CheckCircle2 className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+            Delivered
+          </span>
+        );
+      case 'SHIPPED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 backdrop-blur-sm shadow-2xs">
+            <Truck className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+            Dispatched
+          </span>
+        );
+      case 'PROCESSING':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 backdrop-blur-sm shadow-2xs">
+            <Loader2 className="h-3 w-3 animate-spin text-indigo-600 dark:text-indigo-400" />
+            Processing
+          </span>
+        );
+      case 'CANCELLED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 backdrop-blur-sm shadow-2xs">
+            <XCircle className="h-3 w-3 text-rose-500 dark:text-rose-400" />
+            Cancelled
+          </span>
+        );
+      case 'REFUNDED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 backdrop-blur-sm shadow-2xs">
+            <RotateCcw className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+            Refunded
+          </span>
+        );
+      case 'PENDING':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 backdrop-blur-sm shadow-2xs">
+            <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+            {norm === 'PENDING' ? 'Pending Payment' : status}
+          </span>
+        );
     }
   };
 
@@ -4716,87 +4777,176 @@ admin@technoworld.com`
               </div>
             )}
 
-            {/* Points Assignment Modal */}
+            {/* Points Assignment Modal (Apple macOS Frosted Glass Redesign) */}
             {pointsModalCustomer && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-                <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12]">
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
-                        <Award className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Assign TechnoPoints</h3>
-                        <span className="text-[11px] text-slate-500 dark:text-neutral-400">{pointsModalCustomer.name} ({pointsModalCustomer.email})</span>
-                      </div>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-full max-w-lg rounded-3xl bg-white/90 dark:bg-[#161822]/90 shadow-[0_24px_70px_rgba(0,0,0,0.22)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.7)] backdrop-blur-2xl border border-white/70 dark:border-white/10 overflow-hidden flex flex-col">
+                  {/* macOS Window Header */}
+                  <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/60 dark:border-white/[0.08] bg-slate-100/50 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPointsModalCustomer(null)}
+                        className="h-3 w-3 rounded-full bg-[#ff5f56] border border-[#e0443e] cursor-pointer hover:opacity-80 transition-opacity shadow-xs"
+                        title="Close window"
+                      />
+                      <span className="h-3 w-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-80 shadow-xs" />
+                      <span className="h-3 w-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-80 shadow-xs" />
                     </div>
-                    <button onClick={() => setPointsModalCustomer(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold">&times;</button>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400 tracking-tight">
+                      TechnoPoints Inspector
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPointsModalCustomer(null)}
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg leading-none font-bold p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    >
+                      &times;
+                    </button>
                   </div>
 
-                  <div className="p-6 space-y-4 text-xs">
-                    <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl flex items-center justify-between">
-                      <span className="font-bold text-amber-900 dark:text-amber-300">Current Loyalty Balance:</span>
-                      <span className="text-base font-black text-amber-800 dark:text-amber-200">⭐ {pointsModalCustomer.technoPoints || 0} pts</span>
+                  {/* Customer Identity Bar */}
+                  <div className="px-6 pt-5 pb-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white font-black flex items-center justify-center text-sm shadow-sm ring-1 ring-white/60 dark:ring-white/20 shrink-0">
+                        <Award className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm truncate">
+                          {pointsModalCustomer.name || 'Anonymous User'}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-mono truncate">
+                          {pointsModalCustomer.email}
+                        </p>
+                      </div>
+                    </div>
+                    {pointsModalCustomer.customerId && (
+                      <span className="px-2.5 py-1 rounded-full font-mono text-[10.5px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 shrink-0 shadow-2xs">
+                        {pointsModalCustomer.customerId}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 space-y-4 text-xs overflow-y-auto">
+                    {/* Apple Wallet Style Loyalty Balance Card */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/25 dark:border-amber-500/20 backdrop-blur-md flex items-center justify-between shadow-2xs">
+                      <div>
+                        <span className="block text-[10.5px] uppercase font-bold text-amber-800 dark:text-amber-300 tracking-wider">
+                          Current Loyalty Balance
+                        </span>
+                        <span className="text-[11px] text-amber-700/80 dark:text-amber-400/80">
+                          Active balance on patron wallet
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xl font-black text-amber-900 dark:text-amber-200 tracking-tight flex items-center gap-1.5 justify-end">
+                          <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+                          {pointsModalCustomer.technoPoints || 0}
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-300">pts</span>
+                        </span>
+                      </div>
                     </div>
 
+                    {/* Apple Native Segmented Control for Action Type */}
                     <div className="space-y-1.5">
-                      <label className="font-bold text-slate-700 dark:text-neutral-300">Action Type</label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-neutral-300 uppercase tracking-wider block">
+                        Action Type
+                      </label>
+                      <div className="p-1 rounded-2xl bg-slate-200/70 dark:bg-black/40 border border-black/5 dark:border-white/5 grid grid-cols-2 gap-1 backdrop-blur-md">
                         <button
                           type="button"
                           onClick={() => setPointsType('CREDIT')}
-                          className={`py-2 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
                             pointsType === 'CREDIT'
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                              : 'border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-slate-700 dark:text-neutral-300'
+                              ? 'bg-white dark:bg-white/20 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                              : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
-                          <Plus className="h-3.5 w-3.5" /> Credit Points (+)
+                          <Plus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Credit Points (+)</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setPointsType('DEBIT')}
-                          className={`py-2 px-3 rounded-xl border text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 ${
+                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
                             pointsType === 'DEBIT'
-                              ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                              : 'border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-white/[0.04] text-slate-700 dark:text-neutral-300'
+                              ? 'bg-white dark:bg-white/20 text-rose-700 dark:text-rose-300 shadow-sm'
+                              : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
-                          <X className="h-3.5 w-3.5" /> Deduct Points (-)
+                          <X className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                          <span>Deduct Points (−)</span>
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="font-bold text-slate-700 dark:text-neutral-300">Points Amount</label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={pointsAmount}
-                        onChange={(e) => setPointsAmount(e.target.value)}
-                        placeholder="e.g. 50"
-                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-amber-500"
-                      />
+                    {/* Quick Pick Presets & Custom Input */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-600 dark:text-neutral-300 uppercase tracking-wider">
+                          Points Amount
+                        </label>
+                        {/* Apple Quick-Tap Chips */}
+                        <div className="flex items-center gap-1">
+                          {['10', '25', '50', '100', '250'].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setPointsAmount(preset)}
+                              className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all ${
+                                pointsAmount === preset
+                                  ? 'bg-amber-500 text-white shadow-xs'
+                                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-neutral-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                              }`}
+                            >
+                              +{preset}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={pointsAmount}
+                          onChange={(e) => setPointsAmount(e.target.value)}
+                          placeholder="e.g. 50"
+                          className="w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-white/5 px-4 py-2.5 text-sm font-black text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/70 transition-all placeholder:text-slate-400"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 dark:text-neutral-500 pointer-events-none">
+                          Points
+                        </span>
+                      </div>
                     </div>
 
+                    {/* Audit Reason / Note */}
                     <div className="space-y-1.5">
-                      <label className="font-bold text-slate-700 dark:text-neutral-300">Audit Reason / Note (Mandatory for record)</label>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-neutral-300 uppercase tracking-wider block">
+                        Audit Reason / Note (Mandatory Record)
+                      </label>
                       <textarea
                         rows={2}
                         value={pointsReason}
                         onChange={(e) => setPointsReason(e.target.value)}
                         placeholder="e.g. Annual member bonus reward, review contest winner, goodwill coupon..."
-                        className="w-full rounded-xl border border-slate-300 dark:border-white/[0.12] bg-white dark:bg-white/[0.04] p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 resize-none"
+                        className="w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-slate-50/70 dark:bg-white/5 p-3.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/70 transition-all resize-none placeholder:text-slate-400"
                       />
                     </div>
 
-                    <div className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl text-[11px] text-blue-900 dark:text-blue-300 leading-relaxed">
-                      💡 <b>Points Only (No Cash):</b> This updates loyalty balance strictly. An official confirmation email with your note will automatically be dispatched to the patron.
+                    {/* Apple Information Callout Card */}
+                    <div className="p-3.5 bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/20 rounded-2xl text-[11px] text-blue-900 dark:text-blue-200 flex items-start gap-2.5 leading-relaxed">
+                      <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <div>
+                        <b className="font-semibold text-blue-950 dark:text-blue-100">Points-Only Ledger Update:</b>{' '}
+                        This updates the patron's loyalty points balance in real-time. An automated official confirmation email will be dispatched immediately.
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2.5 border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
+                  {/* macOS Frosted Bottom Bar */}
+                  <div className="flex items-center justify-end gap-2.5 border-t border-slate-200/60 dark:border-white/[0.08] px-6 py-4 bg-slate-100/50 dark:bg-white/[0.02]">
                     <button
                       type="button"
                       onClick={() => setPointsModalCustomer(null)}
@@ -4808,9 +4958,13 @@ admin@technoworld.com`
                       type="button"
                       disabled={isSubmittingPoints}
                       onClick={handlePointsSubmit}
-                      className="glass-action-button-primary"
+                      className="glass-action-button-primary !py-2 !px-4"
                     >
-                      {isSubmittingPoints ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                      {isSubmittingPoints ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Check className="h-3.5 w-3.5" />
+                      )}
                       <span>Apply Points Adjustment</span>
                     </button>
                   </div>
@@ -4892,196 +5046,351 @@ admin@technoworld.com`
               </div>
             )}
 
-            {/* Customer Profile & Purchase History Modal */}
+            {/* Customer Profile & Purchase History Modal (Apple macOS 27 Frosted Glass Redesign) */}
             {selectedCustomerDetail && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-                <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-[#0d1324] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/[0.12] flex flex-col max-h-[90vh]">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08] px-6 py-4 bg-slate-50 dark:bg-white/[0.03]">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 font-black flex items-center justify-center text-sm shadow-2xs border border-blue-200 dark:border-blue-500/30">
-                        {(selectedCustomerDetail.name || 'C').charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-black text-slate-900 dark:text-white text-base">{selectedCustomerDetail.name || 'Anonymous User'}</h3>
-                          {selectedCustomerDetail.isActive === false ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">Blacklisted</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>
-                          )}
-                          {selectedCustomerDetail.customerId && (
-                            <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                              {selectedCustomerDetail.customerId}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-neutral-400 font-mono mt-0.5">
-                          <span>{selectedCustomerDetail.email ? selectedCustomerDetail.email.replace(/@example\.com/g, '@technoworldbooks.in') : ''}</span>
-                          {selectedCustomerDetail.phone && (
-                            <span>&bull; {selectedCustomerDetail.phone}</span>
-                          )}
-                        </div>
-                      </div>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-3 sm:p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-full max-w-5xl rounded-3xl bg-white/92 dark:bg-[#151722]/92 shadow-[0_24px_70px_rgba(0,0,0,0.25)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.7)] backdrop-blur-2xl border border-white/80 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden">
+                  
+                  {/* macOS Window Titlebar */}
+                  <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/60 dark:border-white/[0.08] bg-slate-100/50 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCustomerDetail(null)}
+                        className="h-3 w-3 rounded-full bg-[#ff5f56] border border-[#e0443e] cursor-pointer hover:opacity-80 transition-opacity shadow-xs"
+                        title="Close window"
+                      />
+                      <span className="h-3 w-3 rounded-full bg-[#ffbd2e] border border-[#dea123] opacity-80 shadow-xs" />
+                      <span className="h-3 w-3 rounded-full bg-[#27c93f] border border-[#1aab29] opacity-80 shadow-xs" />
                     </div>
-                    <button onClick={() => setSelectedCustomerDetail(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl font-bold">&times;</button>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400 tracking-tight">
+                      Customer Profile & Activity Inspector
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCustomerDetail(null)}
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg leading-none font-bold p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    >
+                      &times;
+                    </button>
                   </div>
 
-                  {/* Body */}
-                  <div className="p-6 overflow-y-auto space-y-6 text-xs [scrollbar-width:thin]">
-                    {/* Top Stats Cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Total Orders</span>
-                        <span className="text-lg font-black text-slate-900 dark:text-white">{selectedCustomerDetail.totalOrders}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Lifetime Spend</span>
-                        <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{formatINR(selectedCustomerDetail.totalSpent || 0)}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">TechnoPoints</span>
-                        <span className="text-lg font-black text-amber-700 dark:text-amber-400">⭐ {selectedCustomerDetail.technoPoints || 0}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.08] text-center">
-                        <span className="block text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">TechnoWallet</span>
-                        <span className="text-lg font-black text-blue-700 dark:text-blue-400">{formatINR(selectedCustomerDetail.technoWallet || 0)}</span>
+                  {/* Customer Hero Profile Header */}
+                  <div className="px-6 py-4 border-b border-slate-200/50 dark:border-white/[0.06] bg-gradient-to-b from-slate-50/70 to-transparent dark:from-white/[0.02]">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5">
+                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 text-white font-black text-base flex items-center justify-center shadow-md ring-2 ring-white/80 dark:ring-white/15 shrink-0">
+                          {(selectedCustomerDetail.name || 'C').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-black text-slate-900 dark:text-white text-base tracking-tight">
+                              {selectedCustomerDetail.name || 'Anonymous User'}
+                            </h3>
+                            {selectedCustomerDetail.isActive === false ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                                Suspended
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Active Patron
+                              </span>
+                            )}
+                            {selectedCustomerDetail.customerId && (
+                              <span
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedCustomerDetail.customerId);
+                                  toast.success(`Copied ${selectedCustomerDetail.customerId}`);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10.5px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 cursor-pointer hover:bg-purple-500/20 transition-colors shadow-2xs"
+                                title="Click to copy Customer ID"
+                              >
+                                <Tag className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                {selectedCustomerDetail.customerId}
+                                <Copy className="h-2.5 w-2.5 opacity-60" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-neutral-400 font-mono mt-1">
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-neutral-300 font-sans">
+                              <Mail className="h-3 w-3 text-slate-400" />
+                              {selectedCustomerDetail.email ? selectedCustomerDetail.email.replace(/@example\.com/g, '@technoworldbooks.in') : 'No email'}
+                            </span>
+                            {selectedCustomerDetail.phone && (
+                              <a
+                                href={`tel:${selectedCustomerDetail.phone}`}
+                                className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:underline font-sans font-semibold"
+                              >
+                                <Phone className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                {selectedCustomerDetail.phone}
+                              </a>
+                            )}
+                            <span className="text-[11px] text-slate-400 font-sans">
+                              Member since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Books Ordered History */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 text-sm">
-                          <BookOpen className="h-4 w-4 text-emerald-600" />
-                          Books Purchased ({selectedCustomerDetail.purchasedBooks?.length || 0})
-                        </h4>
-                        {isLoadingCustomerDetails && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
-                            <Loader2 className="h-3 w-3 animate-spin" /> Loading full catalog logs...
-                          </span>
+                    {/* Apple System KPI Widgets (Clean 4-Grid without empty gaps) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+                      <div className="p-3 bg-white/70 dark:bg-white/[0.04] rounded-2xl border border-slate-200/70 dark:border-white/[0.06] shadow-2xs backdrop-blur-sm">
+                        <div className="flex items-center justify-between text-slate-400 mb-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider">Total Orders</span>
+                          <ShoppingBag className="h-3.5 w-3.5 text-blue-500" />
+                        </div>
+                        <span className="text-xl font-black text-slate-900 dark:text-white">
+                          {selectedCustomerDetail.totalOrders || 0}
+                        </span>
+                        <span className="block text-[10px] text-slate-400 mt-0.5">Recorded checkouts</span>
+                      </div>
+
+                      <div className="p-3 bg-white/70 dark:bg-white/[0.04] rounded-2xl border border-slate-200/70 dark:border-white/[0.06] shadow-2xs backdrop-blur-sm">
+                        <div className="flex items-center justify-between text-slate-400 mb-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider">Lifetime Spend</span>
+                          <IndianRupee className="h-3.5 w-3.5 text-emerald-500" />
+                        </div>
+                        <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                          {formatINR(selectedCustomerDetail.totalSpent || 0)}
+                        </span>
+                        <span className="block text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Active order volume</span>
+                      </div>
+
+                      <div className="p-3 bg-white/70 dark:bg-white/[0.04] rounded-2xl border border-slate-200/70 dark:border-white/[0.06] shadow-2xs backdrop-blur-sm">
+                        <div className="flex items-center justify-between text-slate-400 mb-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider">TechnoPoints</span>
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        </div>
+                        <span className="text-xl font-black text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                          ⭐ {selectedCustomerDetail.technoPoints || 0}
+                        </span>
+                        <span className="block text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">Loyalty reward balance</span>
+                      </div>
+
+                      <div className="p-3 bg-white/70 dark:bg-white/[0.04] rounded-2xl border border-slate-200/70 dark:border-white/[0.06] shadow-2xs backdrop-blur-sm">
+                        <div className="flex items-center justify-between text-slate-400 mb-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider">TechnoWallet</span>
+                          <Wallet className="h-3.5 w-3.5 text-indigo-500" />
+                        </div>
+                        <span className="text-xl font-black text-indigo-700 dark:text-indigo-400">
+                          {formatINR(selectedCustomerDetail.technoWallet || 0)}
+                        </span>
+                        <span className="block text-[10px] text-indigo-600/80 dark:text-indigo-400/80 mt-0.5">Store credit cash balance</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Body: macOS 2-Column Responsive Split Layout */}
+                  <div className="p-6 overflow-y-auto space-y-6 text-xs [scrollbar-width:thin] flex-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      
+                      {/* Left Column: Books Purchased & Saved Addresses */}
+                      <div className="lg:col-span-6 space-y-5">
+                        
+                        {/* Books Purchased Section */}
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-sm tracking-tight">
+                              <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              Books Purchased ({selectedCustomerDetail.purchasedBooks?.length || 0})
+                            </h4>
+                            {isLoadingCustomerDetails && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
+                                <Loader2 className="h-3 w-3 animate-spin" /> Syncing...
+                              </span>
+                            )}
+                          </div>
+
+                          {selectedCustomerDetail.purchasedBooks?.length > 0 ? (
+                            <div className="space-y-2.5">
+                              {selectedCustomerDetail.purchasedBooks.map((b: any) => (
+                                <div
+                                  key={b.bookId}
+                                  className="p-3 rounded-2xl border border-slate-200/70 dark:border-white/[0.07] bg-white/70 dark:bg-white/[0.03] backdrop-blur-sm flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/15 transition-all shadow-2xs"
+                                >
+                                  <div className="h-16 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-2xs">
+                                    {b.coverImage ? (
+                                      <img src={b.coverImage} alt={b.title} className="h-full w-full object-cover" />
+                                    ) : (
+                                      <BookOpen className="h-5 w-5 text-slate-400" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2 leading-snug" title={b.title}>
+                                      {b.title}
+                                    </h5>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                      {b.edition && (
+                                        <span className="px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-neutral-300 border border-slate-200/60 dark:border-white/10">
+                                          {b.edition}
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] font-mono text-slate-400">
+                                        ISBN: {b.isbn || 'N/A'}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1.5 flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-white/[0.05]">
+                                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                                        {formatINR(b.unitPrice)} &times; {b.totalQuantity}
+                                      </span>
+                                      <span className="font-black text-slate-900 dark:text-white">
+                                        {formatINR(b.totalSpent)}
+                                      </span>
+                                    </div>
+                                    {b.orderReferences?.[0] && (
+                                      <div className="mt-1 text-[10px] text-slate-400 dark:text-neutral-500 font-mono truncate">
+                                        Ref: #{b.orderReferences[0].orderNumber} ({new Date(b.lastPurchasedAt).toLocaleDateString()})
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center text-slate-400 dark:text-neutral-500">
+                              <BookOpen className="h-6 w-6 mx-auto mb-1.5 text-slate-300 dark:text-neutral-600" />
+                              <p className="text-xs">No purchased books recorded yet.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Shipping Addresses Section */}
+                        <div>
+                          <h4 className="font-extrabold text-slate-900 dark:text-white mb-3 text-sm flex items-center gap-2 tracking-tight">
+                            <MapPin className="h-4 w-4 text-rose-500" />
+                            Shipping Addresses ({selectedCustomerDetail.addresses?.length || 0})
+                          </h4>
+                          {selectedCustomerDetail.addresses?.length > 0 ? (
+                            <div className="space-y-2.5">
+                              {selectedCustomerDetail.addresses.map((addr: any) => (
+                                <div
+                                  key={addr.id}
+                                  className="p-3.5 rounded-2xl border border-slate-200/70 dark:border-white/[0.07] bg-white/70 dark:bg-white/[0.03] backdrop-blur-sm text-xs shadow-2xs"
+                                >
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                      {addr.fullName || selectedCustomerDetail.name}
+                                    </span>
+                                    {addr.isDefault && (
+                                      <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                                        Default
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-slate-600 dark:text-neutral-400 leading-relaxed text-[11.5px]">
+                                    {addr.addressLine1 || addr.line1}
+                                    {addr.addressLine2 ? `, ${addr.addressLine2}` : ''}
+                                    {addr.city ? `, ${addr.city}` : ''}
+                                    {addr.state ? `, ${addr.state}` : ''} &bull; <b className="font-mono text-slate-800 dark:text-neutral-200">{addr.pincode}</b>
+                                  </p>
+                                  {addr.phone && (
+                                    <a
+                                      href={`tel:${addr.phone}`}
+                                      className="inline-flex items-center gap-1 mt-1.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline"
+                                    >
+                                      <Phone className="h-3 w-3" />
+                                      {addr.phone}
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center text-slate-400 dark:text-neutral-500">
+                              <MapPin className="h-6 w-6 mx-auto mb-1.5 text-slate-300 dark:text-neutral-600" />
+                              <p className="text-xs">No saved address on file.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Column: Order History & Consignments */}
+                      <div className="lg:col-span-6 space-y-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2 tracking-tight">
+                            <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            Order History & Dispatches ({selectedCustomerDetail.orders?.length || 0})
+                          </h4>
+                        </div>
+
+                        {selectedCustomerDetail.orders?.length === 0 ? (
+                          <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center text-slate-400 dark:text-neutral-500">
+                            <Package className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-neutral-600" />
+                            <p className="text-xs">No orders recorded yet.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {selectedCustomerDetail.orders.map((o: any) => (
+                              <div
+                                key={o.id}
+                                className="p-4 rounded-2xl border border-slate-200/70 dark:border-white/[0.07] bg-white/70 dark:bg-white/[0.03] backdrop-blur-sm shadow-2xs hover:border-slate-300 dark:hover:border-white/15 transition-all"
+                              >
+                                {/* Order Title Bar with Apple Status Badge */}
+                                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.05]">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono font-black text-slate-900 dark:text-white text-xs">
+                                      #{o.orderNumber}
+                                    </span>
+                                    {/* Apple macOS Status Pill (Replaces generic AI look) */}
+                                    {renderAppleOrderStatus(o.status)}
+                                  </div>
+                                  <span className="font-black text-slate-900 dark:text-white text-sm">
+                                    {formatINR(o.totalAmount)}
+                                  </span>
+                                </div>
+
+                                {/* Order Metadata */}
+                                <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-neutral-400">
+                                  <span>{new Date(o.createdAt).toLocaleString()}</span>
+                                  <span className="px-2 py-0.5 rounded-md font-bold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-neutral-300 text-[10px]">
+                                    {o.paymentMethod || 'PREPAID'}
+                                  </span>
+                                </div>
+
+                                <div className="mt-1 text-[11px] text-slate-400 dark:text-neutral-500">
+                                  {o.items?.length || 1} book title(s) in parcel
+                                </div>
+
+                                {/* Tracking & Consignment Bar if present */}
+                                {o.trackingNumber && (
+                                  <div className="mt-2.5 p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] font-mono">
+                                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold truncate">
+                                      <Truck className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="truncate">AWB: {o.trackingNumber}</span>
+                                    </div>
+                                    <a
+                                      href="https://www.indiapost.gov.in"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-[10.5px] font-sans font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                                    >
+                                      <span>Track</span>
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-
-                      {selectedCustomerDetail.purchasedBooks?.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {selectedCustomerDetail.purchasedBooks.map((b: any) => (
-                            <div key={b.bookId} className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.03] flex items-start gap-3">
-                              <div className="h-16 w-12 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center border border-slate-300 dark:border-slate-600">
-                                {b.coverImage ? (
-                                  <img src={b.coverImage} alt={b.title} className="h-full w-full object-cover" />
-                                ) : (
-                                  <BookOpen className="h-6 w-6 text-slate-400" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h5 className="font-extrabold text-slate-900 dark:text-white text-xs line-clamp-2 leading-tight" title={b.title}>
-                                  {b.title}
-                                </h5>
-                                {b.edition && (
-                                  <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-slate-200 dark:bg-white/[0.1] text-slate-700 dark:text-neutral-300">
-                                    {b.edition}
-                                  </span>
-                                )}
-                                <div className="mt-1 flex items-center justify-between text-[11px]">
-                                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{formatINR(b.unitPrice)} &times; {b.totalQuantity}</span>
-                                  <span className="font-extrabold text-slate-900 dark:text-white">{formatINR(b.totalSpent)}</span>
-                                </div>
-                                <div className="mt-1 text-[10px] text-slate-400 dark:text-neutral-500 font-mono truncate">
-                                  Last Order: #{b.orderReferences?.[0]?.orderNumber} ({new Date(b.lastPurchasedAt).toLocaleDateString()})
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs py-2">No book order items recorded yet.</p>
-                      )}
-                    </div>
-
-                    {/* Order Hierarchy & Consignments */}
-                    <div>
-                      <h4 className="font-extrabold text-slate-900 dark:text-white mb-3 text-sm flex items-center gap-1.5">
-                        <Package className="h-4 w-4 text-blue-600" />
-                        Order History & Dispatches
-                      </h4>
-                      {selectedCustomerDetail.orders?.length === 0 ? (
-                        <p className="text-slate-400 dark:text-neutral-500 text-xs italic">No orders placed yet.</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {selectedCustomerDetail.orders.map((o: any) => (
-                            <div key={o.id} className="flex flex-wrap items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] shadow-2xs gap-3">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-black text-slate-900 dark:text-white">#{o.orderNumber}</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                    o.status === 'DELIVERED'
-                                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                                      : o.status === 'SHIPPED'
-                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
-                                      : 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-                                  }`}>
-                                    {o.status}
-                                  </span>
-                                  <span className="text-[10.5px] font-semibold text-slate-400">{o.paymentMethod || 'PREPAID'}</span>
-                                </div>
-                                <div className="text-[11px] text-slate-400 dark:text-neutral-500 mt-0.5">
-                                  {new Date(o.createdAt).toLocaleString()} &bull; {o.items?.length || 1} book title(s)
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="font-black text-slate-900 dark:text-white text-sm">{formatINR(o.totalAmount)}</span>
-                                {o.trackingNumber && (
-                                  <span className="block text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">
-                                    Tracking: {o.trackingNumber}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Saved Addresses */}
-                    <div>
-                      <h4 className="font-extrabold text-slate-900 dark:text-white mb-2 text-sm flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4 text-rose-500" />
-                        Shipping Addresses ({selectedCustomerDetail.addresses?.length || 0})
-                      </h4>
-                      {selectedCustomerDetail.addresses?.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          {selectedCustomerDetail.addresses.map((addr: any) => (
-                            <div key={addr.id} className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-xs">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-slate-900 dark:text-white">{addr.fullName || selectedCustomerDetail.name}</span>
-                                {addr.isDefault && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">Default</span>
-                                )}
-                              </div>
-                              <p className="text-slate-600 dark:text-neutral-400 leading-snug">
-                                {addr.addressLine1 || addr.line1}
-                                {addr.city ? `, ${addr.city}` : ''}
-                                {addr.state ? `, ${addr.state}` : ''} - {addr.pincode}
-                              </p>
-                              <span className="block mt-1 font-mono text-[11px] text-slate-500">Phone: {addr.phone || 'N/A'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs">No address registered on profile.</p>
-                      )}
                     </div>
                   </div>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-200 dark:border-white/[0.08] px-6 py-3.5 bg-slate-50 dark:bg-white/[0.03]">
-                    <span className="text-[11px] text-slate-400">Customer since: {new Date(selectedCustomerDetail.createdAt).toLocaleDateString()}</span>
+                  {/* macOS Frosted Bottom Bar */}
+                  <div className="flex items-center justify-between border-t border-slate-200/60 dark:border-white/[0.08] px-6 py-3.5 bg-slate-100/50 dark:bg-white/[0.02]">
+                    <span className="text-[11px] text-slate-400 font-sans">
+                      Verified customer activity ledger
+                    </span>
                     <button
+                      type="button"
                       onClick={() => setSelectedCustomerDetail(null)}
                       className="glass-action-button"
                     >
-                      Close
+                      Done
                     </button>
                   </div>
                 </div>

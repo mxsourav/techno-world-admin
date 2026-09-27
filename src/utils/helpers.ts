@@ -1,7 +1,14 @@
 export const discountPct = (book: { mrp: number; price: number }) =>
   Math.round(((book.mrp - book.price) / book.mrp) * 100);
 
-export const formatINR = (n: number) => '₹' + n.toLocaleString('en-IN');
+export const formatINR = (n: any): string => {
+  if (n === null || n === undefined || n === '') return '₹0';
+  const cleanStr = String(n).trim().replace(/[^0-9.-]+/g, '');
+  if (!cleanStr) return '₹0';
+  const parsed = Number(cleanStr);
+  if (isNaN(parsed) || !isFinite(parsed)) return '₹0';
+  return '₹' + parsed.toLocaleString('en-IN');
+};
 
 /**
  * Generates/formats SKU ID following Flipkart Seller Hub client standard
