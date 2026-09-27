@@ -148,6 +148,87 @@ export default function ProductsWorkspace() {
     }
   };
 
+  const handleExportCatalog = () => {
+    if (!data || data.length === 0) {
+      toast.error('No products available to export');
+      return;
+    }
+
+    try {
+      toast.info('Preparing catalog export...');
+      const headers = [
+        'Title',
+        'SKU',
+        'ISBN-13',
+        'ISBN-10',
+        'Book Code',
+        'Category',
+        'Price',
+        'MRP',
+        'Cost Price',
+        'Stock',
+        'Status',
+        'Publisher',
+        'Authors',
+        'Edition',
+        'Language',
+        'Binding',
+      ];
+
+      const csvRows = [headers.join(',')];
+
+      data.forEach((b: any) => {
+        const escapeCsv = (val: any) => {
+          if (val === undefined || val === null) return '""';
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        };
+
+        const categoryName = typeof b.category === 'object' ? b.category?.name : b.category || '';
+        const publisherName = typeof b.publisher === 'object' ? b.publisher?.name : b.publisher || '';
+        const authorsList = Array.isArray(b.authors)
+          ? b.authors.map((a: any) => (typeof a === 'object' ? a.name : a)).join('; ')
+          : b.author || '';
+
+        const row = [
+          escapeCsv(b.title || ''),
+          escapeCsv(b.sku || formatClientSku(b) || ''),
+          escapeCsv(b.isbn13 || ''),
+          escapeCsv(b.isbn10 || ''),
+          escapeCsv(b.bookCode || ''),
+          escapeCsv(categoryName),
+          escapeCsv(b.price || 0),
+          escapeCsv(b.mrp || 0),
+          escapeCsv(b.costPrice || 0),
+          escapeCsv(b.stock || 0),
+          escapeCsv(b.status || 'PUBLISHED'),
+          escapeCsv(publisherName),
+          escapeCsv(authorsList),
+          escapeCsv(b.edition || ''),
+          escapeCsv(b.language || 'English'),
+          escapeCsv(b.bindingType || 'Paperback'),
+        ];
+
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\r\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.download = `techno_world_catalog_${activeTab}_${dateStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success(`Exported ${data.length} products to CSV!`);
+    } catch (err: any) {
+      toast.error('Failed to export catalog: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   return (
     <div className="flex h-full flex-col space-y-4">
       
@@ -173,7 +254,7 @@ export default function ProductsWorkspace() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="glass-action-button">
+          <button onClick={handleExportCatalog} className="glass-action-button">
             <Download className="h-4 w-4" /> Export
           </button>
           <button onClick={() => setEditingBook({})} className="glass-action-button-primary">
