@@ -14,9 +14,11 @@ import {
   ChevronRight,
   PanelRightClose,
   PanelRight,
-  Globe
+  Globe,
+  Check,
+  Tag
 } from 'lucide-react';
-import { cmsService } from '@/services/api';
+import { cmsService, categoryService } from '@/services/api';
 import { toast } from 'sonner';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
@@ -89,6 +91,26 @@ const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
   { key: 'footer.phone', label: 'Landline Phone Number', section: 'Contact & Storefront', defaultText: '033 2219 6115' },
 ];
 
+export interface CategoryOption {
+  name: string;
+  slug: string;
+  icon: string;
+  description?: string;
+}
+
+export const DEFAULT_CATEGORY_OPTIONS: CategoryOption[] = [
+  { name: 'Bengali Story Books', slug: 'bengali', icon: '📖', description: 'Classic & modern Bengali literature, stories & novels' },
+  { name: 'Engineering & Technology Books', slug: 'engineering', icon: '⚙️', description: 'B.Tech, CSE, Electrical, Civil & Mechanical engineering' },
+  { name: 'Medical & Healthcare Books', slug: 'medical', icon: '🩺', description: 'MBBS, Nursing, Pharmacy & Clinical reference textbooks' },
+  { name: 'Competitive Exam Books', slug: 'competitive-exams', icon: '📚', description: 'UPSC, SSC, JEE, NEET, GATE, Bank & Govt exams' },
+  { name: 'School Books (NCERT / ICSE)', slug: 'school', icon: '🏫', description: 'NCERT, CBSE & ICSE syllabus school textbooks' },
+  { name: 'University & College Books', slug: 'university', icon: '🎓', description: 'Undergraduate & postgraduate degree courses' },
+  { name: 'Fiction & Novels', slug: 'fiction', icon: '✍️', description: 'Bestselling fiction, mysteries, thrillers & classics' },
+  { name: 'Non-Fiction Books', slug: 'non-fiction', icon: '📜', description: 'Biographies, self-help, business, history & essays' },
+  { name: 'International Books', slug: 'international', icon: '🌐', description: 'Imported titles, global academic & bestsellers' },
+  { name: "Rare & Collector's Editions", slug: 'rare', icon: '💎', description: 'Out-of-print, antique & collector editions' },
+];
+
 export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
 
   // Device Preset: strictly Phone or Tablet
@@ -121,6 +143,59 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
       .catch((err: any) => {
         console.error('[CMS Editor] Failed to fetch content', err);
       });
+  }, []);
+
+  // Category Suggestions & Synchronization State
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(DEFAULT_CATEGORY_OPTIONS);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [suggestionHighlightIndex, setSuggestionHighlightIndex] = useState<number>(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch available categories from backend to merge with presets
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const fetchFn = (categoryService as any)?.getAllAdminCategories || (categoryService as any)?.getCategories;
+        if (typeof fetchFn === 'function') {
+          const res: any = await fetchFn();
+          const list = res?.data || res || [];
+          if (Array.isArray(list) && list.length > 0) {
+            setCategoryOptions((prev) => {
+              const combined = [...prev];
+              list.forEach((c: any) => {
+                const name = c.name?.trim() || '';
+                const slug = c.slug?.trim() || '';
+                if (!name || !slug) return;
+                const formattedName = name.toLowerCase().includes('book') || name.includes('&') ? name : `${name} Books`;
+                if (!combined.some((item) => item.slug === slug || item.name.toLowerCase() === formattedName.toLowerCase())) {
+                  combined.push({
+                    name: formattedName,
+                    slug: slug,
+                    icon: '📚',
+                    description: c.description || `Books categorized under ${name}`,
+                  });
+                }
+              });
+              return combined;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[CMS Editor] Could not load backend categories', err);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Listen to postMessage from the iframe when user clicks an element
@@ -248,6 +323,41 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
     );
   };
 
+  const currentKeyInfo = REGISTERED_CMS_KEYS.find((k) => k.key === selectedKey);
+
+  // Detect whether currently selected key is a category-driven homepage section
+  const isCategorySectionKey = Boolean(
+    selectedKey && (
+      selectedKey.startsWith('home.section_') ||
+      currentKeyInfo?.section === 'Homepage Book Sections' ||
+      selectedKey.includes('category')
+    )
+  );
+
+  const currentInputValue = selectedKey
+    ? (content[selectedKey] !== undefined ? content[selectedKey] : (currentKeyInfo?.defaultText || ''))
+    : '';
+
+  // Filter category suggestions based on current input text
+  const filteredCategorySuggestions = useMemo(() => {
+    if (!isCategorySectionKey) return [];
+    const query = (currentInputValue || '').trim().toLowerCase();
+    if (!query) return categoryOptions;
+    return categoryOptions.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.slug.toLowerCase().includes(query) ||
+        (c.description && c.description.toLowerCase().includes(query))
+    );
+  }, [isCategorySectionKey, currentInputValue, categoryOptions]);
+
+  const handleSelectCategory = (cat: CategoryOption) => {
+    handleValueChange(cat.name);
+    setShowSuggestions(false);
+    setSuggestionHighlightIndex(-1);
+    toast.success(`Category synchronized to "${cat.name}". Books updated!`);
+  };
+
   // Reset selected key to default
   const handleResetCurrentKey = () => {
     if (!selectedKey) return;
@@ -308,8 +418,6 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
         (content[k.key] || k.defaultText).toLowerCase().includes(q)
     );
   }, [searchTerm, content]);
-
-  const currentKeyInfo = REGISTERED_CMS_KEYS.find((k) => k.key === selectedKey);
 
   return (
     <div className="flex flex-col h-[calc(100vh-130px)] min-h-[560px] bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
@@ -477,25 +585,140 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                     </button>
                   </div>
 
-                  <div>
+                  <div className="relative" ref={dropdownRef}>
                     {currentKeyInfo?.multiline ? (
                       <textarea
                         rows={3}
-                        value={content[selectedKey] !== undefined ? content[selectedKey] : (currentKeyInfo?.defaultText || '')}
+                        value={currentInputValue}
                         onChange={(e) => handleValueChange(e.target.value)}
                         className="w-full rounded-md px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-y"
                         placeholder="Enter text..."
                       />
                     ) : (
-                      <input
-                        type="text"
-                        value={content[selectedKey] !== undefined ? content[selectedKey] : (currentKeyInfo?.defaultText || '')}
-                        onChange={(e) => handleValueChange(e.target.value)}
-                        className="w-full rounded-md px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                        placeholder="Enter text..."
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={currentInputValue}
+                          onFocus={() => {
+                            if (isCategorySectionKey) setShowSuggestions(true);
+                          }}
+                          onChange={(e) => {
+                            handleValueChange(e.target.value);
+                            if (isCategorySectionKey) setShowSuggestions(true);
+                          }}
+                          onKeyDown={(e) => {
+                            if (!isCategorySectionKey || !showSuggestions || filteredCategorySuggestions.length === 0) return;
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setSuggestionHighlightIndex((prev) =>
+                                prev < filteredCategorySuggestions.length - 1 ? prev + 1 : 0
+                              );
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setSuggestionHighlightIndex((prev) =>
+                                prev > 0 ? prev - 1 : filteredCategorySuggestions.length - 1
+                              );
+                            } else if (e.key === 'Enter') {
+                              if (suggestionHighlightIndex >= 0 && suggestionHighlightIndex < filteredCategorySuggestions.length) {
+                                e.preventDefault();
+                                handleSelectCategory(filteredCategorySuggestions[suggestionHighlightIndex]);
+                              }
+                            } else if (e.key === 'Escape') {
+                              setShowSuggestions(false);
+                            }
+                          }}
+                          className="w-full rounded-md px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          placeholder={isCategorySectionKey ? 'Search or choose a category...' : 'Enter text...'}
+                        />
+
+                        {/* Autocomplete Dropdown List */}
+                        {isCategorySectionKey && showSuggestions && filteredCategorySuggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800">
+                            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between sticky top-0 backdrop-blur-xs">
+                              <span>Suggested Category Names</span>
+                              <span className="font-mono text-[9px] text-emerald-600 dark:text-emerald-400">⚡ Auto-syncs books</span>
+                            </div>
+                            {filteredCategorySuggestions.map((cat, idx) => {
+                              const isHighlighted = idx === suggestionHighlightIndex;
+                              const isCurrent = currentInputValue.toLowerCase() === cat.name.toLowerCase();
+                              return (
+                                <button
+                                  key={cat.slug}
+                                  type="button"
+                                  onClick={() => handleSelectCategory(cat)}
+                                  className={`w-full text-left px-2.5 py-2 flex items-center justify-between gap-2 text-xs transition-colors ${
+                                    isHighlighted
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200'
+                                      : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-sm shrink-0">{cat.icon}</span>
+                                    <div className="min-w-0">
+                                      <p className="font-semibold truncate leading-tight">{cat.name}</p>
+                                      {cat.description && (
+                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate leading-tight mt-0.5">
+                                          {cat.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                      {cat.slug}
+                                    </span>
+                                    {isCurrent && (
+                                      <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
+
+                  {/* Category Synchronization Notice & Quick Preset Chips */}
+                  {isCategorySectionKey && (
+                    <div className="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-700">
+                      <div className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-md bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 text-[11px] text-emerald-800 dark:text-emerald-300">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="leading-tight">
+                          <span className="font-bold">Dynamic Category Sync:</span> Renaming this title automatically updates the books rendered in this section in real time.
+                        </div>
+                      </div>
+
+                      {/* Quick Chips */}
+                      <div>
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                          <Tag className="h-2.5 w-2.5" />
+                          <span>Quick Categories:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {DEFAULT_CATEGORY_OPTIONS.slice(0, 8).map((cat) => {
+                            const isSelected = currentInputValue.toLowerCase() === cat.name.toLowerCase();
+                            return (
+                              <button
+                                key={cat.slug}
+                                type="button"
+                                onClick={() => handleSelectCategory(cat)}
+                                className={`text-[10px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 ${
+                                  isSelected
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs font-bold'
+                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300'
+                                }`}
+                              >
+                                <span>{cat.icon}</span>
+                                <span>{cat.name.replace(' Books', '')}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 pt-1 border-t border-slate-200 dark:border-slate-700">
                     <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
