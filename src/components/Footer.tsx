@@ -35,79 +35,80 @@ export default function Footer() {
     <footer className="mt-8 bg-gradient-to-b from-slate-950 to-black text-slate-300">
       <style>{`
         .tw-dev-box {
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: flex-start;
-          padding: 12px 16px;
-          padding-right: 68px;
-          min-height: 76px;
-          min-width: 245px;
-          border-radius: 12px;
+          padding: 5px 10px;
+          padding-right: 38px;
+          min-height: 42px;
+          min-width: 148px;
+          border-radius: 8px;
           background: rgba(48, 209, 88, 0.02);
           border: 1px solid rgba(48, 209, 88, 0.22);
           position: relative;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 0 12px rgba(48, 209, 88, 0.05);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), inset 0 0 8px rgba(48, 209, 88, 0.04);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .tw-dev-box:hover {
           border-color: rgba(48, 209, 88, 0.45);
           background: rgba(48, 209, 88, 0.05);
-          box-shadow: 0 8px 24px rgba(48, 209, 88, 0.15), inset 0 0 16px rgba(48, 209, 88, 0.08);
+          box-shadow: 0 4px 14px rgba(48, 209, 88, 0.14), inset 0 0 10px rgba(48, 209, 88, 0.07);
           transform: translateY(-1px);
         }
         .tw-dev-handle {
-          font-size: 1.15rem;
+          font-size: 0.76rem;
           font-weight: 800;
           color: #30d158;
           text-decoration: none;
-          letter-spacing: 0.02em;
-          text-shadow: 0 0 12px rgba(48, 209, 88, 0.65);
-          line-height: 1.15;
-          transition: color 0.3s ease, text-shadow 0.3s ease;
+          letter-spacing: 0.01em;
+          text-shadow: 0 0 8px rgba(48, 209, 88, 0.55);
+          line-height: 1.1;
+          transition: color 0.25s ease, text-shadow 0.25s ease;
         }
         .tw-dev-handle:hover {
           color: #ffffff;
-          text-shadow: 0 0 20px rgba(48, 209, 88, 0.85);
+          text-shadow: 0 0 14px rgba(48, 209, 88, 0.8);
         }
         .tw-dev-portfolio {
-          font-size: 0.72rem;
+          font-size: 0.6rem;
           font-weight: 600;
           color: #a1a1aa;
           text-decoration: none;
-          letter-spacing: 0.03em;
-          transition: color 0.25s ease;
+          letter-spacing: 0.02em;
+          line-height: 1.1;
+          transition: color 0.2s ease;
           display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 3px;
         }
         .tw-dev-portfolio:hover {
           color: #30d158;
         }
         .tw-github-badge {
           position: absolute;
-          right: 14px;
+          right: 8px;
           top: 50%;
           transform: translateY(-50%);
-          width: 44px;
-          height: 44px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background: #ffffff;
           display: flex;
           align-items: flex-end;
           justify-content: center;
-          box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           overflow: hidden;
         }
         .tw-github-badge img {
-          width: 38px;
-          height: 38px;
+          width: 21px;
+          height: 21px;
           object-fit: contain;
-          margin-bottom: -2px;
+          margin-bottom: -1px;
         }
         .tw-github-badge:hover {
           transform: translateY(-50%) scale(1.08);
-          box-shadow: 0 0 18px rgba(255, 255, 255, 0.45);
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
         }
       `}</style>
 
@@ -194,8 +195,8 @@ export default function Footer() {
 
       {/* Developer Credits Strip (AquaNexus Server Style) */}
       <div className="border-t border-white/[0.06]">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col items-center lg:items-start gap-1 text-center lg:text-left">
+        <div className="mx-auto max-w-7xl px-6 py-2.5 flex flex-col lg:flex-row items-center justify-between gap-2.5">
+          <div className="flex flex-col items-center lg:items-start gap-0.5 text-center lg:text-left">
             <span className="text-[11px] font-bold tracking-[0.08em] text-slate-400 uppercase">
               © {new Date().getFullYear()} Techno World Books. All rights reserved.
             </span>
@@ -204,11 +205,11 @@ export default function Footer() {
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-center">
+          <div className="flex flex-row flex-wrap items-center gap-2 justify-center">
             {DEVELOPERS.map((dev) => (
-              <div key={dev.handle} className="tw-dev-box w-full sm:w-auto">
-                <div className="flex flex-col items-start justify-center gap-0.5 w-full">
-                  <span className="text-[10px] font-bold tracking-[0.08em] text-[#8e8e93] uppercase leading-none">
+              <div key={dev.handle} className="tw-dev-box">
+                <div className="flex flex-col items-start justify-center gap-0.5">
+                  <span className="text-[8px] font-bold tracking-[0.08em] text-[#8e8e93] uppercase leading-none">
                     DEVELOPER
                   </span>
                   <a
@@ -225,7 +226,7 @@ export default function Footer() {
                     rel="noreferrer"
                     className="tw-dev-portfolio"
                   >
-                    <Globe className="h-2.5 w-2.5 text-emerald-400/80" />
+                    <Globe className="h-2 w-2 text-emerald-400/80" />
                     {dev.portfolioLabel}
                   </a>
                 </div>
