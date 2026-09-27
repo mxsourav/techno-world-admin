@@ -1,15 +1,28 @@
-import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { MapPin, Phone, Globe, Camera } from 'lucide-react';
 import { useStore } from '@/store/StoreContext';
 import { useAuthStore } from '@/store/AuthStore';
 import { toast } from 'sonner';
 
+const DEVELOPERS = [
+  {
+    handle: '@mxsourav',
+    githubUrl: 'https://github.com/mxsourav',
+    portfolioLabel: 'mxsourav.dev',
+    portfolioUrl: 'https://mxsourav.dev',
+  },
+  {
+    handle: '@joyxcode2005',
+    githubUrl: 'https://github.com/joyxcode2005',
+    portfolioLabel: 'portfolio.joycodes.me',
+    portfolioUrl: 'https://portfolio.joycodes.me',
+  },
+];
+
 export default function Footer() {
   const { user, logout: storeLogout } = useStore();
   const { logout: authLogout } = useAuthStore();
   const navigate = useNavigate();
-  const [uptime, setUptime] = useState('');
 
   const handleLogout = () => {
     storeLogout();
@@ -17,32 +30,87 @@ export default function Footer() {
     toast.success('Logged out successfully');
     navigate('/');
   };
-  
-  // Use today's date minus 12 hours so it starts showing hours/mins/secs
-  // then rolls over to days organically as time passes.
-  const [buildTime] = useState(() => new Date(Date.now() - (12 * 60 * 60 * 1000 + 45 * 60 * 1000)).getTime()); 
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const diff = Date.now() - buildTime;
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      
-      let out = '';
-      if (d > 0) out += `${d} days, `;
-      out += `${h} hours, ${m} mins, ${s} secs`;
-      setUptime(out);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [buildTime]);
-
-  const todayStr = new Date().toLocaleDateString('en-GB'); // DD/MM/YYYY
-  const timeStr = new Date(buildTime).toLocaleTimeString('en-US');
 
   return (
     <footer className="mt-8 bg-gradient-to-b from-slate-950 to-black text-slate-300">
+      <style>{`
+        .tw-dev-box {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 12px 16px;
+          padding-right: 68px;
+          min-height: 76px;
+          min-width: 245px;
+          border-radius: 12px;
+          background: rgba(48, 209, 88, 0.02);
+          border: 1px solid rgba(48, 209, 88, 0.22);
+          position: relative;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 0 12px rgba(48, 209, 88, 0.05);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .tw-dev-box:hover {
+          border-color: rgba(48, 209, 88, 0.45);
+          background: rgba(48, 209, 88, 0.05);
+          box-shadow: 0 8px 24px rgba(48, 209, 88, 0.15), inset 0 0 16px rgba(48, 209, 88, 0.08);
+          transform: translateY(-1px);
+        }
+        .tw-dev-handle {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: #30d158;
+          text-decoration: none;
+          letter-spacing: 0.02em;
+          text-shadow: 0 0 12px rgba(48, 209, 88, 0.65);
+          line-height: 1.15;
+          transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .tw-dev-handle:hover {
+          color: #ffffff;
+          text-shadow: 0 0 20px rgba(48, 209, 88, 0.85);
+        }
+        .tw-dev-portfolio {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: #a1a1aa;
+          text-decoration: none;
+          letter-spacing: 0.03em;
+          transition: color 0.25s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .tw-dev-portfolio:hover {
+          color: #30d158;
+        }
+        .tw-github-badge {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: #ffffff;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .tw-github-badge img {
+          width: 38px;
+          height: 38px;
+          object-fit: contain;
+          margin-bottom: -2px;
+        }
+        .tw-github-badge:hover {
+          transform: translateY(-50%) scale(1.08);
+          box-shadow: 0 0 18px rgba(255, 255, 255, 0.45);
+        }
+      `}</style>
+
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-6 md:grid-cols-12 md:gap-8">
         
         {/* Col 1: Address (Takes more space) */}
@@ -124,23 +192,54 @@ export default function Footer() {
 
       </div>
 
-      {/* Developer Strip with Live Counter */}
-      <div className="border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6 py-3 text-[11px] font-bold tracking-widest text-slate-500 uppercase flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <p>
-              <a href="https://github.com/mxsourav" target="_blank" rel="noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">mx_sourav</a>
-              <span className="ml-3">TECHNO_WORLD_STOREFRONT_V3.0</span>
-            </p>
-            <p className="text-slate-600 font-medium">
-              DATE: {todayStr} &nbsp;&nbsp;&nbsp; LAST UPDATE: {timeStr}
-            </p>
+      {/* Developer Credits Strip (AquaNexus Server Style) */}
+      <div className="border-t border-white/[0.06]">
+        <div className="mx-auto max-w-7xl px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col items-center lg:items-start gap-1 text-center lg:text-left">
+            <span className="text-[11px] font-bold tracking-[0.08em] text-slate-400 uppercase">
+              © {new Date().getFullYear()} Techno World Books. All rights reserved.
+            </span>
+            <span className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">
+              Official Online Bookstore • College Street, Kolkata
+            </span>
           </div>
-          <div className="text-right flex flex-col items-end gap-1">
-            <p className="text-slate-600">UPTIME COUNTER</p>
-            <p className="text-emerald-400 font-mono tracking-normal text-xs font-medium bg-emerald-950/30 px-2 py-1 rounded border border-emerald-900/50">
-              {uptime}
-            </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-center">
+            {DEVELOPERS.map((dev) => (
+              <div key={dev.handle} className="tw-dev-box w-full sm:w-auto">
+                <div className="flex flex-col items-start justify-center gap-0.5 w-full">
+                  <span className="text-[10px] font-bold tracking-[0.08em] text-[#8e8e93] uppercase leading-none">
+                    DEVELOPER
+                  </span>
+                  <a
+                    href={dev.githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tw-dev-handle"
+                  >
+                    {dev.handle}
+                  </a>
+                  <a
+                    href={dev.portfolioUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tw-dev-portfolio"
+                  >
+                    <Globe className="h-2.5 w-2.5 text-emerald-400/80" />
+                    {dev.portfolioLabel}
+                  </a>
+                </div>
+                <a
+                  href={dev.githubUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${dev.handle} GitHub`}
+                  className="tw-github-badge"
+                >
+                  <img src="/github-logo.png" alt="GitHub" />
+                </a>
+              </div>
+            ))}
           </div>
         </div>
       </div>
