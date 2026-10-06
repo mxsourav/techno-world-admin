@@ -173,6 +173,12 @@ export default function ProductsWorkspace() {
         'Edition',
         'Language',
         'Binding',
+        'Cover Image',
+        'Cover Public ID',
+        'Gallery Images',
+        'Gallery Public IDs',
+        'Preview PDF URL',
+        'Preview PDF Public ID',
       ];
 
       const csvRows = [headers.join(',')];
@@ -189,6 +195,30 @@ export default function ProductsWorkspace() {
         const authorsList = Array.isArray(b.authors)
           ? b.authors.map((a: any) => (typeof a === 'object' ? a.name : a)).join('; ')
           : b.author || '';
+
+        let galleryUrlsStr = '';
+        if (b.galleryUrls) {
+          try {
+            const parsed = typeof b.galleryUrls === 'string' ? JSON.parse(b.galleryUrls) : b.galleryUrls;
+            galleryUrlsStr = Array.isArray(parsed) ? parsed.join('; ') : String(parsed);
+          } catch {
+            galleryUrlsStr = String(b.galleryUrls);
+          }
+        } else if (Array.isArray(b.images)) {
+          galleryUrlsStr = b.images.map((img: any) => img.secureUrl || img.url).filter(Boolean).join('; ');
+        }
+
+        let galleryPublicIdsStr = '';
+        if (b.galleryPublicIds) {
+          try {
+            const parsed = typeof b.galleryPublicIds === 'string' ? JSON.parse(b.galleryPublicIds) : b.galleryPublicIds;
+            galleryPublicIdsStr = Array.isArray(parsed) ? parsed.join('; ') : String(parsed);
+          } catch {
+            galleryPublicIdsStr = String(b.galleryPublicIds);
+          }
+        } else if (Array.isArray(b.images)) {
+          galleryPublicIdsStr = b.images.map((img: any) => img.publicId).filter(Boolean).join('; ');
+        }
 
         const row = [
           escapeCsv(b.title || ''),
@@ -207,6 +237,12 @@ export default function ProductsWorkspace() {
           escapeCsv(b.edition || ''),
           escapeCsv(b.language || 'English'),
           escapeCsv(b.bindingType || 'Paperback'),
+          escapeCsv(b.coverUrl || ''),
+          escapeCsv(b.coverPublicId || ''),
+          escapeCsv(galleryUrlsStr),
+          escapeCsv(galleryPublicIdsStr),
+          escapeCsv(b.previewPdfUrl || ''),
+          escapeCsv(b.previewPdfPublicId || ''),
         ];
 
         csvRows.push(row.join(','));
