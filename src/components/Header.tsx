@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
   BookOpen, ShoppingCart, Heart, User, Menu, Search, Mic, MessageCircle,
-  History, TrendingUp, ChevronDown, LogOut, MapPin, Tag
+  History, TrendingUp, ChevronDown, LogOut, MapPin, Tag, Truck, FileText, HelpCircle, Shield
 } from 'lucide-react';
 import { POPULAR_SEARCHES } from '@/data/blog';
 import { CATEGORIES as WEBSITE_CATEGORIES } from '@/data/books';
@@ -393,11 +393,26 @@ export default function Header() {
                 </div>
                 <div className="mt-4 border-t border-slate-100 pt-3 space-y-0.5">
                   <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Quick Links</p>
-                  <Link to="/search?publisher=Techno%20World%20Publications" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">🏢 Our Publications</Link>
-                  <Link to="/track" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">📦 Track Order</Link>
-                  <Link to="/blog" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">✍️ Blog & Book Lists</Link>
-                  <Link to="/help" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">❓ Help Center</Link>
-                  <Link to="/admin" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">🛠️ Admin Panel</Link>
+                  <Link to="/search?publisher=Techno%20World%20Publications" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                    <BookOpen className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <span>Our Publications</span>
+                  </Link>
+                  <Link to="/track" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                    <Truck className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <span>Track Order</span>
+                  </Link>
+                  <Link to="/blog" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                    <FileText className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <span>Blog & Book Lists</span>
+                  </Link>
+                  <Link to="/help" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                    <HelpCircle className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <span>Help Center</span>
+                  </Link>
+                  <Link to="/admin" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition-colors">
+                    <Shield className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <span>Admin Panel</span>
+                  </Link>
                 </div>
               </nav>
             </SheetContent>
@@ -410,7 +425,7 @@ export default function Header() {
 
         {/* Sticky Search Bar (Expands Left-to-Right because Right side has ml-auto) */}
         <div className={`hidden md:block transition-all duration-500 ease-in-out overflow-hidden mx-4 ${isScrolled ? 'flex-1 max-w-2xl opacity-100' : 'flex-none max-w-0 opacity-0'}`}>
-          <SearchBar className="w-full rounded-full shadow-[0_12px_35px_rgba(0,0,0,0.6)] border-none ring-0" />
+          <SearchBar className="w-full rounded-full shadow-md border-none ring-0" />
         </div>
         
         {/* Sticky Search Bar (Mobile Flex) */}

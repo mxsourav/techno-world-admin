@@ -8,13 +8,14 @@ import { BookCover } from './BookCover';
 import { CmsText } from './common/CmsText';
 
 export function RatingStars({ rating, size = 3.5 }: { rating: number; size?: number }) {
+  const px = Math.round(size * 4);
   return (
     <span className="inline-flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-${size} w-${size} ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}`}
-          style={{ width: `${size * 4}px`, height: `${size * 4}px` }}
+          className={`shrink-0 ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}`}
+          style={{ width: `${px}px`, height: `${px}px` }}
         />
       ))}
     </span>
@@ -36,7 +37,7 @@ export function BookCard({ book }: { book: Book }) {
         <Heart className={`h-4 w-4 ${wish ? 'fill-rose-500' : ''}`} />
       </button>
       {book.edition && (
-        <span className="absolute left-3 top-4 z-10 rounded-sm bg-emerald-600/95 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white shadow-md ring-1 ring-emerald-400/50 backdrop-blur-sm">
+        <span className="absolute left-3 top-4 z-10 rounded-md bg-emerald-700 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm">
           {book.edition}
         </span>
       )}
@@ -75,9 +76,9 @@ export function BookCard({ book }: { book: Book }) {
             addToCart(book.id);
             navigate('/checkout');
           }}
-          className="flex-[3] flex items-center justify-center gap-1 rounded-lg bg-amber-400 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-amber-500"
+          className="flex-[3] flex items-center justify-center gap-1 rounded-lg bg-emerald-700 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-800"
         >
-          <Zap className="h-3 w-3" /> Buy Now
+          <Zap className="h-3 w-3 fill-white text-white" /> Buy Now
         </button>
       </div>
     </div>
