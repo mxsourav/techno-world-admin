@@ -189,14 +189,14 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
         {isSubmitted ? (
           /* Minimalist Editorial Success State */
           <div className="py-12 px-4 text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 border border-stone-200 text-emerald-800">
               <CheckCircle2 className="h-8 w-8" />
             </div>
             <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">
               Thank you. Your inquiry has been logged.
             </h3>
             <p className="max-w-md mx-auto text-sm text-stone-600 leading-relaxed">
-              Our institutional sales team (Direct Sales Desk: Md. Washim Akram) will review your requirements and contact you within <strong>2–4 business hours</strong> with custom bulk pricing.
+              Our institutional sales team (Direct Sales Desk: Md. Washim Akram) will review your requirements and contact you within <strong className="text-stone-900">2–4 business hours</strong> with custom bulk pricing.
             </p>
             <div className="pt-2 text-xs text-stone-400 font-mono">
               Closing dialog automatically...
@@ -205,9 +205,9 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
         ) : (
           /* Form Content */
           <>
-            {/* Header & Eyebrow */}
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-800">
-              <Building2 className="h-3.5 w-3.5 text-emerald-700" />
+            {/* Header & Eyebrow: Sophisticated Neutral Badge */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-stone-800">
+              <Building2 className="h-3.5 w-3.5 text-stone-700" />
               <span>Institutional & Bulk Purchases</span>
             </div>
 
@@ -218,11 +218,11 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
               Custom quotations and supply for schools, colleges, and libraries.
             </p>
 
-            {/* SLA Assurance Banner */}
-            <div className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-stone-200 bg-stone-50/80 p-3 text-xs text-stone-700 leading-relaxed">
-              <Clock className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
+            {/* SLA Assurance Banner: Understated Informational Neutral Box */}
+            <div className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-600 leading-relaxed">
+              <Clock className="h-4 w-4 text-stone-700 shrink-0 mt-0.5" />
               <span>
-                <strong>SLA Guarantee:</strong> Our institutional sales team will review your requirements and contact you within <span className="text-emerald-900 font-semibold">2–4 business hours</span>.
+                <strong className="text-stone-900 font-semibold">SLA Guarantee:</strong> Our institutional sales team will review your requirements and contact you within <span className="text-stone-900 font-semibold">2–4 business hours</span>.
               </span>
             </div>
 
@@ -250,7 +250,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                     value={organizationName}
                     onChange={(e) => setOrganizationName(e.target.value)}
                     placeholder="e.g. St. Xavier's College, Kolkata"
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors"
                   />
                 </div>
 
@@ -266,7 +266,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                     value={representativeName}
                     onChange={(e) => setRepresentativeName(e.target.value)}
                     placeholder="e.g. Dr. A. K. Banerjee (Librarian)"
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors"
                   />
                 </div>
 
@@ -282,7 +282,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="library@institution.ac.in"
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors"
                   />
                 </div>
 
@@ -298,7 +298,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors"
                   />
                 </div>
 
@@ -313,7 +313,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                   id="b2b-timeline"
                   value={timeline}
                   onChange={(e) => setTimeline(e.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors cursor-pointer"
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors cursor-pointer"
                 >
                   {TIMELINE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -335,26 +335,24 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
                   placeholder="Please describe the books, genres, or specific titles you need bulk pricing for (e.g. 30 sets of MBBS 1st Year Anatomy textbooks, or departmental requisition)..."
-                  className="w-full rounded-lg border border-stone-300 bg-white p-3 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors leading-relaxed"
+                  className="w-full rounded-lg border border-stone-300 bg-white p-3 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 transition-colors leading-relaxed"
                 />
               </div>
 
-              {/* Crucial UX: Link Cart Feature */}
+              {/* Crucial UX: Link Cart Feature (Neutral Styling) */}
               <div className={`rounded-xl border p-3 sm:p-4 transition-colors ${
                 cartItemCount > 0
-                  ? 'border-emerald-200/90 bg-emerald-50/40'
-                  : 'border-stone-200 bg-stone-50/50'
+                  ? 'border-stone-300 bg-stone-50/60'
+                  : 'border-stone-200 bg-stone-50/30'
               }`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5">
-                    <ShoppingCart className={`h-4 w-4 mt-0.5 shrink-0 ${
-                      cartItemCount > 0 ? 'text-emerald-700' : 'text-stone-400'
-                    }`} />
+                    <ShoppingCart className="h-4 w-4 mt-0.5 shrink-0 text-stone-700" />
                     <div className="space-y-0.5">
                       <div className="text-xs font-bold text-stone-900 flex items-center gap-2">
                         <span>Attach Current Cart Items to Request</span>
                         {cartItemCount > 0 && (
-                          <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-semibold">
+                          <span className="rounded-full bg-stone-100 border border-stone-200 text-stone-700 px-2 py-0.5 text-[10px] font-semibold">
                             {cartItemCount} item{cartItemCount !== 1 ? 's' : ''} in cart
                           </span>
                         )}
@@ -373,7 +371,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                     </div>
                   </div>
 
-                  {/* Toggle Checkbox / Switch */}
+                  {/* Toggle Checkbox / Switch (Deep Forest Green Active State) */}
                   <label className={`relative inline-flex items-center shrink-0 ${
                     cartItemCount === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                   }`}>
@@ -384,7 +382,7 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
                       onChange={(e) => setAttachCart(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-700"></div>
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-900"></div>
                   </label>
                 </div>
               </div>
@@ -411,36 +409,28 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
               </div>
             </form>
 
-            {/* Direct Contact Footer Bar */}
-            <div className="mt-5 pt-4 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-600">
-              <div className="flex items-center gap-2">
-                <span className="text-stone-500">Urgent requisition?</span>
-                <span className="font-semibold text-stone-900">Direct Sales Desk:</span>
+            {/* Bottom Contact Footer (Clean Full-Width Flexbox Container, Non-Wrapping) */}
+            <div className="mt-6 -mx-5 -mb-5 sm:-mx-8 sm:-mb-8 rounded-b-2xl bg-stone-50 border-t border-stone-200 px-5 sm:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-600">
+              {/* Left Side: Call Md. Washim */}
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="text-stone-500">Urgent?</span>
+                <span className="text-stone-700">Call Md. Washim:</span>
                 <a
                   href="tel:+917479135626"
-                  className="font-mono text-emerald-800 hover:underline font-semibold"
+                  className="font-bold text-stone-900 hover:text-emerald-800 font-mono tracking-tight whitespace-nowrap"
                 >
                   +91 747 913 5626
                 </a>
               </div>
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://wa.me/917479135626?text=Hi%20Md.%20Washim,%20we%20require%20an%20urgent%20institutional%20quote"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-medium"
-                >
-                  <span>WhatsApp Desk</span>
-                </a>
-                <span className="text-stone-300">•</span>
-                <a
-                  href="mailto:team@technoworldbooks.in?subject=Institutional%20Quote%20Inquiry"
-                  className="inline-flex items-center gap-1 text-stone-600 hover:text-stone-900"
-                >
-                  <Mail className="h-3 w-3" />
-                  <span>team@technoworldbooks.in</span>
-                </a>
-              </div>
+
+              {/* Right Side: Email Desk */}
+              <a
+                href="mailto:team@technoworldbooks.in?subject=Institutional%20Quote%20Inquiry"
+                className="inline-flex items-center gap-1.5 text-stone-700 hover:text-stone-900 font-mono text-xs whitespace-nowrap transition-colors"
+              >
+                <Mail className="h-3.5 w-3.5 text-stone-500 shrink-0" />
+                <span>team@technoworldbooks.in</span>
+              </a>
             </div>
           </>
         )}
