@@ -98,6 +98,7 @@ import HeroBookCoverManager from '@/components/admin/hero/HeroBookCoverManager';
 import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
 import CategoryOrderManager from '@/components/admin/cms/CategoryOrderManager';
 import SalesReportWorkspace from '@/components/admin/sales/SalesReportWorkspace';
+import B2BQuotesWorkspace from '@/components/admin/b2b/B2BQuotesWorkspace';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 export default function Dashboard() {
   const location = useLocation();
@@ -2112,6 +2113,7 @@ admin@technoworld.com`
         {tab === 'products' && <ProductsWorkspace />}
         {tab === 'blog' && <BlogWorkspace />}
         {tab === 'abandoned_carts' && <AbandonedCartsWorkspace />}
+        {tab === 'b2b_quotes' && <B2BQuotesWorkspace />}
         {tab === 'orders' && (() => {
           // Filter orders according to Flipkart fulfillment stages
           const getStageOrders = (stg: string) => {

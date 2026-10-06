@@ -1,29 +1,66 @@
 import { useState, useEffect } from 'react';
-import { Building2, X, PhoneCall, Mail, Copy, Check, ArrowUpRight } from 'lucide-react';
+import {
+  Building2,
+  X,
+  Mail,
+  CheckCircle2,
+  Clock,
+  ShoppingCart,
+  Loader2,
+  Send,
+  AlertCircle
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { useStore } from '@/store/StoreContext';
+import { useCartTotals } from '@/hooks/useCartTotals';
+import { b2bService } from '@/services/api';
 
 interface InstitutionalModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const INSTITUTION_TAGS = [
-  'Schools',
-  'Colleges',
-  'Universities',
-  'Academic Libraries',
-  'Coaching Institutes',
+const TIMELINE_OPTIONS = [
+  'Within 1–2 weeks',
+  'Within 2–4 weeks',
+  'Immediate (Within 48 hours)',
+  'Upcoming Academic Semester',
+  'Annual Institutional Requisition',
 ];
 
 export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps) {
-  const [copiedPhone, setCopiedPhone] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
+  const { cart } = useStore();
+  const { items: cartPricingItems } = useCartTotals();
 
+  const [organizationName, setOrganizationName] = useState('');
+  const [representativeName, setRepresentativeName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [timeline, setTimeline] = useState('Within 1–2 weeks');
+  const [requirements, setRequirements] = useState('');
+  const [attachCart, setAttachCart] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const cartItemCount = cart?.length || 0;
+
+  // Auto-enable attachCart if user has items in cart
+  useEffect(() => {
+    if (cartItemCount > 0) {
+      setAttachCart(true);
+    } else {
+      setAttachCart(false);
+    }
+  }, [cartItemCount, isOpen]);
+
+  // Modal accessibility: Escape key and body scroll lock
   useEffect(() => {
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !isSubmitting) onClose();
     };
 
     document.addEventListener('keydown', onKeyDown);
@@ -34,34 +71,109 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isSubmitting]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsSubmitted(false);
+      setErrorMessage(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleCopyPhone = () => {
-    navigator.clipboard.writeText('+91 747 913 5626');
-    setCopiedPhone(true);
-    toast.success('Institutional sales phone copied: +91 747 913 5626');
-    setTimeout(() => setCopiedPhone(false), 2000);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText('team@technoworldbooks.in');
-    setCopiedEmail(true);
-    toast.success('B2B support email copied: team@technoworldbooks.in');
-    setTimeout(() => setCopiedEmail(false), 2000);
+    // Validation
+    if (!organizationName.trim()) {
+      setErrorMessage('Please enter your Institute or Organization Name.');
+      return;
+    }
+    if (!representativeName.trim()) {
+      setErrorMessage('Please enter the Representative Contact Name.');
+      return;
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErrorMessage('Please provide a valid official email address.');
+      return;
+    }
+    if (!phone.trim() || phone.trim().length < 7) {
+      setErrorMessage('Please provide a valid phone or WhatsApp contact number.');
+      return;
+    }
+    if (!requirements.trim()) {
+      setErrorMessage('Please describe your book requirements, titles, or syllabus.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Build cart snapshot if attached
+      let attachedSnapshot: any[] = [];
+      if (attachCart && cartItemCount > 0) {
+        if (cartPricingItems && cartPricingItems.length > 0) {
+          attachedSnapshot = cartPricingItems.map((item: any) => ({
+            bookId: item.bookId || item.id || null,
+            isbn: item.isbn || item.book?.isbn || null,
+            title: item.title || item.book?.title || 'Book Title',
+            requestedQuantity: Number(item.quantity || item.qty || 1),
+            currentRetailPrice: Number(item.salePrice || item.price || item.book?.salePrice || 0),
+          }));
+        } else {
+          attachedSnapshot = cart.map((i) => ({
+            bookId: i.bookId,
+            requestedQuantity: i.qty,
+            title: `Cart Item (${i.bookId})`,
+            currentRetailPrice: 0,
+          }));
+        }
+      }
+
+      await b2bService.submitQuoteRequest({
+        organizationName: organizationName.trim(),
+        representativeName: representativeName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        timeline,
+        requirements: requirements.trim(),
+        attachedCartItems: attachedSnapshot,
+      });
+
+      setIsSubmitted(true);
+      toast.success('Your quote request has been logged successfully!');
+
+      // Auto-clear and close modal after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setOrganizationName('');
+        setRepresentativeName('');
+        setEmail('');
+        setPhone('');
+        setRequirements('');
+        onClose();
+      }, 3000);
+    } catch (err: any) {
+      console.error('Failed to submit B2B quote request:', err);
+      setErrorMessage(err?.message || 'Failed to submit quote request. Please try again or call our sales desk directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="institutional-modal-title"
+      aria-labelledby="b2b-modal-title"
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl border border-stone-200 bg-white p-6 sm:p-8 text-stone-900 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
+        className="relative w-full max-w-2xl rounded-2xl border border-stone-200 bg-white p-5 sm:p-8 text-stone-900 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -74,168 +186,264 @@ export function InstitutionalModal({ isOpen, onClose }: InstitutionalModalProps)
           <X className="h-5 w-5" />
         </button>
 
-        {/* Header Eyebrow */}
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-800">
-          <Building2 className="h-3.5 w-3.5 text-emerald-700" />
-          <span>Institutional & Bulk Sales</span>
-        </div>
+        {isSubmitted ? (
+          /* Minimalist Editorial Success State */
+          <div className="py-12 px-4 text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900">
+              Thank you. Your inquiry has been logged.
+            </h3>
+            <p className="max-w-md mx-auto text-sm text-stone-600 leading-relaxed">
+              Our institutional sales team (Direct Sales Desk: Md. Washim Akram) will review your requirements and contact you within <strong>2–4 business hours</strong> with custom bulk pricing.
+            </p>
+            <div className="pt-2 text-xs text-stone-400 font-mono">
+              Closing dialog automatically...
+            </div>
+          </div>
+        ) : (
+          /* Form Content */
+          <>
+            {/* Header & Eyebrow */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-800">
+              <Building2 className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Institutional & Bulk Purchases</span>
+            </div>
 
-        {/* Modal Heading & Description */}
-        <h2 id="institutional-modal-title" className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-stone-900">
-          Direct Institutional & Corporate Purchasing
-        </h2>
-        <p className="mt-1.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
-          Custom quotations, purchase orders, and special library pricing for academic and professional institutions.
-        </p>
+            <h2 id="b2b-modal-title" className="mt-2.5 text-xl sm:text-2xl font-bold tracking-tight text-stone-900">
+              Institutional & Bulk Book Purchases
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-stone-600 leading-relaxed">
+              Custom quotations and supply for schools, colleges, and libraries.
+            </p>
 
-        {/* Segments Tags */}
-        <div className="mt-3.5 flex flex-wrap items-center gap-1.5 text-xs text-stone-600">
-          {INSTITUTION_TAGS.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-md border border-stone-200/70 bg-stone-100 px-2.5 py-1 font-medium text-stone-700"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+            {/* SLA Assurance Banner */}
+            <div className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-stone-200 bg-stone-50/80 p-3 text-xs text-stone-700 leading-relaxed">
+              <Clock className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
+              <span>
+                <strong>SLA Guarantee:</strong> Our institutional sales team will review your requirements and contact you within <span className="text-emerald-900 font-semibold">2–4 business hours</span>.
+              </span>
+            </div>
 
-        {/* 2-Column Responsive Card Grid */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          {/* Card 1: Direct Institutional Sales Desk */}
-          <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-4 sm:p-5 flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold tracking-wider text-emerald-800 uppercase bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200">
-                  Direct Sales Desk
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] text-stone-500 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  Priority Desk
-                </span>
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="mt-3.5 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+                <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Quote Request Form */}
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                
+                {/* Organization Details */}
+                <div className="space-y-1">
+                  <label htmlFor="b2b-org" className="block text-xs font-semibold text-stone-800">
+                    Institute / Organization Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="b2b-org"
+                    type="text"
+                    required
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.target.value)}
+                    placeholder="e.g. St. Xavier's College, Kolkata"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                  />
+                </div>
+
+                {/* Representative Name */}
+                <div className="space-y-1">
+                  <label htmlFor="b2b-rep" className="block text-xs font-semibold text-stone-800">
+                    Representative Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="b2b-rep"
+                    type="text"
+                    required
+                    value={representativeName}
+                    onChange={(e) => setRepresentativeName(e.target.value)}
+                    placeholder="e.g. Dr. A. K. Banerjee (Librarian)"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1">
+                  <label htmlFor="b2b-email" className="block text-xs font-semibold text-stone-800">
+                    Email Address <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="b2b-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="library@institution.ac.in"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                  />
+                </div>
+
+                {/* Phone / WhatsApp */}
+                <div className="space-y-1">
+                  <label htmlFor="b2b-phone" className="block text-xs font-semibold text-stone-800">
+                    Phone / WhatsApp Number <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="b2b-phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
+                  />
+                </div>
+
               </div>
 
-              <h3 className="mt-3 text-sm sm:text-base font-bold text-stone-900">
-                Md. Washim Akram
-              </h3>
-              <p className="text-xs text-stone-600 mt-0.5">
-                Head of Institutional Sales / B2B Accounts
-              </p>
+              {/* Timeline */}
+              <div className="space-y-1">
+                <label htmlFor="b2b-timeline" className="block text-xs font-semibold text-stone-800">
+                  Required By / Expected Timeline
+                </label>
+                <select
+                  id="b2b-timeline"
+                  value={timeline}
+                  onChange={(e) => setTimeline(e.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs sm:text-sm text-stone-900 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors cursor-pointer"
+                >
+                  {TIMELINE_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <div className="mt-3 flex items-center justify-between rounded-lg bg-white px-3 py-2 border border-stone-200 shadow-2xs">
+              {/* Requirements & Book List */}
+              <div className="space-y-1">
+                <label htmlFor="b2b-requirements" className="block text-xs font-semibold text-stone-800">
+                  Detailed Requirements & Book List <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  id="b2b-requirements"
+                  rows={3}
+                  required
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  placeholder="Please describe the books, genres, or specific titles you need bulk pricing for (e.g. 30 sets of MBBS 1st Year Anatomy textbooks, or departmental requisition)..."
+                  className="w-full rounded-lg border border-stone-300 bg-white p-3 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors leading-relaxed"
+                />
+              </div>
+
+              {/* Crucial UX: Link Cart Feature */}
+              <div className={`rounded-xl border p-3 sm:p-4 transition-colors ${
+                cartItemCount > 0
+                  ? 'border-emerald-200/90 bg-emerald-50/40'
+                  : 'border-stone-200 bg-stone-50/50'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <ShoppingCart className={`h-4 w-4 mt-0.5 shrink-0 ${
+                      cartItemCount > 0 ? 'text-emerald-700' : 'text-stone-400'
+                    }`} />
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-stone-900 flex items-center gap-2">
+                        <span>Attach Current Cart Items to Request</span>
+                        {cartItemCount > 0 && (
+                          <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-semibold">
+                            {cartItemCount} item{cartItemCount !== 1 ? 's' : ''} in cart
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-stone-600 leading-normal">
+                        {cartItemCount > 0 ? (
+                          <>
+                            Attach <strong>{cartItemCount} items</strong> currently in your shopping cart to this quotation. Our sales desk will quote institutional volume discounts on these exact titles.
+                          </>
+                        ) : (
+                          <span className="text-stone-500 italic">
+                            Your cart is empty. Add books to your cart to link them automatically.
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Checkbox / Switch */}
+                  <label className={`relative inline-flex items-center shrink-0 ${
+                    cartItemCount === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      disabled={cartItemCount === 0}
+                      checked={attachCart}
+                      onChange={(e) => setAttachCart(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-700"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Action Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-800 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-900 active:bg-emerald-950 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Submitting Quote Request...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      <span>Submit Quote Request</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Direct Contact Footer Bar */}
+            <div className="mt-5 pt-4 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-600">
+              <div className="flex items-center gap-2">
+                <span className="text-stone-500">Urgent requisition?</span>
+                <span className="font-semibold text-stone-900">Direct Sales Desk:</span>
                 <a
                   href="tel:+917479135626"
-                  className="text-xs font-semibold text-stone-900 hover:text-emerald-700 transition-colors font-mono tracking-tight"
-                  aria-label="Call Md. Washim Akram at +91 747 913 5626"
+                  className="font-mono text-emerald-800 hover:underline font-semibold"
                 >
                   +91 747 913 5626
                 </a>
-                <button
-                  type="button"
-                  onClick={handleCopyPhone}
-                  className="text-stone-400 hover:text-stone-700 transition-colors p-1 rounded cursor-pointer"
-                  title="Copy phone number"
-                  aria-label="Copy phone number +91 747 913 5626"
-                >
-                  {copiedPhone ? (
-                    <Check className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
               </div>
-            </div>
-
-            {/* Direct Action Buttons */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <a
-                href="tel:+917479135626"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-800 hover:bg-stone-50 hover:border-stone-400 transition-all text-center shadow-2xs"
-                aria-label="Call institutional sales desk directly"
-              >
-                <PhoneCall className="h-3.5 w-3.5 text-stone-700" />
-                <span>Call Now</span>
-              </a>
-
-              <a
-                href="https://wa.me/917479135626?text=Hi%20Md.%20Washim,%20we%20require%20a%20bulk%20quote%20for%20our%20institution"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-2 text-xs font-bold text-white hover:bg-[#20ba5a] transition-all text-center shadow-2xs"
-                aria-label="Chat on WhatsApp for institutional bulk quotation"
-              >
-                <svg className="h-3.5 w-3.5 fill-current text-white shrink-0" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.884 9.885m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                <span>WhatsApp</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Card 2: Official Quotation Desk */}
-          <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-4 sm:p-5 flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold tracking-wider text-emerald-800 uppercase bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200">
-                  Official Quotation Desk
-                </span>
-                <span className="text-[11px] text-stone-500 font-medium">
-                  24h Turnaround
-                </span>
-              </div>
-
-              <h3 className="mt-3 text-sm sm:text-base font-bold text-stone-900">
-                Institutional Accounts Team
-              </h3>
-              <p className="text-xs text-stone-600 mt-0.5">
-                Custom POs, Tender Submissions & Library Invoices
-              </p>
-
-              <div className="mt-3 flex items-center justify-between rounded-lg bg-white px-3 py-2 border border-stone-200 shadow-2xs">
+              <div className="flex items-center gap-3">
                 <a
-                  href="mailto:team@technoworldbooks.in?subject=Request%20for%20Bulk%20Quotation%20%2F%20Institutional%20Purchase"
-                  className="text-xs font-semibold text-stone-900 hover:text-emerald-700 transition-colors font-mono tracking-tight truncate max-w-[190px]"
-                  aria-label="Email institutional support at team@technoworldbooks.in"
+                  href="https://wa.me/917479135626?text=Hi%20Md.%20Washim,%20we%20require%20an%20urgent%20institutional%20quote"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-medium"
                 >
-                  team@technoworldbooks.in
+                  <span>WhatsApp Desk</span>
                 </a>
-                <button
-                  type="button"
-                  onClick={handleCopyEmail}
-                  className="text-stone-400 hover:text-stone-700 transition-colors p-1 rounded shrink-0 ml-1 cursor-pointer"
-                  title="Copy email address"
-                  aria-label="Copy email team@technoworldbooks.in"
+                <span className="text-stone-300">•</span>
+                <a
+                  href="mailto:team@technoworldbooks.in?subject=Institutional%20Quote%20Inquiry"
+                  className="inline-flex items-center gap-1 text-stone-600 hover:text-stone-900"
                 >
-                  {copiedEmail ? (
-                    <Check className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
+                  <Mail className="h-3 w-3" />
+                  <span>team@technoworldbooks.in</span>
+                </a>
               </div>
             </div>
-
-            {/* Email Action Link */}
-            <div className="pt-1">
-              <a
-                href="mailto:team@technoworldbooks.in?subject=Request%20for%20Bulk%20Quotation%20%2F%20Institutional%20Purchase"
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-all text-center shadow-2xs"
-                aria-label="Request quotation via email"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                <span>Request Quotation via Email</span>
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Footer Note */}
-        <p className="mt-5 text-center text-xs text-stone-500">
-          For university tenders or official vendor empanelment, please attach your institution's requisition list.
-        </p>
+          </>
+        )}
       </div>
     </div>
   );

@@ -769,6 +769,35 @@ export const contactService = {
     api.patch<any>(`/contact/${id}`, data),
 };
 
+export interface B2BQuoteRequestPayload {
+  organizationName: string;
+  representativeName: string;
+  email: string;
+  phone: string;
+  timeline?: string;
+  requirements: string;
+  attachedCartItems?: Array<{
+    bookId?: string | null;
+    isbn?: string | null;
+    title: string;
+    requestedQuantity: number;
+    currentRetailPrice: number;
+  }>;
+}
+
+export const b2bService = {
+  submitQuoteRequest: (data: B2BQuoteRequestPayload) =>
+    api.post<any>('/b2b-quotes', data),
+  getQuoteRequests: (params?: { page?: number; limit?: number; status?: string; search?: string }) =>
+    api.get<any>('/b2b-quotes', params as Record<string, string | number | boolean>),
+  getQuoteRequestById: (id: string) =>
+    api.get<any>(`/b2b-quotes/${id}`),
+  updateQuoteRequestStatus: (id: string, data: { status?: string; adminNotes?: string }) =>
+    api.patch<any>(`/b2b-quotes/${id}`, data),
+  deleteQuoteRequest: (id: string) =>
+    api.delete<any>(`/b2b-quotes/${id}`),
+};
+
 export const bookRequestService = {
   submitRequest: (data: {
     title: string;

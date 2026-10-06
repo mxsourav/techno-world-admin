@@ -31,6 +31,7 @@ import {
   MessageSquare,
   PanelLeft,
   TrendingUp,
+  Building2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService, authService } from '@/services/api';
@@ -53,6 +54,7 @@ const TAB_SECTIONS = [
       { id: 'customers', name: 'Customers', icon: Users },
       { id: 'abandoned_carts', name: 'Abandoned Carts', icon: ShoppingCart },
       { id: 'coupons', name: 'Coupons', icon: Tag },
+      { id: 'b2b_quotes', name: 'B2B Quotes', icon: Building2 },
       { id: 'reviews', name: 'Reviews', icon: Star },
       { id: 'media', name: 'Media Library', icon: FolderOpen },
       { id: 'cms', name: 'Homepage CMS', icon: FileEdit },
