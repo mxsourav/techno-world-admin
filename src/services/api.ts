@@ -150,11 +150,10 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
         headers.set('Authorization', `Bearer ${newToken}`);
         return fetch(url, { ...options, headers, credentials: 'include' });
       } else {
-        // Do NOT drop token abruptly; trigger in-place session unlock so user never loses form state
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('tw:admin-auth-expired', {
-            detail: { message: 'Admin session timed out' }
-          }));
+        // If refresh fails after session expiration, redirect to admin login if on protected admin route
+        if (isAdminRoute && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
+          localStorage.removeItem('tw_admin_token');
+          window.location.href = '/admin/login';
         }
       }
     } else {
