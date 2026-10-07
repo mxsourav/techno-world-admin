@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Navigate } from 'react-router';
 import {
   BookOpen,
   Plus,
+  Pen,
   Search,
   ShoppingCart,
   Users,
@@ -1824,14 +1825,40 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   const [selectedEmailPreview, setSelectedEmailPreview] = useState<any>(null);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
 
+  // Outbox Filter Tabs & Manual Compose State
+  const [outboxFilterTier, setOutboxFilterTier] = useState<'ALL' | 'ORDERS' | 'TEAM' | 'SUPPORT'>('ALL');
+  const [outboxSearchQuery, setOutboxSearchQuery] = useState('');
+  const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
+  const [isSendingManualEmail, setIsSendingManualEmail] = useState(false);
+  const [composeForm, setComposeForm] = useState<{
+    tier: 'ORDERS' | 'TEAM' | 'SUPPORT';
+    toEmail: string;
+    recipientName: string;
+    subject: string;
+    message: string;
+    orderNumber: string;
+  }>({
+    tier: 'ORDERS',
+    toEmail: '',
+    recipientName: '',
+    subject: '',
+    message: '',
+    orderNumber: '',
+  });
+
   const [pendingOrdersSummary, setPendingOrdersSummary] = useState<any[]>([]);
 
-  const fetchEmailLogs = () => {
+  const fetchEmailLogs = (tierParam?: string, searchParam?: string) => {
     setIsLoadingEmails(true);
-    adminService.getEmailLogs({ limit: 50 })
+    const activeTier = tierParam !== undefined ? tierParam : (outboxFilterTier === 'ALL' ? undefined : outboxFilterTier);
+    const activeSearch = searchParam !== undefined ? searchParam : (outboxSearchQuery.trim() || undefined);
+    adminService.getEmailLogs({ limit: 60, tier: activeTier, search: activeSearch })
       .then((res: any) => {
         if (res.success && Array.isArray(res.data)) {
           setEmailLogs(res.data);
+          if (res.data.length > 0 && (!selectedEmailPreview || !res.data.some((d: any) => d.id === selectedEmailPreview.id))) {
+            setSelectedEmailPreview(res.data[0]);
+          }
         }
       })
       .catch(() => {})
@@ -1935,6 +1962,51 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
       toast.error(err.message || 'SMTP Test failed. Check credentials.');
     } finally {
       setIsTestingSmtp(false);
+    }
+  };
+
+  const handleSendManualEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!composeForm.toEmail || !composeForm.toEmail.includes('@')) {
+      return toast.error('Please enter a valid recipient email address');
+    }
+    if (!composeForm.subject.trim()) {
+      return toast.error('Subject line is required');
+    }
+    if (!composeForm.message.trim()) {
+      return toast.error('Message body is required');
+    }
+
+    setIsSendingManualEmail(true);
+    try {
+      const res = await adminService.sendManualEmail({
+        tier: composeForm.tier,
+        toEmail: composeForm.toEmail.trim(),
+        recipientName: composeForm.recipientName.trim() || undefined,
+        subject: composeForm.subject.trim(),
+        message: composeForm.message.trim(),
+        orderNumber: composeForm.orderNumber.trim() || undefined,
+      });
+
+      if (res.success) {
+        toast.success(`Email dispatched successfully via ${composeForm.tier} account!`);
+        setIsComposeModalOpen(false);
+        setComposeForm({
+          tier: composeForm.tier,
+          toEmail: '',
+          recipientName: '',
+          subject: '',
+          message: '',
+          orderNumber: '',
+        });
+        fetchEmailLogs();
+      } else {
+        toast.error(res.message || 'Failed to dispatch email');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to dispatch manual email');
+    } finally {
+      setIsSendingManualEmail(false);
     }
   };
 
@@ -7310,9 +7382,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       setTestEmailTo(adminProfile.email || 'customer@technoworldbooks.in');
                       setIsTestEmailModalOpen(true);
                     }}
-                    className="glass-action-button"
+                    className="glass-action-button flex items-center gap-1.5"
                   >
-                    🚀 Test SMTP
+                    <Send className="h-3.5 w-3.5" /> Test SMTP
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
@@ -7351,7 +7423,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       }}
                       className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
                     >
-                      <span>⚡ Hostinger Orders (orders@)</span>
+                      <Package className="h-3.5 w-3.5" /> Orders (orders@)
                     </button>
                     <button
                       type="button"
@@ -7367,9 +7439,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         });
                         toast.success('Loaded Hostinger support@technoworldbooks.in presets!');
                       }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
                     >
-                      support@technoworldbooks.in
+                      <MessageSquare className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> support@technoworldbooks.in
                     </button>
                     <button
                       type="button"
@@ -7385,9 +7457,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         });
                         toast.success('Loaded Hostinger team@technoworldbooks.in presets!');
                       }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95"
+                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
                     >
-                      team@technoworldbooks.in
+                      <Users className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> team@technoworldbooks.in
                     </button>
                   </div>
                 </div>
@@ -7469,7 +7541,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   {/* Hostinger & Customer Reply Notice */}
                   <div className="rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-2">
                     <p className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                      <span>💡 Hostinger Webmail & Two-Way Customer Inbox:</span>
+                      <ShieldCheck className="h-4 w-4 text-blue-600" /> Hostinger Webmail & Two-Way Customer Inbox:
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
                       <li><b>Outbound Emails:</b> Order receipts, tracking numbers, and address clarifications are sent via <b>smtp.hostinger.com (Port 465 SSL)</b>.</li>
@@ -7492,36 +7564,46 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
             {/* Test Email Modal */}
             {isTestEmailModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-                <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200">
-                  <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
-                    <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-emerald-700" /> Send Live SMTP Test Email
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+                <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0c1222] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-slate-50 dark:bg-[#131b2e]">
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-emerald-700 dark:text-emerald-400" /> Send Live SMTP Test Email
                     </h3>
                     <button onClick={() => { setIsTestEmailModalOpen(false); setTestEmailResult(null); }} className="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
                   </div>
 
                   <form onSubmit={handleSendTestEmail} className="p-6 space-y-4">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Enter any recipient email to test if your SMTP host ({smtpForm.host}) is delivering messages.
                     </p>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Recipient Email Address</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Recipient Email Address</label>
                       <input
                         type="email"
                         value={testEmailTo}
                         onChange={(e) => setTestEmailTo(e.target.value)}
                         placeholder="your_personal_email@gmail.com"
-                        className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-emerald-500"
                         required
                       />
                     </div>
 
                     {testEmailResult && (
-                      <div className={`rounded-xl p-3.5 text-xs border ${testEmailResult.isDelivered ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-950'}`}>
+                      <div className={`rounded-xl p-3.5 text-xs border ${testEmailResult.isDelivered ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-950 dark:text-amber-200'}`}>
                         <p className="font-bold flex items-center gap-1.5">
-                          {testEmailResult.isDelivered ? '✅ SMTP Delivered Successfully!' : '📦 Dispatched to Admin Outbox'}
+                          {testEmailResult.isDelivered ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              SMTP Delivered Successfully!
+                            </>
+                          ) : (
+                            <>
+                              <Package className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              Dispatched to Admin Outbox
+                            </>
+                          )}
                         </p>
                         <p className="mt-1 text-[11px] opacity-90">{testEmailResult.note || testEmailResult.message}</p>
                       </div>
@@ -7531,7 +7613,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       <button
                         type="button"
                         onClick={() => { setIsTestEmailModalOpen(false); setTestEmailResult(null); }}
-                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                        className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         Close
                       </button>
@@ -7542,6 +7624,190 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       >
                         {isTestingSmtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                         Send Test Email
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Compose New Email Modal */}
+            {isComposeModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+                <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#0c1222] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh]">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-slate-50 dark:bg-[#131b2e]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                        <Pen className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Compose New Email</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Send custom operational or customer notification from official desks</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsComposeModalOpen(false)}
+                      className="rounded-full p-1 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Form */}
+                  <form onSubmit={handleSendManualEmail} className="p-6 space-y-4 overflow-y-auto flex-1">
+                    {/* Sender Account Dropdown */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                        Sender Account (Routing Tier)
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setComposeForm({ ...composeForm, tier: 'ORDERS' })}
+                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            composeForm.tier === 'ORDERS'
+                              ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100'
+                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e] text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
+                            <Package className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> Orders
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">orders@technoworldbooks.in</div>
+                          <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Strict No-Reply</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setComposeForm({ ...composeForm, tier: 'TEAM' })}
+                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            composeForm.tier === 'TEAM'
+                              ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-100'
+                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e] text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
+                            <Users className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Team
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">team@technoworldbooks.in</div>
+                          <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Auto-Matching Replies</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setComposeForm({ ...composeForm, tier: 'SUPPORT' })}
+                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                            composeForm.tier === 'SUPPORT'
+                              ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100'
+                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e] text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
+                            <MessageSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Support
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">support@technoworldbooks.in</div>
+                          <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Accepts Replies</div>
+                        </button>
+                      </div>
+                      {composeForm.tier === 'TEAM' && (
+                        <div className="mt-2 p-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/40 text-[11px] text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                          <Zap className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                          <span>Includes automated reply tracking headers and a 1-click customer response mailto button.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recipient Details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Recipient Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={composeForm.toEmail}
+                          onChange={(e) => setComposeForm({ ...composeForm, toEmail: e.target.value })}
+                          placeholder="customer@example.com"
+                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Recipient Name (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={composeForm.recipientName}
+                          onChange={(e) => setComposeForm({ ...composeForm, recipientName: e.target.value })}
+                          placeholder="e.g. Rahul Sharma"
+                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Order Reference */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Order Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={composeForm.orderNumber}
+                        onChange={(e) => setComposeForm({ ...composeForm, orderNumber: e.target.value })}
+                        placeholder="e.g. 261007-4482"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3.5 py-2 text-xs font-mono outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Subject */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Subject Line <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={composeForm.subject}
+                        onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
+                        placeholder="e.g. Update regarding your order delivery address"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Message Body */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Message Body <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        required
+                        rows={6}
+                        value={composeForm.message}
+                        onChange={(e) => setComposeForm({ ...composeForm, message: e.target.value })}
+                        placeholder="Type your message here..."
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white p-3.5 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 leading-relaxed font-sans"
+                      />
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setIsComposeModalOpen(false)}
+                        className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSendingManualEmail}
+                        className="flex items-center gap-1.5 px-5 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {isSendingManualEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        Send Email
                       </button>
                     </div>
                   </form>
@@ -7564,12 +7830,19 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsComposeModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
+                  >
+                    <Pen className="h-3.5 w-3.5" /> Compose New Email
+                  </button>
                   <span className="rounded-full bg-black/[0.06] dark:bg-white/[0.10] px-3 py-1 text-xs font-semibold text-slate-700 dark:text-neutral-300">
                     {emailLogs.length} Total
                   </span>
                   <button
                     type="button"
-                    onClick={fetchEmailLogs}
+                    onClick={() => fetchEmailLogs()}
                     disabled={isLoadingEmails}
                     className="apple-pill-btn px-3 py-1.5 text-xs font-bold gap-1.5"
                   >
@@ -7579,10 +7852,94 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 </div>
               </div>
 
+              {/* Filter Tabs Bar (Tier Navigation) */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 pb-2">
+                <div className="flex flex-wrap items-center gap-1.5 bg-black/[0.04] dark:bg-white/[0.06] p-1 rounded-2xl border border-slate-200/60 dark:border-white/[0.06]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOutboxFilterTier('ALL');
+                      fetchEmailLogs('ALL');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      outboxFilterTier === 'ALL'
+                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    <span>All</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOutboxFilterTier('ORDERS');
+                      fetchEmailLogs('ORDERS');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      outboxFilterTier === 'ORDERS'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Package className="h-3.5 w-3.5" />
+                    <span>Orders (orders@technoworldbooks.in)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOutboxFilterTier('TEAM');
+                      fetchEmailLogs('TEAM');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      outboxFilterTier === 'TEAM'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    <span>Team (team@technoworldbooks.in)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOutboxFilterTier('SUPPORT');
+                      fetchEmailLogs('SUPPORT');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      outboxFilterTier === 'SUPPORT'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Support (support@technoworldbooks.in)</span>
+                  </button>
+                </div>
+
+                {/* Quick Search */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={outboxSearchQuery}
+                    onChange={(e) => {
+                      setOutboxSearchQuery(e.target.value);
+                      fetchEmailLogs(undefined, e.target.value);
+                    }}
+                    placeholder="Search outbox..."
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-zinc-800/60 text-xs text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
               {emailLogs.length === 0 ? (
                 <div className="py-14 text-center text-slate-400 dark:text-neutral-500 text-xs">
                   <Mail className="h-10 w-10 mx-auto text-slate-300 dark:text-neutral-600 mb-2.5" />
-                  No sent emails logged yet. Click &quot;🚀 Test SMTP&quot; above or update an order to dispatch an email.
+                  No sent emails logged yet. Click &quot;Test SMTP&quot; or &quot;Compose New Email&quot; above to dispatch an email.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[500px]">

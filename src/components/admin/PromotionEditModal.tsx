@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, Copy, Eye, Settings2, Users, PackageOpen, AlertCircle, ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react';
+import { X, Save, Copy, Eye, Settings2, Users, PackageOpen, AlertCircle, ChevronDown, ChevronUp, Check, RotateCcw, Globe } from 'lucide-react';
 import { promotionService, categoryService } from '@/services/api';
 import { toast } from 'sonner';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
@@ -228,15 +228,15 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
     <button 
       type="button" 
       onClick={() => toggleSection(id)}
-      className="flex w-full items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
+      className="flex w-full items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
     >
       <div className="flex items-center gap-2.5 text-left">
-        <div className={`p-1.5 rounded-lg ${expandedSection === id ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-neutral-400'}`}>
+        <div className={`p-1.5 rounded-lg ${expandedSection === id ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
           <Icon className="h-4 w-4" />
         </div>
         <div>
           <h4 className="font-bold text-slate-900 dark:text-white text-xs">{title}</h4>
-          <p className="text-[11px] text-slate-500 dark:text-neutral-400">{desc}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">{desc}</p>
         </div>
       </div>
       {expandedSection === id ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
@@ -244,11 +244,11 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
   );
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 p-2 sm:p-4 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="w-full max-w-[1050px] rounded-2xl bg-white dark:bg-[#0d1324] border border-slate-200 dark:border-white/[0.12] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden text-slate-900 dark:text-white dark-content">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/80 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="w-full max-w-[1050px] rounded-2xl bg-white dark:bg-[#0c1222] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[94vh] overflow-hidden text-slate-900 dark:text-white">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.08] px-5 py-3 bg-white dark:bg-[#0c1222]">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 bg-white dark:bg-[#0c1222]">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black text-slate-900 dark:text-white">
@@ -260,30 +260,30 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-neutral-400">Configure promotion rules and targeting</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Configure promotion rules and targeting</p>
           </div>
           <div className="flex items-center gap-2">
             {hasDraft && !promotion?.id && (
               <button
                 type="button"
                 onClick={handleClearDraft}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
                 title="Discard saved draft"
               >
                 <RotateCcw className="h-3.5 w-3.5" /> Discard Draft
               </button>
             )}
-            <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
+            <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative bg-slate-50/50 dark:bg-[#080d1a]">
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative bg-slate-50 dark:bg-[#080d1a]">
           
           {/* Mobile Tabs */}
-          <div className="flex lg:hidden p-2 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c1222] justify-center">
+          <div className="flex lg:hidden p-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1222] justify-center">
             <AnimatedGlassTabs
               tabs={[
                 { id: 'form', label: 'Configuration' },
@@ -297,7 +297,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
 
           {/* Left Column: Form */}
           <div className={`flex-1 overflow-y-auto p-3.5 sm:p-4 ${activeTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
-            <div className="max-w-2xl mx-auto space-y-3">
+            <div className="max-w-2xl mx-auto space-y-3.5">
               
               {/* Promotion Type */}
               <div>
@@ -308,14 +308,16 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                     onClick={() => setFormData({...formData, promotionType: 'UNIVERSAL'})}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border-2 text-left transition-all ${
                       formData.promotionType === 'UNIVERSAL'
-                        ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30'
-                        : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/[0.04]'
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e]'
                     }`}
                   >
-                    <div className="text-xl">🌍</div>
+                    <div className="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+                      <Globe className="h-4.5 w-4.5" />
+                    </div>
                     <div>
                       <div className="font-bold text-slate-900 dark:text-white text-xs mb-0.5">Universal</div>
-                      <div className="text-[11px] text-slate-500 dark:text-neutral-400 leading-snug">Available to anyone who enters the code or qualifies for the rule.</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">Available to anyone who enters the code or qualifies for the rule.</div>
                     </div>
                   </button>
                   <button 
@@ -323,34 +325,36 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                     onClick={() => setFormData({...formData, promotionType: 'PERSONAL'})}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border-2 text-left transition-all ${
                       formData.promotionType === 'PERSONAL'
-                        ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30'
-                        : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/[0.04]'
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e]'
                     }`}
                   >
-                    <div className="text-xl">👤</div>
+                    <div className="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+                      <Users className="h-4.5 w-4.5" />
+                    </div>
                     <div>
                       <div className="font-bold text-slate-900 dark:text-white text-xs mb-0.5">Personal</div>
-                      <div className="text-[11px] text-slate-500 dark:text-neutral-400 leading-snug">Gated to specific customers. Assigned via Customer Management later.</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">Gated to specific customers. Assigned via Customer Management later.</div>
                     </div>
                   </button>
                 </div>
               </div>
 
               {/* Basic Info */}
-              <div className="bg-white dark:bg-[#0d1324]/80 rounded-xl border border-slate-200 dark:border-white/[0.08] p-3.5 space-y-2.5 shadow-sm">
+              <div className="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-2.5 shadow-xs">
                 <div>
                   <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">Promotion Name <span className="text-red-500">*</span></label>
-                  <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" placeholder="e.g. Summer Back to School Sale" />
+                  <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" placeholder="e.g. Summer Back to School Sale" />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">Coupon Code (Optional)</label>
-                    <input value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-mono uppercase" placeholder="e.g. SUMMER20" />
+                    <input value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-mono uppercase" placeholder="e.g. SUMMER20" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">Discount Type</label>
-                    <select value={formData.discountType} onChange={e => setFormData({ ...formData, discountType: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-[#131b2e] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs">
+                    <select value={formData.discountType} onChange={e => setFormData({ ...formData, discountType: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs">
                       <option value="PERCENTAGE">Percentage (%)</option>
                       <option value="FIXED">Flat Amount (₹)</option>
                       <option value="FREE_SHIPPING">Free Shipping</option>
@@ -362,10 +366,10 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">Discount Value <span className="text-red-500">*</span></label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-xs">
                         {formData.discountType === 'PERCENTAGE' ? '%' : '₹'}
                       </span>
-                      <input required type="number" step="0.01" value={formData.discountValue} onChange={e => setFormData({ ...formData, discountValue: Number(e.target.value) })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white pl-8 pr-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-bold text-emerald-700 dark:text-emerald-400" placeholder="0.00" />
+                      <input required type="number" step="0.01" value={formData.discountValue} onChange={e => setFormData({ ...formData, discountValue: Number(e.target.value) })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white pl-8 pr-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs font-bold text-emerald-700 dark:text-emerald-400" placeholder="0.00" />
                     </div>
                   </div>
                 )}
@@ -373,41 +377,41 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">Start Date</label>
-                    <input type="datetime-local" value={formData.validFrom} onChange={e => setFormData({ ...formData, validFrom: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" />
+                    <input type="datetime-local" value={formData.validFrom} onChange={e => setFormData({ ...formData, validFrom: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">End Date</label>
-                    <input type="datetime-local" value={formData.validUntil} onChange={e => setFormData({ ...formData, validUntil: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" />
+                    <input type="datetime-local" value={formData.validUntil} onChange={e => setFormData({ ...formData, validUntil: e.target.value })} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-xs" />
                   </div>
                 </div>
               </div>
 
               {/* Progressive Disclosure Sections (Accordions) */}
-              <div className="bg-white dark:bg-[#0d1324]/80 rounded-xl border border-slate-200 dark:border-white/[0.08] overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/[0.06]">
+              <div className="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs divide-y divide-slate-100 dark:divide-slate-800">
                 
                 {/* Usage Rules */}
                 <div>
                   <AccordionHeader id="usage" icon={Settings2} title="Usage Rules" desc="Minimums, maximums, and limits" />
                   {expandedSection === 'usage' && (
-                    <div className="p-3.5 bg-slate-50/50 dark:bg-white/[0.02] space-y-2.5 border-t border-slate-100 dark:border-white/[0.06]">
+                    <div className="p-3.5 bg-slate-50/70 dark:bg-[#0c1222]/50 space-y-2.5 border-t border-slate-100 dark:border-slate-800">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 dark:text-neutral-300 mb-1">Min Order Amount (₹)</label>
-                          <input type="number" value={formData.minOrderAmount} onChange={e => setFormData({...formData, minOrderAmount: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for none" />
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Min Order Amount (₹)</label>
+                          <input type="number" value={formData.minOrderAmount} onChange={e => setFormData({...formData, minOrderAmount: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for none" />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 dark:text-neutral-300 mb-1">Max Discount (₹)</label>
-                          <input type="number" value={formData.maxDiscount} onChange={e => setFormData({...formData, maxDiscount: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for none" />
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Max Discount (₹)</label>
+                          <input type="number" value={formData.maxDiscount} onChange={e => setFormData({...formData, maxDiscount: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for none" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 dark:text-neutral-300 mb-1">Total Usage Limit</label>
-                          <input type="number" value={formData.usageLimit} onChange={e => setFormData({...formData, usageLimit: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for unlimited" />
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Total Usage Limit</label>
+                          <input type="number" value={formData.usageLimit} onChange={e => setFormData({...formData, usageLimit: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 text-xs" placeholder="0 for unlimited" />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 dark:text-neutral-300 mb-1">Usage Limit Per User</label>
-                          <input type="number" value={formData.usageLimitPerUser} onChange={e => setFormData({...formData, usageLimitPerUser: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-white/[0.06] text-slate-900 dark:text-white px-3 py-1.5 text-xs" min="1" />
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Usage Limit Per User</label>
+                          <input type="number" value={formData.usageLimitPerUser} onChange={e => setFormData({...formData, usageLimitPerUser: Number(e.target.value)})} className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0c1222] text-slate-900 dark:text-white px-3 py-1.5 text-xs" min="1" />
                         </div>
                       </div>
                     </div>
@@ -418,19 +422,19 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                 <div>
                   <AccordionHeader id="customer" icon={Users} title="Customer Eligibility" desc="Target specific user segments" />
                   {expandedSection === 'customer' && (
-                    <div className="p-3.5 bg-slate-50/50 dark:bg-white/[0.02] space-y-2 border-t border-slate-100 dark:border-white/[0.06]">
-                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-white/[0.04] rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer hover:border-emerald-500 transition-colors">
-                        <input type="checkbox" checked={formData.isFirstOrderOnly} onChange={e => setFormData({...formData, isFirstOrderOnly: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" />
+                    <div className="p-3.5 bg-slate-50/70 dark:bg-[#0c1222]/50 space-y-2 border-t border-slate-100 dark:border-slate-800">
+                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-[#0c1222] rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors">
+                        <input type="checkbox" checked={formData.isFirstOrderOnly} onChange={e => setFormData({...formData, isFirstOrderOnly: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700 focus:ring-emerald-500" />
                         <div>
                           <div className="text-xs font-bold text-slate-900 dark:text-white">First Order Only</div>
-                          <div className="text-[11px] text-slate-500 dark:text-neutral-400">Only applies to customers with zero previous orders.</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">Only applies to customers with zero previous orders.</div>
                         </div>
                       </label>
-                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-white/[0.04] rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer hover:border-emerald-500 transition-colors">
-                        <input type="checkbox" checked={formData.requireLogin} onChange={e => setFormData({...formData, requireLogin: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" />
+                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-[#0c1222] rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors">
+                        <input type="checkbox" checked={formData.requireLogin} onChange={e => setFormData({...formData, requireLogin: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700 focus:ring-emerald-500" />
                         <div>
                           <div className="text-xs font-bold text-slate-900 dark:text-white">Require Login</div>
-                          <div className="text-[11px] text-slate-500 dark:text-neutral-400">Guests cannot use this promotion.</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">Guests cannot use this promotion.</div>
                         </div>
                       </label>
                     </div>
@@ -501,19 +505,19 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                 <div>
                   <AccordionHeader id="advanced" icon={AlertCircle} title="Advanced Restrictions" desc="Stacking, priority, and free shipping" />
                   {expandedSection === 'advanced' && (
-                    <div className="p-3.5 bg-slate-50/50 dark:bg-white/[0.02] space-y-2 border-t border-slate-100 dark:border-white/[0.06]">
-                       <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-white/[0.04] rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer hover:border-emerald-500 transition-colors">
-                        <input type="checkbox" checked={formData.freeShipping} onChange={e => setFormData({...formData, freeShipping: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" />
+                    <div className="p-3.5 bg-slate-50/70 dark:bg-[#0c1222]/50 space-y-2 border-t border-slate-100 dark:border-slate-800">
+                       <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-[#0c1222] rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors">
+                        <input type="checkbox" checked={formData.freeShipping} onChange={e => setFormData({...formData, freeShipping: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700 focus:ring-emerald-500" />
                         <div>
                           <div className="text-xs font-bold text-slate-900 dark:text-white">Includes Free Shipping</div>
-                          <div className="text-[11px] text-slate-500 dark:text-neutral-400">Provides free delivery in addition to the discount.</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">Provides free delivery in addition to the discount.</div>
                         </div>
                       </label>
-                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-white/[0.04] rounded-lg border border-slate-200 dark:border-white/10 cursor-pointer hover:border-emerald-500 transition-colors opacity-50">
-                        <input disabled type="checkbox" checked={formData.allowCombination} onChange={e => setFormData({...formData, allowCombination: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300" />
+                      <label className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-[#0c1222] rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition-colors opacity-50">
+                        <input disabled type="checkbox" checked={formData.allowCombination} onChange={e => setFormData({...formData, allowCombination: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded border-slate-300 dark:border-slate-700" />
                         <div>
                           <div className="text-xs font-bold text-slate-900 dark:text-white">Allow Combination (Coming Soon)</div>
-                          <div className="text-[11px] text-slate-500 dark:text-neutral-400">Can be stacked with other active promotions.</div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">Can be stacked with other active promotions.</div>
                         </div>
                       </label>
                     </div>
@@ -525,7 +529,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
           </div>
 
           {/* Right Column: Live Preview */}
-          <div className={`w-full lg:w-[320px] bg-slate-100 dark:bg-[#0a0f1d] border-l border-slate-200 dark:border-white/[0.08] p-4 flex-col overflow-y-auto ${activeTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`w-full lg:w-[320px] bg-slate-100 dark:bg-[#0c1222] border-l border-slate-200 dark:border-slate-800 p-4 flex-col overflow-y-auto ${activeTab === 'form' ? 'hidden lg:flex' : 'flex'}`}>
             <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Eye className="h-4 w-4" /> Live Storefront Preview
             </h3>
@@ -542,8 +546,8 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                   <div className="absolute inset-0 bg-[radial-gradient(#b45309_1px,transparent_1px)] [background-size:10px_10px] opacity-10 pointer-events-none" />
                   
                   {/* Left & Right Circular Perforation Cutout Notches */}
-                  <div className="absolute -left-3.5 top-[65%] -translate-y-1/2 h-7 w-7 rounded-full bg-slate-100 dark:bg-[#0a0f1d] border-r-2 border-amber-400 shadow-inner z-10" />
-                  <div className="absolute -right-3.5 top-[65%] -translate-y-1/2 h-7 w-7 rounded-full bg-slate-100 dark:bg-[#0a0f1d] border-l-2 border-amber-400 shadow-inner z-10" />
+                  <div className="absolute -left-3.5 top-[65%] -translate-y-1/2 h-7 w-7 rounded-full bg-slate-100 dark:bg-[#0c1222] border-r-2 border-amber-400 shadow-inner z-10" />
+                  <div className="absolute -right-3.5 top-[65%] -translate-y-1/2 h-7 w-7 rounded-full bg-slate-100 dark:bg-[#0c1222] border-l-2 border-amber-400 shadow-inner z-10" />
 
                   {/* Top Header: Date Stamp & Type Pill */}
                   <div className="flex items-center justify-between gap-2 mb-3 relative z-0">
@@ -653,12 +657,12 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
             {/* Health Warnings */}
             {warnings.length > 0 && (
               <div className="mt-6">
-                <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" /> Promotion Health
                 </h4>
                 <div className="space-y-2">
                   {warnings.map((w, i) => (
-                    <div key={i} className="bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs p-3 rounded-lg flex items-start gap-2">
+                    <div key={i} className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 text-xs p-2.5 rounded-xl flex items-start gap-2 shadow-2xs">
                       <span className="shrink-0 mt-0.5">•</span>
                       <span>{w}</span>
                     </div>
@@ -671,8 +675,12 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-200 dark:border-white/[0.08] p-3 sm:p-4 bg-white dark:bg-[#0c1222] flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <button type="button" onClick={onClose} className="glass-action-button w-full sm:w-auto">
+        <div className="border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 bg-white dark:bg-[#0c1222] flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+          >
             Cancel
           </button>
           
@@ -681,33 +689,33 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
               type="button" 
               onClick={() => handleSave('DRAFT', false)}
               disabled={loading || !formData.name}
-              className="glass-action-button disabled:opacity-50"
+              className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Save className="h-4 w-4" /> Save Draft
+              <Save className="h-3.5 w-3.5" /> Save Draft
             </button>
             <button 
               type="button" 
               onClick={() => handleSave('PAUSED', false)}
               disabled={loading || !formData.name}
-              className="glass-action-button text-amber-700 dark:text-amber-300 disabled:opacity-50"
+              className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <AlertCircle className="h-4 w-4" /> Save as Paused
+              <AlertCircle className="h-3.5 w-3.5" /> Save as Paused
             </button>
             <button 
               type="button" 
               onClick={() => handleSave('DRAFT', true)}
               disabled={loading || !formData.name}
-              className="glass-action-button disabled:opacity-50"
+              className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Copy className="h-4 w-4" /> Save Template
+              <Copy className="h-3.5 w-3.5" /> Save Template
             </button>
             <button 
               type="button" 
               onClick={() => handleSave('ACTIVE', false)}
               disabled={loading || !formData.name || (formData.discountType !== 'FREE_SHIPPING' && !formData.discountValue)}
-              className="glass-action-button-primary disabled:opacity-50"
+              className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-900/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Save className="h-4 w-4" /> {promotion?.id ? 'Update & Activate' : 'Publish & Go Live'}
+              <Save className="h-3.5 w-3.5" /> {promotion?.id ? 'Update & Activate' : 'Publish & Go Live'}
             </button>
           </div>
         </div>

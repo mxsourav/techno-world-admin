@@ -352,8 +352,18 @@ export const adminService = {
     pass?: string;
     senderEmail?: string;
     senderName?: string;
+    tier?: 'ORDERS' | 'TEAM' | 'SUPPORT';
   }) => api.post<any>('/admin/smtp/test', data),
-  getEmailLogs: (params?: { limit?: number }) => api.get<any[]>('/admin/emails', params),
+  getEmailLogs: (params?: { limit?: number; tier?: string; status?: string; search?: string }) =>
+    api.get<any[]>('/admin/emails', params),
+  sendManualEmail: (data: {
+    tier: 'ORDERS' | 'TEAM' | 'SUPPORT';
+    toEmail: string;
+    recipientName?: string;
+    subject: string;
+    message: string;
+    orderNumber?: string;
+  }) => api.post<any>('/admin/emails/send', data),
   getCustomers: (params?: { search?: string; phone?: string; status?: string; page?: number; limit?: number }) => api.get<any>('/admin/customers', params),
   updateCustomer: (id: string, data: any) => api.patch<any>(`/admin/customers/${id}`, data),
   deleteCustomer: (id: string) => api.delete<any>(`/admin/customers/${id}`),
