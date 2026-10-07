@@ -38,6 +38,9 @@ import {
   Clock,
   Package,
   Zap,
+  Sun,
+  Moon,
+  Maximize2,
   Store,
   CalendarCheck,
   MessageSquare,
@@ -1824,6 +1827,117 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [selectedEmailPreview, setSelectedEmailPreview] = useState<any>(null);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
+  const [emailPreviewMode, setEmailPreviewMode] = useState<'light' | 'dark'>('light');
+  const [isFullEmailModalOpen, setIsFullEmailModalOpen] = useState(false);
+
+  // Sync email preview theme with Admin UI dark mode, defaulting to light mode
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setEmailPreviewMode(isDark ? 'dark' : 'light');
+
+    const observer = new MutationObserver(() => {
+      const currentDark = document.documentElement.classList.contains('dark');
+      setEmailPreviewMode(currentDark ? 'dark' : 'light');
+    });
+
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const generateEmailIframeDoc = (rawHtml?: string, mode: 'light' | 'dark' = 'light', plainText?: string) => {
+    const content = rawHtml || `<div style="font-family: sans-serif; padding: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${plainText || 'No email content available.'}</div>`;
+
+    if (mode === 'light') {
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root { color-scheme: light !important; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 16px 12px;
+      background-color: #ffffff !important;
+      color: #1e293b !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    .email-bg, body > table { background-color: #f8fafc !important; }
+    .card, table[style*="background"], td[style*="background"] { 
+      background-color: #ffffff !important; 
+    }
+    p, td, li, div, span {
+      color: #1e293b !important;
+    }
+    h1, h2, h3, h4, strong, b {
+      color: #0f172a !important;
+    }
+    .text-muted { color: #64748b !important; }
+    a { color: #0284c7 !important; }
+    @media (prefers-color-scheme: dark) {
+      body, table, td, div, p, span {
+        background-color: transparent !important;
+        color: inherit !important;
+      }
+      .email-bg { background-color: #f8fafc !important; }
+      .card { background-color: #ffffff !important; }
+      p, td, span, div { color: #1e293b !important; }
+      h1, h2, h3, strong, b { color: #0f172a !important; }
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`;
+    }
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root { color-scheme: dark !important; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 16px 12px;
+      background-color: #09090b !important;
+      color: #f4f4f5 !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    .email-bg, body > table { background-color: #09090b !important; }
+    .card, table[style*="background"], td[style*="background"] {
+      background-color: #18181b !important;
+      border-color: #27272a !important;
+    }
+    p, td, li, div, span {
+      color: #e4e4e7 !important;
+    }
+    h1, h2, h3, h4, strong, b {
+      color: #ffffff !important;
+    }
+    .text-muted { color: #a1a1aa !important; }
+    .brand-header { background: #064e3b !important; }
+    .footer-note { background-color: #27272a !important; color: #e4e4e7 !important; border-color: #3f3f46 !important; }
+    a { color: #38bdf8 !important; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`;
+  };
 
   // Outbox Filter Tabs & Manual Compose State
   const [outboxFilterTier, setOutboxFilterTier] = useState<'ALL' | 'ORDERS' | 'TEAM' | 'SUPPORT'>('ALL');
@@ -7944,7 +8058,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[500px]">
                   {/* Left Pane: macOS Mail 3-Line List (matches media_1789083620354.png) */}
-                  <div className="lg:col-span-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/60 dark:bg-zinc-900/50 p-2 overflow-y-auto max-h-[620px] space-y-1">
+                  <div className="lg:col-span-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/60 dark:bg-zinc-900/50 p-2 overflow-y-auto min-h-[640px] max-h-[780px] space-y-1">
                     {emailLogs.map((log: any) => {
                       const isSelected = selectedEmailPreview?.id === log.id;
                       const rawSnippet = log.message || (log.htmlContent ? log.htmlContent.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : 'Email notification sent successfully.');
@@ -8019,12 +8133,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   </div>
 
                   {/* Right Pane: Apple macOS Mail Reading / Detail Pane */}
-                  <div className="lg:col-span-7 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-950/70 p-6 flex flex-col justify-between overflow-hidden shadow-xs">
+                  <div className="lg:col-span-7 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-950/70 p-5 flex flex-col justify-between overflow-hidden shadow-xs min-h-[640px] max-h-[780px]">
                     {(selectedEmailPreview || (emailLogs.length > 0 ? emailLogs[0] : null)) ? (() => {
                       const activeLog = selectedEmailPreview || emailLogs[0];
+                      const previewIframeDoc = generateEmailIframeDoc(activeLog.htmlContent, emailPreviewMode, activeLog.message);
+
                       return (
-                        <div className="flex flex-col h-full space-y-4">
-                          <div className="border-b border-slate-200/80 dark:border-white/[0.08] pb-4">
+                        <div className="flex flex-col h-full space-y-3">
+                          {/* Header Bar */}
+                          <div className="border-b border-slate-200/80 dark:border-white/[0.08] pb-3">
                             <div className="flex items-center justify-between gap-2 mb-2">
                               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
                                 activeLog.status === 'DELIVERED'
@@ -8034,37 +8151,145 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                 <span className={`h-2 w-2 rounded-full ${activeLog.status === 'DELIVERED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                 {activeLog.status === 'DELIVERED' ? 'Delivered via SMTP' : 'Queued Outbox'}
                               </span>
-                              <span className="text-xs text-slate-400 dark:text-neutral-400">
-                                {new Date(activeLog.createdAt).toLocaleString('en-IN', {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short',
-                                })}
-                              </span>
+
+                              <div className="flex items-center gap-2">
+                                {/* Mode Toggle for Email Preview (Default Light, Optimized Dark) */}
+                                <div className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEmailPreviewMode('light')}
+                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+                                      emailPreviewMode === 'light'
+                                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                                        : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white'
+                                    }`}
+                                    title="View email in Default Light Mode"
+                                  >
+                                    <Sun className="h-3 w-3" />
+                                    Light
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEmailPreviewMode('dark')}
+                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+                                      emailPreviewMode === 'dark'
+                                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                                        : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white'
+                                    }`}
+                                    title="View email in Optimized Dark Mode"
+                                  >
+                                    <Moon className="h-3 w-3" />
+                                    Dark
+                                  </button>
+                                </div>
+
+                                {/* Expand Modal Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsFullEmailModalOpen(true)}
+                                  className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all shadow-2xs"
+                                  title="Expand to full reading view"
+                                >
+                                  <Maximize2 className="h-3 w-3" />
+                                  Expand
+                                </button>
+
+                                <span className="text-xs text-slate-400 dark:text-neutral-400 ml-1">
+                                  {new Date(activeLog.createdAt).toLocaleString('en-IN', {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                  })}
+                                </span>
+                              </div>
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-snug">
+
+                            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
                               {activeLog.subject}
                             </h2>
-                            <div className="mt-2 text-xs space-y-0.5 text-slate-600 dark:text-neutral-300">
-                              <p><span className="font-semibold text-slate-400 dark:text-neutral-500">To:</span> <span className="font-bold">{activeLog.toEmail}</span></p>
-                              <p><span className="font-semibold text-slate-400 dark:text-neutral-500">From:</span> {activeLog.senderEmail || 'Techno World Books'}</p>
+
+                            <div className="mt-2 text-xs grid grid-cols-1 sm:grid-cols-2 gap-1 text-slate-600 dark:text-neutral-300">
+                              <p className="truncate"><span className="font-semibold text-slate-400 dark:text-neutral-500">To:</span> <span className="font-bold">{activeLog.toEmail}</span></p>
+                              <p className="truncate"><span className="font-semibold text-slate-400 dark:text-neutral-500">From:</span> {activeLog.senderEmail || 'Techno World Books'}</p>
                               {activeLog.orderNumber && (
                                 <p><span className="font-semibold text-slate-400 dark:text-neutral-500">Order:</span> #{activeLog.orderNumber}</p>
+                              )}
+                              {activeLog.tier && (
+                                <p><span className="font-semibold text-slate-400 dark:text-neutral-500">Tier:</span> <span className="font-mono">{activeLog.tier}</span></p>
                               )}
                             </div>
                           </div>
 
-                          <div className="flex-1 overflow-y-auto max-h-[460px] pr-2 rounded-xl bg-slate-50/50 dark:bg-zinc-900/40 p-4 border border-slate-100 dark:border-white/[0.05]">
-                            {activeLog.htmlContent ? (
-                              <div
-                                className="prose prose-sm max-w-none dark:prose-invert"
-                                dangerouslySetInnerHTML={{ __html: activeLog.htmlContent }}
-                              />
-                            ) : (
-                              <div className="whitespace-pre-wrap font-sans text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
-                                {activeLog.message || 'No body content available.'}
-                              </div>
-                            )}
+                          {/* Sandboxed Iframe Preview: Generous height, isolated styles, zero glitching */}
+                          <div className="flex-1 w-full rounded-xl overflow-hidden border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-900 shadow-2xs min-h-[480px]">
+                            <iframe
+                              title="Email Message Preview"
+                              srcDoc={previewIframeDoc}
+                              className="w-full h-full min-h-[480px] border-0"
+                              sandbox="allow-same-origin"
+                            />
                           </div>
+
+                          {/* Full Expanded Reading Modal */}
+                          {isFullEmailModalOpen && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
+                              <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+                                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-zinc-900/60">
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-lg">
+                                      {activeLog.subject}
+                                    </span>
+                                    <span className="text-xs text-slate-500 dark:text-neutral-400">
+                                      To: {activeLog.toEmail} &bull; From: {activeLog.senderEmail || 'Techno World Books'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-xs">
+                                      <button
+                                        type="button"
+                                        onClick={() => setEmailPreviewMode('light')}
+                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                                          emailPreviewMode === 'light'
+                                            ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-bold'
+                                            : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
+                                        }`}
+                                      >
+                                        <Sun className="h-3 w-3" />
+                                        Light
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEmailPreviewMode('dark')}
+                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                                          emailPreviewMode === 'dark'
+                                            ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-bold'
+                                            : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
+                                        }`}
+                                      >
+                                        <Moon className="h-3 w-3" />
+                                        Dark
+                                      </button>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsFullEmailModalOpen(false)}
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+                                      title="Close"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex-1 w-full bg-slate-50 dark:bg-zinc-900 p-2 overflow-hidden">
+                                  <iframe
+                                    title="Full Expanded Email"
+                                    srcDoc={previewIframeDoc}
+                                    className="w-full h-[76vh] border-0 rounded-xl bg-white dark:bg-zinc-950"
+                                    sandbox="allow-same-origin"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })() : (
