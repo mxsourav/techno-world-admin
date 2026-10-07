@@ -42,4 +42,16 @@
    - Updates to the backend require pulling the latest commit, compiling (`npm run build`), and restarting PM2 on the GCP VM (`pm2 restart backend` or `pm2 restart all`) to show `online` (green).
 
 ---
+
+## RULE 3: MANDATORY GCP VM SSH COMMAND DIRECTIVE
+
+1. **Always Include the Exact VM SSH Command**:
+   - Whenever providing any GCP, backend, PM2, environment variable, or server-side terminal instructions, ALWAYS explicitly specify this SSH command first:
+     ```bash
+     gcloud compute ssh instance-20260923-151813 --zone=asia-south1-a
+     ```
+   - Explain that Google Cloud Shell (`technoworldbookswebsite@cloudshell:~`) is merely a management console, and the Node.js backend application, `server/.env`, and PM2 daemon reside inside the Compute Engine VM instance (`~/my-app/server`).
+   - Never assume the user is already inside the VM; always provide this SSH connection step at the beginning of all server workflows.
+
+---
 *(Additional rules will be appended here)*
