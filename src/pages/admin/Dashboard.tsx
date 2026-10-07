@@ -1855,13 +1855,22 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root { color-scheme: light !important; }
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      font-variant-numeric: lining-nums tabular-nums !important;
+      -webkit-font-feature-settings: "lnum" 1 !important;
+      font-feature-settings: "lnum" 1 !important;
+    }
     html, body {
       margin: 0;
       padding: 12px;
       background-color: #f8fafc !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4, .text-primary {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      font-variant-numeric: lining-nums tabular-nums !important;
     }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #f8fafc; }
@@ -1882,7 +1891,12 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root { color-scheme: dark !important; }
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      font-variant-numeric: lining-nums tabular-nums !important;
+      -webkit-font-feature-settings: "lnum" 1 !important;
+      font-feature-settings: "lnum" 1 !important;
+    }
     html, body {
       margin: 0;
       padding: 12px;
@@ -1890,6 +1904,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
       color: #f4f4f5 !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4, .text-primary {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      font-variant-numeric: lining-nums tabular-nums !important;
     }
     .email-bg { background-color: #09090b !important; }
     .card { background-color: #18181b !important; border: 1px solid #27272a !important; }
