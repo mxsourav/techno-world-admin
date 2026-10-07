@@ -1466,11 +1466,13 @@ We would like to inform you that "${firstBookTitle}" is currently being arranged
 
 Rest assured, your order is confirmed and prioritized. As soon as it is packed, we will dispatch it via India Post Speed Post and email your live tracking barcode immediately.
 
+If you have any questions, you can reply directly to this email or reach us on WhatsApp at +91 747 913 5626.
+
 Thank you for your patience and understanding.
 
 Warm regards,
 Techno World Orders Team
-admin@technoworld.com | https://techno-world-books.vercel.app`
+orders@technoworldbooks.in | https://technoworldbooks.in`
       );
     } else if (templateKey === 'ADDRESS_CLARIFICATION') {
       setEmailSubject(`Address Clarification Required: Order #${order.orderNumber} - Techno World Books`);
@@ -1479,16 +1481,18 @@ admin@technoworld.com | https://techno-world-books.vercel.app`
 
 We are getting your order #${order.orderNumber} ready for dispatch via India Post Speed Post.
 
-To ensure seamless delivery by the postal carrier, could you please confirm your complete street address, nearby landmark, and 6-digit postal PIN code?
+To ensure seamless delivery by the postal carrier without any delay or return, could you please confirm your complete street address, nearby landmark, and 6-digit postal PIN code?
 
 Recipient Address on File:
 ${order.address?.line1 || ''}, ${order.address?.city || ''}, ${order.address?.state || ''} - ${order.address?.pincode || ''}
 
-Thank you for your quick confirmation.
+Please reply directly to this email with your updated details, or message our team on WhatsApp at +91 747 913 5626.
+
+Thank you for your quick confirmation!
 
 Warm regards,
 Techno World Dispatch Team
-admin@technoworld.com`
+orders@technoworldbooks.in | https://technoworldbooks.in`
       );
     } else if (templateKey === 'ORDER_CONFIRMATION') {
       setEmailSubject(`Order Confirmed: #${order.orderNumber} is Being Prepared - Techno World Books`);
@@ -1499,10 +1503,13 @@ Great news! Your order #${order.orderNumber} for "${firstBookTitle}" has been re
 
 We are currently packing your books with protective bubble wrap. You will receive an India Post Speed Post tracking number once the consignment is dispatched.
 
+If you have any questions, please feel free to reply directly to this email.
+
 Thank you for choosing Techno World Books!
 
 Warm regards,
-Techno World Books Team`
+Techno World Books Team
+orders@technoworldbooks.in | https://technoworldbooks.in`
       );
     } else {
       setEmailSubject(`Update regarding your Order #${order.orderNumber} - Techno World Books`);
@@ -1513,9 +1520,11 @@ We are writing to you regarding your order #${order.orderNumber}.
 
 
 
+Please reply directly to this email if you have any questions.
+
 Warm regards,
 Techno World Orders Team
-admin@technoworld.com`
+orders@technoworldbooks.in | https://technoworldbooks.in`
       );
     }
   };
@@ -1543,7 +1552,7 @@ admin@technoworld.com`
       });
 
       if (res.success) {
-        toast.success(`Email sent from admin@technoworld.com to ${emailRecipient}`);
+        toast.success(`Email sent from orders@technoworldbooks.in to ${emailRecipient}`);
         setEmailModalOrder(null);
         // Refresh orders to reflect updated communication notes
         orderService.getAllOrders().then(r => r.data && setOrders(r.data));
@@ -1797,13 +1806,13 @@ admin@technoworld.com`
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const [smtpForm, setSmtpForm] = useState({
-    senderEmail: 'admin@technoworld.com',
+    senderEmail: 'orders@technoworldbooks.in',
     senderName: 'Techno World Books',
-    host: 'smtp.gmail.com',
-    port: 587,
-    user: '',
-    pass: '',
-    secure: false,
+    host: 'smtp.hostinger.com',
+    port: 465,
+    user: 'orders@technoworldbooks.in',
+    pass: 'Aksad@301206',
+    secure: true,
   });
   const [isSavingSmtp, setIsSavingSmtp] = useState(false);
 
@@ -7329,7 +7338,7 @@ admin@technoworld.com`
                         type="email"
                         value={smtpForm.senderEmail}
                         onChange={(e) => setSmtpForm({ ...smtpForm, senderEmail: e.target.value })}
-                        placeholder="admin@technoworld.com"
+                        placeholder="orders@technoworldbooks.in"
                         className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
@@ -7338,12 +7347,12 @@ admin@technoworld.com`
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="col-span-2">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Host (e.g. Gmail)</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Host (Hostinger / Custom)</label>
                       <input
                         type="text"
                         value={smtpForm.host}
                         onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
-                        placeholder="smtp.gmail.com"
+                        placeholder="smtp.hostinger.com"
                         className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
@@ -7354,7 +7363,7 @@ admin@technoworld.com`
                         type="number"
                         value={smtpForm.port}
                         onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
-                        placeholder="587"
+                        placeholder="465"
                         className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         required
                       />
@@ -7961,7 +7970,7 @@ admin@technoworld.com`
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-base">Send Direct Customer Email</h3>
-                  <p className="text-xs text-slate-500">From official admin email: <span className="font-semibold text-slate-700">admin@technoworld.com</span></p>
+                  <p className="text-xs text-slate-500">From official orders desk: <span className="font-semibold text-slate-700">orders@technoworldbooks.in</span></p>
                 </div>
               </div>
               <button onClick={() => setEmailModalOrder(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200">
