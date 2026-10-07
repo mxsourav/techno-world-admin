@@ -24,4 +24,22 @@
    - Always verify that all UI labels are clean text accompanied only by crisp SVG vector icons.
 
 ---
+
+## RULE 2: ABSOLUTE BAN ON VERCEL AND RENDER (HOSTING ARCHITECTURE DIRECTIVE)
+
+1. **Never Mention or Target Vercel or Render**:
+   - The project is NO LONGER hosted on Vercel or Render.
+   - NEVER refer to Vercel or Render in responses, instructions, documentation, configs, or deployment steps.
+   - Any reference to Vercel or Render is strictly forbidden.
+
+2. **Official Hosting Infrastructure**:
+   - **Frontend Storefront**: Hosted on **Hostinger** (`https://technoworldbooks.in`), deployed via GitHub Actions (`deploy_frontend.yml`).
+   - **Admin Panel**: Hosted on **Hostinger** (`https://admin.technoworldbooks.in`), deployed via GitHub Actions (`deploy.yml`).
+   - **Backend API**: Hosted on **Google Cloud Platform (GCP) Compute Engine VM** (`https://api.technoworldbooks.in`), managed as a Node.js service via **PM2** (`backend` or `all`).
+   - **Database**: PostgreSQL hosted on the GCP VM.
+
+3. **Backend Service Restart Procedure**:
+   - Updates to the backend require pulling the latest commit, compiling (`npm run build`), and restarting PM2 on the GCP VM (`pm2 restart backend` or `pm2 restart all`) to show `online` (green).
+
+---
 *(Additional rules will be appended here)*
