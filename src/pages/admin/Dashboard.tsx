@@ -1477,7 +1477,7 @@ Techno World Orders Team
 orders@technoworldbooks.in | https://technoworldbooks.in`
       );
     } else if (templateKey === 'ADDRESS_CLARIFICATION') {
-      setEmailSubject(`Address Clarification Required: Order #${order.orderNumber} - Techno World Books`);
+      setEmailSubject(`Address Clarification Required: Order #${order.orderNumber}`);
       setEmailMessage(
 `Dear ${customerName},
 
@@ -1488,7 +1488,7 @@ To ensure seamless delivery by the postal carrier without any delay or return, c
 Recipient Address on File:
 ${order.address?.line1 || ''}, ${order.address?.city || ''}, ${order.address?.state || ''} - ${order.address?.pincode || ''}
 
-Please reply directly to this email with your updated details, or message our team on WhatsApp at +91 747 913 5626.
+Please click the Confirm Delivery Address button below or reply directly to this email with your updated details, or message our team on WhatsApp at +91 747 913 5626.
 
 Thank you for your quick confirmation!
 
@@ -1844,11 +1844,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     const content = rawHtml || `<div style="font-family: sans-serif; padding: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${plainText || 'No email content available.'}</div>`;
 
     if (!isDark) {
-      // MASTER LIGHT MODE VIEW: 100% white paper with dark text, neutralizing any dark media queries or inline black colors
-      const cleaned = content
-        .replace(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)[\s\S]*?\{[\s\S]*?\}\s*\}/gi, '')
-        .replace(/(?:background-color|background)\s*:\s*(?:#0[0-9a-f]{5}|#1[0-9a-f]{5}|#2[0-9a-f]{5}|#000|#111|#222|black|rgb\(\s*[0-3]\d?\s*,\s*[0-3]\d?\s*,\s*[0-3]\d?\s*\))/gi, 'background-color: #ffffff')
-        .replace(/color\s*:\s*(?:#e[0-9a-f]{5}|#f[0-9a-f]{5}|#fff|white)/gi, 'color: #1e293b');
+      // MASTER LIGHT MODE VIEW: 100% genuine light email view without color glitches
+      // Strip dark media queries so host OS dark mode does not trigger dark styling inside iframe
+      const cleaned = content.replace(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)[\s\S]*?\{[\s\S]*?\}\s*\}/gi, '');
 
       return `<!DOCTYPE html>
 <html lang="en">
@@ -1860,36 +1858,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
-      padding: 16px 12px;
+      padding: 12px;
       background-color: #f8fafc !important;
-      color: #1e293b !important;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
-    }
-    body *, table, tbody, tr, td, div, center, section {
-      background-color: transparent !important;
-      color: #1e293b !important;
-    }
-    .email-bg, body > table {
-      background-color: #f8fafc !important;
-    }
-    .card, table.card, table[role="presentation"], div.card {
-      background-color: #ffffff !important;
-      border-color: #e2e8f0 !important;
-    }
-    p, td, li, div, span {
-      color: #1e293b !important;
-    }
-    h1, h2, h3, h4, strong, b {
-      color: #0f172a !important;
-    }
-    .text-muted { color: #64748b !important; }
-    a { color: #0284c7 !important; }
-    .brand-header, [style*="#14432B"], [style*="#0A2618"] {
-      background: #14432b !important;
-    }
-    .brand-header *, [style*="#14432B"] *, [style*="#0A2618"] * {
-      color: #ffffff !important;
     }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #f8fafc; }
@@ -1902,7 +1874,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 </html>`;
     }
 
-    // MASTER DARK MODE VIEW: High contrast, deep surfaces
+    // MASTER DARK MODE VIEW: Clean dark theme without broken boxes or ruined buttons
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1913,27 +1885,25 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
-      padding: 16px 12px;
+      padding: 12px;
       background-color: #09090b !important;
       color: #f4f4f5 !important;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    .email-bg, body > table { background-color: #09090b !important; }
-    .card, table[style*="background"], td[style*="background"] {
-      background-color: #18181b !important;
-      border-color: #27272a !important;
-    }
-    p, td, li, div, span {
-      color: #e4e4e7 !important;
-    }
-    h1, h2, h3, h4, strong, b {
+    .email-bg { background-color: #09090b !important; }
+    .card { background-color: #18181b !important; border: 1px solid #27272a !important; }
+    .card h1, .card h2, .card h3, .card h4 { color: #f4f4f5 !important; }
+    .card p, .card td, .card span { color: #d4d4d8 !important; }
+    .card .text-muted { color: #a1a1aa !important; }
+    .card a { color: #38bdf8 !important; }
+    .brand-header { background: #064e3b !important; }
+    .brand-header div, .brand-header span, .brand-header td { color: #ffffff !important; }
+    .footer-note { background-color: #27272a !important; color: #e4e4e7 !important; border: 1px solid #3f3f46 !important; }
+    td[style*="#2563EB"], a[style*="#2563EB"], a[href^="mailto:"] {
+      background-color: #2563EB !important;
       color: #ffffff !important;
     }
-    .text-muted { color: #a1a1aa !important; }
-    .brand-header { background: #064e3b !important; }
-    .footer-note { background-color: #27272a !important; color: #e4e4e7 !important; border-color: #3f3f46 !important; }
-    a { color: #38bdf8 !important; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
@@ -8193,6 +8163,43 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                 <p><span className="font-semibold text-slate-400 dark:text-neutral-500">Tier:</span> <span className="font-mono">{activeLog.tier}</span></p>
                               )}
                             </div>
+
+                            {/* 1-Click Copy Buttons for Order ID & Customer ID */}
+                            {(activeLog.orderNumber || activeLog.customerId || activeLog.userId) && (
+                              <div className="mt-2.5 flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
+                                {activeLog.orderNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cleanOrd = String(activeLog.orderNumber).replace(/^#/, '');
+                                      navigator.clipboard.writeText(cleanOrd);
+                                      toast.success(`Copied Order ID: #${cleanOrd}`);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer shadow-2xs active:scale-95"
+                                    title="Click to copy Order ID to clipboard"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                    <span>Order: #{String(activeLog.orderNumber).replace(/^#/, '')}</span>
+                                  </button>
+                                )}
+
+                                {(activeLog.customerId || activeLog.userId) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const idToCopy = String(activeLog.customerId || activeLog.userId);
+                                      navigator.clipboard.writeText(idToCopy);
+                                      toast.success(`Copied Customer ID: ${idToCopy}`);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 transition-all cursor-pointer shadow-2xs active:scale-95"
+                                    title="Click to copy Customer ID to clipboard"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                    <span>Customer ID: {String(activeLog.customerId || activeLog.userId)}</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           {/* Sandboxed Iframe Preview: Generous height, isolated styles, zero glitching */}
@@ -8210,13 +8217,47 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
                               <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
                                 <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-white/10 bg-slate-50/70 dark:bg-zinc-900/60">
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col gap-1">
                                     <span className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-lg">
                                       {activeLog.subject}
                                     </span>
-                                    <span className="text-xs text-slate-500 dark:text-neutral-400">
-                                      To: {activeLog.toEmail} &bull; From: {activeLog.senderEmail || 'Techno World Books'}
-                                    </span>
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
+                                      <span>To: {activeLog.toEmail} &bull; From: {activeLog.senderEmail || 'Techno World Books'}</span>
+                                      {(activeLog.orderNumber || activeLog.customerId || activeLog.userId) && (
+                                        <div className="flex items-center gap-1.5 ml-1">
+                                          {activeLog.orderNumber && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const cleanOrd = String(activeLog.orderNumber).replace(/^#/, '');
+                                                navigator.clipboard.writeText(cleanOrd);
+                                                toast.success(`Copied Order ID: #${cleanOrd}`);
+                                              }}
+                                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
+                                              title="Click to copy Order ID"
+                                            >
+                                              <Copy className="h-3 w-3" />
+                                              <span>Order: #{String(activeLog.orderNumber).replace(/^#/, '')}</span>
+                                            </button>
+                                          )}
+                                          {(activeLog.customerId || activeLog.userId) && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const idToCopy = String(activeLog.customerId || activeLog.userId);
+                                                navigator.clipboard.writeText(idToCopy);
+                                                toast.success(`Copied Customer ID: ${idToCopy}`);
+                                              }}
+                                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 transition-all cursor-pointer"
+                                              title="Click to copy Customer ID"
+                                            >
+                                              <Copy className="h-3 w-3" />
+                                              <span>Customer ID: {String(activeLog.customerId || activeLog.userId)}</span>
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <button
