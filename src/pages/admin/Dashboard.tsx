@@ -38,8 +38,6 @@ import {
   Clock,
   Package,
   Zap,
-  Sun,
-  Moon,
   Maximize2,
   Store,
   CalendarCheck,
@@ -1827,27 +1825,31 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [selectedEmailPreview, setSelectedEmailPreview] = useState<any>(null);
   const [isLoadingEmails, setIsLoadingEmails] = useState(false);
-  const [emailPreviewMode, setEmailPreviewMode] = useState<'light' | 'dark'>('light');
+  const [isMasterDark, setIsMasterDark] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
   const [isFullEmailModalOpen, setIsFullEmailModalOpen] = useState(false);
 
-  // Sync email preview theme with Admin UI dark mode, defaulting to light mode
+  // Directly track the master theme toggle with zero local sub-buttons
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setEmailPreviewMode(isDark ? 'dark' : 'light');
+    const checkDark = () => {
+      setIsMasterDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDark();
 
-    const observer = new MutationObserver(() => {
-      const currentDark = document.documentElement.classList.contains('dark');
-      setEmailPreviewMode(currentDark ? 'dark' : 'light');
-    });
-
+    const observer = new MutationObserver(checkDark);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
 
-  const generateEmailIframeDoc = (rawHtml?: string, mode: 'light' | 'dark' = 'light', plainText?: string) => {
+  const generateEmailIframeDoc = (rawHtml?: string, isDark = false, plainText?: string) => {
     const content = rawHtml || `<div style="font-family: sans-serif; padding: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${plainText || 'No email content available.'}</div>`;
 
-    if (mode === 'light') {
+    if (!isDark) {
+      // MASTER LIGHT MODE VIEW: 100% white paper with dark text, neutralizing any dark media queries or inline black colors
+      const cleaned = content
+        .replace(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)[\s\S]*?\{[\s\S]*?\}\s*\}/gi, '')
+        .replace(/(?:background-color|background)\s*:\s*(?:#0[0-9a-f]{5}|#1[0-9a-f]{5}|#2[0-9a-f]{5}|#000|#111|#222|black|rgb\(\s*[0-3]\d?\s*,\s*[0-3]\d?\s*,\s*[0-3]\d?\s*\))/gi, 'background-color: #ffffff')
+        .replace(/color\s*:\s*(?:#e[0-9a-f]{5}|#f[0-9a-f]{5}|#fff|white)/gi, 'color: #1e293b');
+
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1859,14 +1861,21 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     html, body {
       margin: 0;
       padding: 16px 12px;
-      background-color: #ffffff !important;
+      background-color: #f8fafc !important;
       color: #1e293b !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
       -webkit-font-smoothing: antialiased;
     }
-    .email-bg, body > table { background-color: #f8fafc !important; }
-    .card, table[style*="background"], td[style*="background"] { 
-      background-color: #ffffff !important; 
+    body *, table, tbody, tr, td, div, center, section {
+      background-color: transparent !important;
+      color: #1e293b !important;
+    }
+    .email-bg, body > table {
+      background-color: #f8fafc !important;
+    }
+    .card, table.card, table[role="presentation"], div.card {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
     }
     p, td, li, div, span {
       color: #1e293b !important;
@@ -1876,15 +1885,11 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     }
     .text-muted { color: #64748b !important; }
     a { color: #0284c7 !important; }
-    @media (prefers-color-scheme: dark) {
-      body, table, td, div, p, span {
-        background-color: transparent !important;
-        color: inherit !important;
-      }
-      .email-bg { background-color: #f8fafc !important; }
-      .card { background-color: #ffffff !important; }
-      p, td, span, div { color: #1e293b !important; }
-      h1, h2, h3, strong, b { color: #0f172a !important; }
+    .brand-header, [style*="#14432B"], [style*="#0A2618"] {
+      background: #14432b !important;
+    }
+    .brand-header *, [style*="#14432B"] *, [style*="#0A2618"] * {
+      color: #ffffff !important;
     }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #f8fafc; }
@@ -1892,11 +1897,12 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   </style>
 </head>
 <body>
-  ${content}
+  ${cleaned}
 </body>
 </html>`;
     }
 
+    // MASTER DARK MODE VIEW: High contrast, deep surfaces
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8136,7 +8142,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <div className="lg:col-span-7 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-950/70 p-5 flex flex-col justify-between overflow-hidden shadow-xs min-h-[640px] max-h-[780px]">
                     {(selectedEmailPreview || (emailLogs.length > 0 ? emailLogs[0] : null)) ? (() => {
                       const activeLog = selectedEmailPreview || emailLogs[0];
-                      const previewIframeDoc = generateEmailIframeDoc(activeLog.htmlContent, emailPreviewMode, activeLog.message);
+                      const previewIframeDoc = generateEmailIframeDoc(activeLog.htmlContent, isMasterDark, activeLog.message);
 
                       return (
                         <div className="flex flex-col h-full space-y-3">
@@ -8153,36 +8159,6 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                               </span>
 
                               <div className="flex items-center gap-2">
-                                {/* Mode Toggle for Email Preview (Default Light, Optimized Dark) */}
-                                <div className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-xs">
-                                  <button
-                                    type="button"
-                                    onClick={() => setEmailPreviewMode('light')}
-                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                                      emailPreviewMode === 'light'
-                                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
-                                        : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white'
-                                    }`}
-                                    title="View email in Default Light Mode"
-                                  >
-                                    <Sun className="h-3 w-3" />
-                                    Light
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEmailPreviewMode('dark')}
-                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                                      emailPreviewMode === 'dark'
-                                        ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
-                                        : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white'
-                                    }`}
-                                    title="View email in Optimized Dark Mode"
-                                  >
-                                    <Moon className="h-3 w-3" />
-                                    Dark
-                                  </button>
-                                </div>
-
                                 {/* Expand Modal Button */}
                                 <button
                                   type="button"
@@ -8191,7 +8167,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                   title="Expand to full reading view"
                                 >
                                   <Maximize2 className="h-3 w-3" />
-                                  Expand
+                                  Expand View
                                 </button>
 
                                 <span className="text-xs text-slate-400 dark:text-neutral-400 ml-1">
@@ -8243,32 +8219,6 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <div className="flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-xs">
-                                      <button
-                                        type="button"
-                                        onClick={() => setEmailPreviewMode('light')}
-                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-                                          emailPreviewMode === 'light'
-                                            ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-bold'
-                                            : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
-                                        }`}
-                                      >
-                                        <Sun className="h-3 w-3" />
-                                        Light
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => setEmailPreviewMode('dark')}
-                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
-                                          emailPreviewMode === 'dark'
-                                            ? 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white font-bold'
-                                            : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
-                                        }`}
-                                      >
-                                        <Moon className="h-3 w-3" />
-                                        Dark
-                                      </button>
-                                    </div>
                                     <button
                                       type="button"
                                       onClick={() => setIsFullEmailModalOpen(false)}
