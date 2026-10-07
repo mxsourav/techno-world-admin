@@ -8594,9 +8594,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Quick Email Template</label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { id: 'DELAY_NOTICE', label: '⏳ Slight Delay (Procurement)' },
-                    { id: 'ADDRESS_CLARIFICATION', label: '📍 Address / PIN Clarification' },
-                    { id: 'ORDER_CONFIRMATION', label: '✅ Order Accepted & Confirmed' },
+                    { id: 'DELAY_NOTICE', label: 'Slight Delay (Procurement)' },
+                    { id: 'ADDRESS_CLARIFICATION', label: 'Address / PIN Clarification' },
+                    { id: 'ORDER_CONFIRMATION', label: 'Order Accepted & Confirmed' },
                   ].map(t => (
                     <button
                       key={t.id}
