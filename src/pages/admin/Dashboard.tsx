@@ -7315,9 +7315,82 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     🚀 Test SMTP
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-5">
-                  Configure your email address so delay notifications and cancellation updates send from your real address.
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
+                  Configure your email address so order confirmations, delay notifications, and cancellation updates send from your real address.
                 </p>
+
+                {/* 1-Click Hostinger Presets Bar */}
+                <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/70 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-200/90 dark:border-blue-900/50 shadow-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-blue-600 fill-blue-600" /> 1-Click Hostinger Mail Setup:
+                    </span>
+                    <a
+                      href="https://mail.hostinger.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1"
+                    >
+                      Open Webmail Inbox <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpForm({
+                          senderName: 'Techno World Books',
+                          senderEmail: 'orders@technoworldbooks.in',
+                          host: 'smtp.hostinger.com',
+                          port: 465,
+                          user: 'orders@technoworldbooks.in',
+                          pass: 'Aksad@301206',
+                          secure: true,
+                        });
+                        toast.success('Loaded Hostinger orders@technoworldbooks.in presets!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                    >
+                      <span>⚡ Hostinger Orders (orders@)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpForm({
+                          senderName: 'Techno World Support',
+                          senderEmail: 'support@technoworldbooks.in',
+                          host: 'smtp.hostinger.com',
+                          port: 465,
+                          user: 'support@technoworldbooks.in',
+                          pass: 'Aksad@301206',
+                          secure: true,
+                        });
+                        toast.success('Loaded Hostinger support@technoworldbooks.in presets!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95"
+                    >
+                      support@technoworldbooks.in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpForm({
+                          senderName: 'Techno World Team',
+                          senderEmail: 'team@technoworldbooks.in',
+                          host: 'smtp.hostinger.com',
+                          port: 465,
+                          user: 'team@technoworldbooks.in',
+                          pass: 'Aksad@301206',
+                          secure: true,
+                        });
+                        toast.success('Loaded Hostinger team@technoworldbooks.in presets!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95"
+                    >
+                      team@technoworldbooks.in
+                    </button>
+                  </div>
+                </div>
 
                 <form onSubmit={handleSaveSmtp} className="space-y-3.5">
                   <div className="grid grid-cols-2 gap-3">
@@ -7377,33 +7450,32 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         type="text"
                         value={smtpForm.user}
                         onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
-                        placeholder="yourname@gmail.com"
+                        placeholder="orders@technoworldbooks.in"
                         className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP App Password</label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Password</label>
                       <input
                         type="password"
                         value={smtpForm.pass}
                         onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
-                        placeholder="16-character App Password"
+                        placeholder="Hostinger Mail Password"
                         className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono"
                       />
                     </div>
                   </div>
 
-                  {/* Gmail Help Accordion / Box */}
-                  <div className="rounded-2xl bg-white/50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-1.5">
+                  {/* Hostinger & Customer Reply Notice */}
+                  <div className="rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-2">
                     <p className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                      <span>💡 How to connect Gmail to send official emails:</span>
+                      <span>💡 Hostinger Webmail & Two-Way Customer Inbox:</span>
                     </p>
-                    <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
-                      <li>Open your <b>Google Account</b> &rarr; <b>Security</b> &rarr; enable <b>2-Step Verification</b>.</li>
-                      <li>Search for <b>&quot;App Passwords&quot;</b> in Google Account settings.</li>
-                      <li>Create an app password named <i>&quot;Techno World Bookstore&quot;</i> and copy the 16-character code.</li>
-                      <li>Paste it into the <b>SMTP App Password</b> field above and click <b>Save SMTP Settings</b>!</li>
-                    </ol>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
+                      <li><b>Outbound Emails:</b> Order receipts, tracking numbers, and address clarifications are sent via <b>smtp.hostinger.com (Port 465 SSL)</b>.</li>
+                      <li><b>Customer Replies:</b> Customers receive emails from <b>orders@technoworldbooks.in</b> with <i>Reply-To</i> set. When they hit reply in their Gmail/Apple Mail, their replies arrive directly into your <b>Hostinger Webmail Inbox</b> (<a href="https://mail.hostinger.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">mail.hostinger.com</a>).</li>
+                      <li>Click the blue <b>&quot;Hostinger Orders&quot;</b> button above, then click <b>Save Outbound SMTP Settings</b> below to sync.</li>
+                    </ul>
                   </div>
 
                   <button
