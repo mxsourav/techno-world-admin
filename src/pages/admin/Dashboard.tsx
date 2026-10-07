@@ -1841,7 +1841,8 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
   }, []);
 
   const generateEmailIframeDoc = (rawHtml?: string, isDark = false, plainText?: string) => {
-    const content = rawHtml || `<div style="font-family: sans-serif; padding: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${plainText || 'No email content available.'}</div>`;
+    let content = rawHtml || `<div style="font-family: sans-serif; padding: 24px; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${plainText || 'No email content available.'}</div>`;
+    content = content.replace(/src="data:image\/[^"]+"/gi, 'src="https://technoworldbooks.in/icon.png"');
 
     if (!isDark) {
       // MASTER LIGHT MODE VIEW: 100% genuine light email view without color glitches
