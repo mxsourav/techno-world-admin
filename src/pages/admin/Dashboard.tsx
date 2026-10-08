@@ -101,7 +101,9 @@ import VisualCmsEditor from '@/components/admin/VisualCmsEditor';
 import CategoryOrderManager from '@/components/admin/cms/CategoryOrderManager';
 import SalesReportWorkspace from '@/components/admin/sales/SalesReportWorkspace';
 import B2BQuotesWorkspace from '@/components/admin/b2b/B2BQuotesWorkspace';
+import SupportDeskWorkspace from '@/components/admin/support/SupportDeskWorkspace';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
+import { BookCover } from '@/components/BookCover';
 export default function Dashboard() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -5363,9 +5365,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                 >
                                   <div className="h-14 w-11 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700">
                                     {b.coverImage ? (
-                                      <img src={b.coverImage} alt={b.title} className="h-full w-full object-cover" />
+                                      <img 
+                                        src={getImageUrl(b.coverImage)} 
+                                        alt={b.title} 
+                                        className="h-full w-full object-cover" 
+                                        loading="lazy" 
+                                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} 
+                                      />
                                     ) : (
-                                      <BookOpen className="h-5 w-5 text-slate-400" />
+                                      <BookCover book={{ id: b.bookId, title: b.title, ...b }} className="h-full w-full text-[5px]" />
                                     )}
                                   </div>
                                   <div className="min-w-0 flex-1">
@@ -5544,6 +5552,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
           </div>
         )}
 
+        {tab === 'support' && (
+          <SupportDeskWorkspace />
+        )}
 
         {tab === 'reviews' && (
           <div className="space-y-6">

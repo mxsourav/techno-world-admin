@@ -30,6 +30,7 @@ import {
   PanelLeft,
   TrendingUp,
   Building2,
+  LifeBuoy,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService } from '@/services/api';
@@ -50,6 +51,7 @@ const TAB_SECTIONS = [
     title: 'Store & Content',
     tabs: [
       { id: 'customers', name: 'Customers', icon: Users },
+      { id: 'support', name: 'Support Desk', icon: LifeBuoy },
       { id: 'abandoned_carts', name: 'Abandoned Carts', icon: ShoppingCart },
       { id: 'coupons', name: 'Coupons', icon: Tag },
       { id: 'b2b_quotes', name: 'B2B Quotes', icon: Building2 },
@@ -655,9 +657,9 @@ export default function AdminLayout() {
             </div>
 
             <a
-              href="/"
+              href="https://technoworldbooks.in/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="apple-pill-btn px-3.5 py-1.5 text-xs font-bold gap-1.5"
             >
               <Store className="h-3.5 w-3.5" />

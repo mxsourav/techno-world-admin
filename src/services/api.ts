@@ -970,5 +970,16 @@ export const siteMediaService = {
   delete: (id: string) => api.delete<{ success: boolean; message: string }>(`/admin/site-media/${id}`),
 };
 
+export const supportService = {
+  getTickets: (params?: { page?: number; limit?: number; status?: string; department?: string; q?: string }) =>
+    api.get<any>('/support/tickets', params as Record<string, string | number | boolean>),
+  getTicket: (id: string) => api.get<any>(`/support/tickets/${id}`),
+  replyTicket: (id: string, data: { body: string; htmlBody?: string; markAsPending?: boolean }) =>
+    api.post<any>(`/support/tickets/${id}/reply`, data),
+  updateStatus: (id: string, data: { status: string; closureReason?: string }) =>
+    api.patch<any>(`/support/tickets/${id}/status`, data),
+  syncInboxes: () => api.post<any>('/support/sync', {}),
+};
+
 
 
