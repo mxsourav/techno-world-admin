@@ -1635,6 +1635,69 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     }
   };
 
+  const handleMarkDelivered = async (ord: any, grp?: any) => {
+    const targetOrders = grp?.orders?.length ? grp.orders : [ord];
+    const orderNums = targetOrders.map((o: any) => `#${o.orderNumber}`).join(', ');
+    if (!window.confirm(`Mark consignment (${orderNums}) as Delivered / Completed? This updates status to Completed, starts the 7-day replacement window, and sends the delivery notification & review email to the buyer.`)) {
+      return;
+    }
+    try {
+      const orderIds = targetOrders.map((o: any) => o.id);
+      if (orderIds.length === 1) {
+        await orderService.updateStatus(orderIds[0], 'DELIVERED', 'Delivered via 3rd party / local delivery');
+      } else {
+        await orderService.batchUpdateStatus({
+          orderIds,
+          status: 'DELIVERED',
+          notes: 'Delivered via 3rd party / local delivery',
+        });
+      }
+      toast.success(`Consignment (${orderNums}) marked as Delivered!`);
+      setOrders(prev => prev.map(o => orderIds.includes(o.id) ? { ...o, status: 'DELIVERED', deliveredAt: new Date().toISOString() } : o));
+      setSelectedGroupKeys(prev => { const n = new Set(prev); if (grp) n.delete(grp.key); return n; });
+      setSelectedOrderIds(prev => { const n = new Set(prev); orderIds.forEach((id: string) => n.delete(id)); return n; });
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update order status to Delivered');
+    }
+  };
+
+  const handleBatchMarkDelivered = async () => {
+    const targetOrderIds = new Set<string>();
+    if (orderViewMode === 'smart_groups') {
+      const inTransitOrders = orders.filter((o: any) => o.status === 'SHIPPED');
+      const activeGroups = getSmartGroups(inTransitOrders);
+      activeGroups.forEach((g: any) => {
+        if (selectedGroupKeys.has(g.key)) {
+          if (Array.isArray(g.orders)) {
+            g.orders.forEach((o: any) => targetOrderIds.add(o.id));
+          } else if (g.order) {
+            targetOrderIds.add(g.order.id);
+          }
+        }
+      });
+    } else {
+      selectedOrderIds.forEach((id: string) => targetOrderIds.add(id));
+    }
+    const ids = Array.from(targetOrderIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Mark ${ids.length} selected in-transit order(s) as Delivered / Completed?`)) {
+      return;
+    }
+    try {
+      await orderService.batchUpdateStatus({
+        orderIds: ids,
+        status: 'DELIVERED',
+        notes: 'Batch marked Delivered by admin (3rd party delivery / courier)',
+      });
+      toast.success(`${ids.length} order(s) marked as Delivered!`);
+      setOrders(prev => prev.map(o => ids.includes(o.id) ? { ...o, status: 'DELIVERED', deliveredAt: new Date().toISOString() } : o));
+      setSelectedGroupKeys(new Set());
+      setSelectedOrderIds(new Set());
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to batch update orders to Delivered');
+    }
+  };
+
   const bookIndiaPostShipment = async (
     orderId: string,
     deliveryPartner?: string,
@@ -2907,6 +2970,19 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         <span>Accept Orders</span>
                       </button>
                     )}
+
+                    {/* In Transit Delivery Completion Action */}
+                    {forwardStage === 'in_transit' && (
+                      <button
+                        onClick={handleBatchMarkDelivered}
+                        disabled={selectedGroupKeys.size === 0 && selectedOrderIds.size === 0}
+                        className="glass-action-button-primary bg-emerald-700 hover:bg-emerald-800 text-white"
+                        title="Mark selected in-transit shipments as Delivered / Completed"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>Mark Delivered {(selectedGroupKeys.size > 0 || selectedOrderIds.size > 0) ? `(${orderViewMode === 'smart_groups' ? selectedGroupKeys.size : selectedOrderIds.size})` : ''}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3321,6 +3397,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                            <Link2 className="h-3 w-3" /> Merge
                                          </button>
                                        )}
+                                      {forwardStage === 'in_transit' && (
+                                        <button
+                                          title="Mark consignment as Delivered / Completed (Rapido, Uber, Porter, or Handover)"
+                                          onClick={() => handleMarkDelivered(ord, grp)}
+                                          className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs"
+                                        >
+                                          <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Mark Delivered
+                                        </button>
+                                      )}
                                       <button
                                         onClick={() => openEmailModal(ord, 'DELAY_NOTICE')}
                                         className="h-7 px-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
@@ -3766,6 +3851,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                            className="h-7 px-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all"
                                          >
                                            <Link2 className="h-3 w-3" /> Merge
+                                         </button>
+                                       )}
+                                       {forwardStage === 'in_transit' && (
+                                         <button
+                                           title="Mark order as Delivered / Completed (Rapido, Uber, Porter, or Handover)"
+                                           onClick={() => handleMarkDelivered(ord)}
+                                           className="h-7 px-2.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 text-xs font-bold inline-flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs"
+                                         >
+                                           <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Mark Delivered
                                          </button>
                                        )}
                                        <button
