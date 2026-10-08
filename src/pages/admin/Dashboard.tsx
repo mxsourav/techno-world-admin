@@ -7636,17 +7636,25 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Card 1: Admin Account Credentials */}
-              <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[#007aff]" /> Admin Account Credentials
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-5">Manage your display name, login email, and login password.</p>
+            {/* Card 1: Admin Account Credentials */}
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+              <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 dark:border-white/10">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[#007aff]" /> Admin Account Credentials
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+                    Manage your display name, login username or email, and account password.
+                  </p>
+                </div>
+              </div>
 
-                <form onSubmit={handleSaveAdminProfile} className="space-y-4">
+              <form onSubmit={handleSaveAdminProfile} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Admin Display Name</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1.5">
+                      Admin Display Name
+                    </label>
                     <input
                       type="text"
                       value={adminProfile.name}
@@ -7657,7 +7665,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Admin Login Username / Email</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1.5">
+                      Admin Login Username / Email
+                    </label>
                     <input
                       type="text"
                       value={adminProfile.email}
@@ -7669,7 +7679,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Phone Number (Optional)</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1.5">
+                      Phone Number (Optional)
+                    </label>
                     <input
                       type="text"
                       value={adminProfile.phone}
@@ -7678,46 +7690,51 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
+                </div>
 
-                  <div className="border-t border-slate-100 dark:border-white/10 pt-3 space-y-3">
-                    <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">Change Admin Password (leave blank to keep current)</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">New Password</label>
-                        <input
-                          type="password"
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          placeholder="Min 6 characters"
-                          className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">Confirm Password</label>
-                        <input
-                          type="password"
-                          value={adminConfirmPassword}
-                          onChange={(e) => setAdminConfirmPassword(e.target.value)}
-                          placeholder="Repeat password"
-                          className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
-                        />
-                      </div>
+                <div className="border-t border-slate-100 dark:border-white/10 pt-4 space-y-3">
+                  <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">
+                    Change Admin Password (leave blank to keep current)
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Min 6 characters"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-neutral-400 mb-1">Confirm Password</label>
+                      <input
+                        type="password"
+                        value={adminConfirmPassword}
+                        onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                        placeholder="Repeat password"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-white"
+                      />
                     </div>
                   </div>
+                </div>
 
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="apple-pill-btn bg-[#007aff] hover:bg-blue-600 !text-white px-5 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50 mt-2"
+                    className="apple-pill-btn bg-[#007aff] hover:bg-blue-600 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap shrink-0"
                   >
                     {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin !text-white" /> : <CheckCircle2 className="h-4 w-4 !text-white" />}
                     Update Admin Profile
                   </button>
-                </form>
-              </div>
+                </div>
+              </form>
+            </div>
 
-              {/* Card 2: Active Login Sessions & Device Security */}
-            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+            {/* Card 2: Active Login Sessions & Device Security */}
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -7728,12 +7745,12 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 shrink-0">
                   <button
                     type="button"
                     onClick={fetchAdminSessions}
                     disabled={isLoadingSessions}
-                    className="glass-action-button flex items-center gap-1.5 text-xs py-2 px-3"
+                    className="glass-action-button flex items-center gap-1.5 text-xs py-2 px-3.5 whitespace-nowrap shrink-0"
                     title="Refresh Session List"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${isLoadingSessions ? 'animate-spin' : ''}`} /> Refresh
@@ -7742,7 +7759,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     type="button"
                     onClick={handleTerminateOtherSessions}
                     disabled={isTerminatingOthers || adminSessions.length <= 1}
-                    className="apple-pill-btn bg-red-600 hover:bg-red-700 !text-white text-xs px-4 py-2 font-bold rounded-full shadow-sm transition-all disabled:opacity-40 flex items-center gap-1.5"
+                    className="apple-pill-btn bg-red-600 hover:bg-red-700 !text-white text-xs px-4 py-2 font-bold rounded-full shadow-sm transition-all disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap shrink-0"
                   >
                     {isTerminatingOthers ? <Loader2 className="h-3.5 w-3.5 animate-spin !text-white" /> : <LogOut className="h-3.5 w-3.5 !text-white" />}
                     Log Out All Other Devices
@@ -7751,7 +7768,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               </div>
 
               {/* Concurrency Selector */}
-              <div className="mt-5 p-4 rounded-2xl bg-slate-50/80 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <span className="text-xs font-bold text-slate-800 dark:text-white block">
                     Max Concurrent Active Devices Limit
@@ -7761,12 +7778,12 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <select
                     value={maxSessionsLimit}
                     onChange={(e) => handleUpdateSessionLimit(Number(e.target.value))}
                     disabled={isUpdatingSessionLimit}
-                    className="rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shrink-0 min-w-[260px]"
                   >
                     <option value={1}>1 Device (Single Device Strict Mode)</option>
                     <option value={2}>2 Devices (Laptop & Mobile - Recommended)</option>
@@ -7774,17 +7791,17 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     <option value={5}>5 Devices</option>
                     <option value={0}>Unlimited Devices</option>
                   </select>
-                  {isUpdatingSessionLimit && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+                  {isUpdatingSessionLimit && <Loader2 className="h-4 w-4 animate-spin text-blue-500 shrink-0" />}
                 </div>
               </div>
 
               {/* Sessions Table / List */}
               <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-700/60 bg-white/40 dark:bg-zinc-800/20">
-                <div className="p-3 bg-slate-100/60 dark:bg-zinc-800/60 border-b border-slate-200/80 dark:border-zinc-700/60 flex items-center justify-between">
+                <div className="p-3 sm:px-4 bg-slate-100/60 dark:bg-zinc-800/60 border-b border-slate-200/80 dark:border-zinc-700/60 flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700 dark:text-neutral-200">
                     Currently Active Devices ({adminSessions.length} active)
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-neutral-400">
+                  <span className="text-[11px] text-slate-500 dark:text-neutral-400 font-medium">
                     Limit: {maxSessionsLimit === 0 ? 'Unlimited' : `${maxSessionsLimit} max`}
                   </span>
                 </div>
@@ -7800,9 +7817,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 ) : (
                   <div className="divide-y divide-slate-100 dark:divide-zinc-800">
                     {adminSessions.map((session) => (
-                      <div key={session.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                      <div key={session.id} className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#007aff] mt-0.5">
+                          <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#007aff] mt-0.5 shrink-0">
                             {session.userAgent?.toLowerCase().includes('mobile') || session.userAgent?.toLowerCase().includes('android') || session.userAgent?.toLowerCase().includes('iphone') ? (
                               <Smartphone className="h-4 w-4" />
                             ) : (
@@ -7810,17 +7827,17 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             )}
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-bold text-slate-800 dark:text-white">
                                 {session.userAgent || 'Unknown Device'}
                               </span>
                               {session.isCurrent && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0 whitespace-nowrap">
                                   This Device (Current)
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-neutral-400 mt-1">
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-neutral-400 mt-1">
                               <span>IP: <code className="font-mono text-slate-700 dark:text-neutral-300">{session.ipAddress || 'Unknown'}</code></span>
                               <span>&bull;</span>
                               <span>Signed In: {new Date(session.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
@@ -7833,7 +7850,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             type="button"
                             onClick={() => handleTerminateSession(session.id)}
                             disabled={isTerminatingSession === session.id}
-                            className="self-end sm:self-center text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/50 transition-all disabled:opacity-50 flex items-center gap-1"
+                            className="self-start sm:self-center text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 px-3.5 py-1.5 rounded-xl border border-red-200 dark:border-red-900/50 transition-all disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap shrink-0 ml-auto sm:ml-0"
                           >
                             {isTerminatingSession === session.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -7849,11 +7866,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 )}
               </div>
             </div>
-            </div>
           </div>
         )}
 
-        {/* Sent Emails & Outbox Center Workspace */}
+                {/* Sent Emails & Outbox Center Workspace */}
         {tab === 'emails' && (
           <div className="space-y-6">
             <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
