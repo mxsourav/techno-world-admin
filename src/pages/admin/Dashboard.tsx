@@ -27,7 +27,6 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
-  Settings,
   ArrowRight,
   Bell,
   RotateCcw,
@@ -595,6 +594,10 @@ export default function Dashboard() {
     }
     if (tab === 'settings') {
       fetchAdminSettings();
+    }
+    if (tab === 'emails') {
+      fetchAdminSettings();
+      fetchEmailLogs();
     }
     if (tab === 'customers') {
       fetchCustomers();
@@ -7617,17 +7620,17 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
           </div>
         )}
 
-{/* Settings & Outbound Email Workspace */}
+{/* Settings & Credentials Workspace */}
         {tab === 'settings' && (
           <div className="space-y-6">
             <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/10">
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-[#007aff]" /> Admin Details & Outbound Email System
+                    <ShieldCheck className="h-5 w-5 text-[#007aff]" /> Admin Security & System Settings
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
-                    Change your admin login credentials and configure the sender email ID (Gmail SMTP / Custom SMTP) for customer delay notices and order updates.
+                    Manage your administrator login credentials, password, and configure concurrent active device session limits.
                   </p>
                 </div>
               </div>
@@ -7713,199 +7716,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 </form>
               </div>
 
-              {/* Card 2: Outbound Email & Gmail SMTP Configuration */}
-              <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[#007aff]" /> Outbound Sender Email & SMTP
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTestEmailTo(adminProfile.email || 'customer@technoworldbooks.in');
-                      setIsTestEmailModalOpen(true);
-                    }}
-                    className="glass-action-button flex items-center gap-1.5"
-                  >
-                    <Send className="h-3.5 w-3.5" /> Test SMTP
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
-                  Configure your email address so order confirmations, delay notifications, and cancellation updates send from your real address.
-                </p>
-
-                {/* 1-Click Hostinger Presets Bar */}
-                <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/70 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-200/90 dark:border-blue-900/50 shadow-xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
-                      <Zap className="h-3.5 w-3.5 text-blue-600 fill-blue-600" /> 1-Click Hostinger Mail Setup:
-                    </span>
-                    <a
-                      href="https://mail.hostinger.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1"
-                    >
-                      Open Webmail Inbox <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSmtpForm({
-                          senderName: 'Techno World Books',
-                          senderEmail: 'orders@technoworldbooks.in',
-                          host: 'smtp.hostinger.com',
-                          port: 465,
-                          user: 'orders@technoworldbooks.in',
-                          pass: 'Aksad@301206',
-                          secure: true,
-                        });
-                        toast.success('Loaded Hostinger orders@technoworldbooks.in presets!');
-                      }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
-                    >
-                      <Package className="h-3.5 w-3.5" /> Orders (orders@)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSmtpForm({
-                          senderName: 'Techno World Support',
-                          senderEmail: 'support@technoworldbooks.in',
-                          host: 'smtp.hostinger.com',
-                          port: 465,
-                          user: 'support@technoworldbooks.in',
-                          pass: 'Aksad@301206',
-                          secure: true,
-                        });
-                        toast.success('Loaded Hostinger support@technoworldbooks.in presets!');
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> support@technoworldbooks.in
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSmtpForm({
-                          senderName: 'Techno World Team',
-                          senderEmail: 'team@technoworldbooks.in',
-                          host: 'smtp.hostinger.com',
-                          port: 465,
-                          user: 'team@technoworldbooks.in',
-                          pass: 'Aksad@301206',
-                          secure: true,
-                        });
-                        toast.success('Loaded Hostinger team@technoworldbooks.in presets!');
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <Users className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> team@technoworldbooks.in
-                    </button>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSaveSmtp} className="space-y-3.5">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender Display Name</label>
-                      <input
-                        type="text"
-                        value={smtpForm.senderName}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, senderName: e.target.value })}
-                        placeholder="Techno World Books"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender From Email</label>
-                      <input
-                        type="email"
-                        value={smtpForm.senderEmail}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, senderEmail: e.target.value })}
-                        placeholder="orders@technoworldbooks.in"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Host (Hostinger / Custom)</label>
-                      <input
-                        type="text"
-                        value={smtpForm.host}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
-                        placeholder="smtp.hostinger.com"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Port</label>
-                      <input
-                        type="number"
-                        value={smtpForm.port}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
-                        placeholder="465"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Username / Email</label>
-                      <input
-                        type="text"
-                        value={smtpForm.user}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
-                        placeholder="orders@technoworldbooks.in"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Password</label>
-                      <input
-                        type="password"
-                        value={smtpForm.pass}
-                        onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
-                        placeholder="Hostinger Mail Password"
-                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Hostinger & Customer Reply Notice */}
-                  <div className="rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-2">
-                    <p className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                      <ShieldCheck className="h-4 w-4 text-blue-600" /> Hostinger Webmail & Two-Way Customer Inbox:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
-                      <li><b>Outbound Emails:</b> Order receipts, tracking numbers, and address clarifications are sent via <b>smtp.hostinger.com (Port 465 SSL)</b>.</li>
-                      <li><b>Customer Replies:</b> Customers receive emails from <b>orders@technoworldbooks.in</b> with <i>Reply-To</i> set. When they hit reply in their Gmail/Apple Mail, their replies arrive directly into your <b>Hostinger Webmail Inbox</b> (<a href="https://mail.hostinger.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">mail.hostinger.com</a>).</li>
-                      <li>Click the blue <b>&quot;Hostinger Orders&quot;</b> button above, then click <b>Save Outbound SMTP Settings</b> below to sync.</li>
-                    </ul>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSavingSmtp}
-                    className="apple-pill-btn bg-slate-900 dark:bg-white dark:!text-slate-950 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50"
-                  >
-                    {isSavingSmtp ? <Loader2 className="h-4 w-4 animate-spin !text-white dark:!text-slate-950" /> : <CheckCircle2 className="h-4 w-4 !text-white dark:!text-slate-950" />}
-                    Save Outbound SMTP Settings
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Card 3: Active Login Sessions & Device Security */}
+              {/* Card 2: Active Login Sessions & Device Security */}
             <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
                 <div>
@@ -8038,6 +7849,233 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 )}
               </div>
             </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sent Emails & Outbox Center Workspace */}
+        {tab === 'emails' && (
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-[#007aff] text-white flex items-center justify-center shadow-md">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      Sent Emails & Outbox Center
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+                      Live stream of all customer notifications, order dispatches, and system alerts.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestEmailTo(adminProfile.email || 'customer@technoworldbooks.in');
+                      setIsTestEmailModalOpen(true);
+                    }}
+                    className="glass-action-button flex items-center gap-1.5"
+                  >
+                    <Send className="h-3.5 w-3.5" /> Test SMTP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsComposeModalOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
+                  >
+                    <Pen className="h-3.5 w-3.5" /> Compose New Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fetchEmailLogs()}
+                    disabled={isLoadingEmails}
+                    className="apple-pill-btn px-3 py-1.5 text-xs font-bold gap-1.5"
+                  >
+                    {isLoadingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Outbound Email & Gmail SMTP Configuration */}
+              <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-[#007aff]" /> Outbound Sender Email & SMTP
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestEmailTo(adminProfile.email || 'customer@technoworldbooks.in');
+                      setIsTestEmailModalOpen(true);
+                    }}
+                    className="glass-action-button flex items-center gap-1.5"
+                  >
+                    <Send className="h-3.5 w-3.5" /> Test SMTP
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
+                  Configure your email address so order confirmations, delay notifications, and cancellation updates send from your real address.
+                </p>
+
+                {/* 1-Click Hostinger Presets Bar */}
+                <div className="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/70 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-200/90 dark:border-blue-900/50 shadow-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-blue-600 fill-blue-600" /> 1-Click Hostinger Mail Setup:
+                    </span>
+                    <a
+                      href="https://mail.hostinger.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1"
+                    >
+                      Open Webmail Inbox <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpForm({
+                          senderName: 'Techno World Books',
+                          senderEmail: 'orders@technoworldbooks.in',
+                          host: 'smtp.hostinger.com',
+                          port: 465,
+                          user: 'orders@technoworldbooks.in',
+                          pass: 'Aksad@301206',
+                          secure: true,
+                        });
+                        toast.success('Loaded Hostinger orders@technoworldbooks.in presets!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                    >
+                      <Package className="h-3.5 w-3.5" /> Orders (orders@)
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSmtpForm({
+                          senderName: 'Techno World Team',
+                          senderEmail: 'team@technoworldbooks.in',
+                          host: 'smtp.hostinger.com',
+                          port: 465,
+                          user: 'team@technoworldbooks.in',
+                          pass: 'Aksad@301206',
+                          secure: true,
+                        });
+                        toast.success('Loaded Hostinger team@technoworldbooks.in presets!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <Users className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> team@technoworldbooks.in
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveSmtp} className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender Display Name</label>
+                      <input
+                        type="text"
+                        value={smtpForm.senderName}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, senderName: e.target.value })}
+                        placeholder="Techno World Books"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Sender From Email</label>
+                      <input
+                        type="email"
+                        value={smtpForm.senderEmail}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, senderEmail: e.target.value })}
+                        placeholder="orders@technoworldbooks.in"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Host (Hostinger / Custom)</label>
+                      <input
+                        type="text"
+                        value={smtpForm.host}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, host: e.target.value })}
+                        placeholder="smtp.hostinger.com"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">Port</label>
+                      <input
+                        type="number"
+                        value={smtpForm.port}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, port: Number(e.target.value) })}
+                        placeholder="465"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Username / Email</label>
+                      <input
+                        type="text"
+                        value={smtpForm.user}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, user: e.target.value })}
+                        placeholder="orders@technoworldbooks.in"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Password</label>
+                      <input
+                        type="password"
+                        value={smtpForm.pass}
+                        onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
+                        placeholder="Hostinger Mail Password"
+                        className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Hostinger & Customer Reply Notice */}
+                  <div className="rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 p-4 text-xs text-slate-600 dark:text-neutral-300 space-y-2">
+                    <p className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-blue-600" /> Hostinger Webmail & Two-Way Customer Inbox:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 dark:text-neutral-400">
+                      <li><b>Outbound Emails:</b> Order receipts, tracking numbers, and address clarifications are sent via <b>smtp.hostinger.com (Port 465 SSL)</b>.</li>
+                      <li><b>Customer Replies:</b> Customers receive emails from <b>orders@technoworldbooks.in</b> with <i>Reply-To</i> set. When they hit reply in their Gmail/Apple Mail, their replies arrive directly into your <b>Hostinger Webmail Inbox</b> (<a href="https://mail.hostinger.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">mail.hostinger.com</a>).</li>
+                      <li>Click the blue <b>&quot;Hostinger Orders&quot;</b> button above, then click <b>Save Outbound SMTP Settings</b> below to sync.</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSavingSmtp}
+                    className="apple-pill-btn bg-slate-900 dark:bg-white dark:!text-slate-950 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50"
+                  >
+                    {isSavingSmtp ? <Loader2 className="h-4 w-4 animate-spin !text-white dark:!text-slate-950" /> : <CheckCircle2 className="h-4 w-4 !text-white dark:!text-slate-950" />}
+                    Save Outbound SMTP Settings
+                  </button>
+                </form>
+              </div>
 
             {/* Test Email Modal */}
             {isTestEmailModalOpen && (
@@ -8139,7 +8177,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                         Sender Account (Routing Tier)
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => setComposeForm({ ...composeForm, tier: 'ORDERS' })}
@@ -8172,21 +8210,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">Auto-Matching Replies</div>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setComposeForm({ ...composeForm, tier: 'SUPPORT' })}
-                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                            composeForm.tier === 'SUPPORT'
-                              ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100'
-                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131b2e] text-slate-700 dark:text-slate-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5 font-bold text-xs mb-0.5">
-                            <MessageSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Support
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">support@technoworldbooks.in</div>
-                          <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Accepts Replies</div>
-                        </button>
+                        
                       </div>
                       {composeForm.tier === 'TEAM' && (
                         <div className="mt-2 p-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/40 text-[11px] text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
@@ -8380,21 +8404,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     <span>Team (team@technoworldbooks.in)</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOutboxFilterTier('SUPPORT');
-                      fetchEmailLogs('SUPPORT');
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                      outboxFilterTier === 'SUPPORT'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span>Support (support@technoworldbooks.in)</span>
-                  </button>
+                  
                 </div>
 
                 {/* Quick Search */}

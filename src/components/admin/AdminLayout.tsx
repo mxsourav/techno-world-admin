@@ -14,7 +14,6 @@ import {
   FolderOpen,
   FileEdit,
   Bell,
-  Settings,
   AlertTriangle,
   ArrowRight,
   CreditCard,
@@ -31,6 +30,8 @@ import {
   TrendingUp,
   Building2,
   LifeBuoy,
+  Mail,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/AuthStore';
 import { orderService } from '@/services/api';
@@ -38,34 +39,55 @@ import { formatINR } from '@/utils/helpers';
 
 const TAB_SECTIONS = [
   {
-    title: 'Favorites',
+    title: 'Overview',
     tabs: [
       { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-      { id: 'orders', name: 'Orders', icon: ShoppingCart },
-      { id: 'products', name: 'Products', icon: Package },
-      { id: 'payments', name: 'Payments', icon: CreditCard },
-      { id: 'sales_report', name: 'Sales Report', icon: TrendingUp },
+      { id: 'analytics', name: 'Analytics & Trends', icon: BarChart3 },
     ],
   },
   {
-    title: 'Store & Content',
+    title: 'Order Operations',
     tabs: [
-      { id: 'customers', name: 'Customers', icon: Users },
-      { id: 'support', name: 'Support Desk', icon: LifeBuoy },
-      { id: 'abandoned_carts', name: 'Abandoned Carts', icon: ShoppingCart },
-      { id: 'coupons', name: 'Coupons', icon: Tag },
+      { id: 'orders', name: 'Orders & Shipments', icon: ShoppingCart },
+      { id: 'abandoned_carts', name: 'Abandoned Carts', icon: Clock },
       { id: 'b2b_quotes', name: 'B2B Quotes', icon: Building2 },
-      { id: 'reviews', name: 'Reviews', icon: Star },
+    ],
+  },
+  {
+    title: 'Catalog & Store',
+    tabs: [
+      { id: 'products', name: 'Products & Books', icon: Package },
+      { id: 'coupons', name: 'Coupons & Promos', icon: Tag },
       { id: 'media', name: 'Media Library', icon: FolderOpen },
       { id: 'cms', name: 'Homepage CMS', icon: FileEdit },
       { id: 'blog', name: 'Blog & Social Feed', icon: BookOpen },
+      { id: 'reviews', name: 'Reviews & Feedback', icon: Star },
     ],
   },
   {
-    title: 'System',
+    title: 'Customer Relations',
     tabs: [
-      { id: 'analytics', name: 'Analytics & Trends', icon: BarChart3 },
-      { id: 'settings', name: 'Settings & Email', icon: Settings },
+      { id: 'support', name: 'Support Desk', icon: LifeBuoy },
+      { id: 'customers', name: 'Customers Directory', icon: Users },
+    ],
+  },
+  {
+    title: 'Communications',
+    tabs: [
+      { id: 'emails', name: 'Sent Emails & Outbox', icon: Mail },
+    ],
+  },
+  {
+    title: 'Finance & Revenue',
+    tabs: [
+      { id: 'payments', name: 'Payments & Gateway', icon: CreditCard },
+      { id: 'sales_report', name: 'Sales & Revenue Report', icon: TrendingUp },
+    ],
+  },
+  {
+    title: 'Administration',
+    tabs: [
+      { id: 'settings', name: 'Admin Security & Settings', icon: ShieldCheck },
     ],
   },
 ];
