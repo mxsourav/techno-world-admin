@@ -67,6 +67,8 @@ import {
   Laptop,
   Smartphone,
   LogOut,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { formatINR, formatClientSku, formatClientFsn } from '@/utils/helpers';
 import type { Book } from '@/types/index';
@@ -1896,6 +1898,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
     secure: true,
   });
   const [isSavingSmtp, setIsSavingSmtp] = useState(false);
+  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
 
   const [testEmailTo, setTestEmailTo] = useState('');
   const [isTestingSmtp, setIsTestingSmtp] = useState(false);
@@ -2124,10 +2127,17 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
             });
           }
           if (res.data.smtp) {
-            setSmtpForm((prev: any) => ({
-              ...prev,
-              ...res.data.smtp,
-            }));
+            const isLegacyGmail =
+              res.data.smtp.host?.includes('gmail.com') ||
+              res.data.smtp.senderEmail?.includes('gmail.com') ||
+              res.data.smtp.user?.includes('gmail.com');
+
+            if (!isLegacyGmail) {
+              setSmtpForm((prev: any) => ({
+                ...prev,
+                ...res.data.smtp,
+              }));
+            }
           }
         }
       })
@@ -7956,43 +7966,69 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     </a>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSmtpForm({
-                          senderName: 'Techno World Books',
-                          senderEmail: 'orders@technoworldbooks.in',
-                          host: 'smtp.hostinger.com',
-                          port: 465,
-                          user: 'orders@technoworldbooks.in',
-                          pass: 'Aksad@301206',
-                          secure: true,
-                        });
-                        toast.success('Loaded Hostinger orders@technoworldbooks.in presets!');
-                      }}
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
-                    >
-                      <Package className="h-3.5 w-3.5" /> Orders (orders@)
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSmtpForm({
-                          senderName: 'Techno World Team',
-                          senderEmail: 'team@technoworldbooks.in',
-                          host: 'smtp.hostinger.com',
-                          port: 465,
-                          user: 'team@technoworldbooks.in',
-                          pass: 'Aksad@301206',
-                          secure: true,
-                        });
-                        toast.success('Loaded Hostinger team@technoworldbooks.in presets!');
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <Users className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> team@technoworldbooks.in
-                    </button>
+                    {(() => {
+                      const isOrdersActive = smtpForm.senderEmail === 'orders@technoworldbooks.in' && smtpForm.host === 'smtp.hostinger.com';
+                      const isTeamActive = smtpForm.senderEmail === 'team@technoworldbooks.in' && smtpForm.host === 'smtp.hostinger.com';
+                      const isCustomOrLegacy = !isOrdersActive && !isTeamActive;
+
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSmtpForm({
+                                senderName: 'Techno World Books',
+                                senderEmail: 'orders@technoworldbooks.in',
+                                host: 'smtp.hostinger.com',
+                                port: 465,
+                                user: 'orders@technoworldbooks.in',
+                                pass: 'Aksad@301206',
+                                secure: true,
+                              });
+                              toast.success('Loaded Hostinger orders@technoworldbooks.in presets! Click Save below to persist.');
+                            }}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 active:scale-95 ${
+                              isOrdersActive
+                                ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
+                                : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700/50'
+                            }`}
+                          >
+                            <Package className="h-3.5 w-3.5" /> Orders (orders@)
+                            {isOrdersActive && <Check className="h-3 w-3 ml-0.5" />}
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSmtpForm({
+                                senderName: 'Techno World Team',
+                                senderEmail: 'team@technoworldbooks.in',
+                                host: 'smtp.hostinger.com',
+                                port: 465,
+                                user: 'team@technoworldbooks.in',
+                                pass: 'Aksad@301206',
+                                secure: true,
+                              });
+                              toast.success('Loaded Hostinger team@technoworldbooks.in presets! Click Save below to persist.');
+                            }}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 active:scale-95 ${
+                              isTeamActive
+                                ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/30'
+                                : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200/90 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700/50'
+                            }`}
+                          >
+                            <Users className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" /> team@technoworldbooks.in
+                            {isTeamActive && <Check className="h-3 w-3 ml-0.5" />}
+                          </button>
+
+                          {isCustomOrLegacy && (
+                            <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" /> Custom/Legacy SMTP ({smtpForm.senderEmail || 'Not configured'})
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -8059,9 +8095,26 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300 mb-1">SMTP Password</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-neutral-300">SMTP Password</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                          className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-neutral-200 flex items-center gap-1"
+                        >
+                          {showSmtpPassword ? (
+                            <>
+                              <EyeOff className="h-3 w-3" /> Hide
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3 w-3" /> Show
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <input
-                        type="password"
+                        type={showSmtpPassword ? "text" : "password"}
                         value={smtpForm.pass}
                         onChange={(e) => setSmtpForm({ ...smtpForm, pass: e.target.value })}
                         placeholder="Hostinger Mail Password"
