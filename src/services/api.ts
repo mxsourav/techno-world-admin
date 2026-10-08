@@ -333,6 +333,10 @@ export const adminService = {
     return api.upload<any>(`/admin/books/${id}/pdf`, formData);
   },
   getSettings: () => api.get<any>('/admin/settings'),
+  getAdminSessions: () => api.get<any>('/admin/sessions'),
+  updateMaxSessionsLimit: (limit: number) => api.post<any>('/admin/sessions/limit', { limit }),
+  terminateSession: (sessionId: string) => api.delete<any>(`/admin/sessions/${sessionId}`),
+  terminateOtherSessions: () => api.post<any>('/admin/sessions/terminate-others', {}),
   updateProfile: (data: { name?: string; email?: string; phone?: string | null; password?: string }) =>
     api.patch<any>('/admin/profile', data),
   updateSmtp: (data: {
