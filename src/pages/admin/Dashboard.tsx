@@ -2992,7 +2992,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                                 {bk.coverUrl ? (
                                                   <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                 ) : (
-                                                  <span className="text-[10px]">📖</span>
+                                                  <BookOpen className="h-3 w-3 text-slate-400" />
                                                 )}
                                               </div>
                                               <div className="min-w-0 flex-1">
@@ -3035,11 +3035,11 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                         <div className="pt-1">
                                           {ord.selectedPickupSlot ? (
                                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-800 border-emerald-200">
-                                              📅 {ord.selectedPickupSlot}
+                                              {ord.selectedPickupSlot}
                                             </span>
                                           ) : (
                                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200">
-                                              ⏳ {ord.pickupStatus === 'SLOTS_OFFERED' ? 'Slots Offered (Awaiting User)' : 'Slots Needed'}
+                                              {ord.pickupStatus === 'SLOTS_OFFERED' ? 'Slots Offered (Awaiting User)' : 'Slots Needed'}
                                             </span>
                                           )}
                                         </div>
@@ -3063,7 +3063,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                                               : 'bg-amber-50 text-amber-800 border-amber-200'
                                           }`}>
-                                            {isSameDay ? '⚡ Same Day 2PM' : '🕒 Next Day 2PM'}
+                                            {isSameDay ? 'Same Day 2PM' : 'Next Day 2PM'}
                                           </span>
                                           <span className="text-[11px] font-mono font-bold text-slate-900">
                                             {grp.priceDisplay}
@@ -3312,7 +3312,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                                         {bk.coverUrl ? (
                                                           <img src={getImageUrl(bk.coverUrl)} alt={bk.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                                         ) : (
-                                                          <span className="text-xs">📖</span>
+                                                          <BookOpen className="h-3.5 w-3.5 text-slate-400" />
                                                         )}
                                                       </div>
                                                       <div>
@@ -3425,7 +3425,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                   {entry.isBundled && (
                                     <div>
                                       <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
-                                        📦 Bundled Package
+                                        Bundled Package
                                       </span>
                                     </div>
                                   )}
@@ -3440,7 +3440,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                       {book.coverUrl ? (
                                         <img src={getImageUrl(book.coverUrl)} alt={book.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                                       ) : (
-                                        <span className="text-xs">📖</span>
+                                        <BookOpen className="h-3.5 w-3.5 text-slate-400" />
                                       )}
                                     </div>
                                     <div className="min-w-0 flex-1 space-y-0.5">
@@ -3472,20 +3472,20 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                   {ord.shippingMethod === 'SELF_PICKUP' ? (
                                     <>
                                       <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 px-1.5 py-0.5 text-[10px] font-extrabold mb-1">
-                                        🏪 Store Takeaway
+                                        Store Takeaway
                                       </span>
                                       <p className="font-bold text-slate-900 flex items-center gap-1">
                                         {ord.pickupName || ord.user?.name || 'Customer Collector'}
                                       </p>
                                       <p className="text-[11px] text-slate-700 font-semibold">
-                                        📞 {ord.pickupPhone || ord.user?.phone || 'No phone'}
+                                        Phone: {ord.pickupPhone || ord.user?.phone || 'No phone'}
                                       </p>
                                       <p className="text-[10px] text-emerald-800 font-medium">
-                                        📍 College Street Takeaway Desk
+                                        College Street Takeaway Desk
                                       </p>
                                       {ord.selectedPickupSlot && (
                                         <p className="text-[10px] text-purple-700 font-bold bg-purple-50 rounded px-1 py-0.5 mt-0.5">
-                                          ⏰ {ord.selectedPickupSlot}
+                                          {ord.selectedPickupSlot}
                                         </p>
                                       )}
                                     </>
@@ -3608,10 +3608,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                                )}
                                                <span>
                                                  {entry.group.highestMethod === 'EXPRESS_LOCAL'
-                                                   ? '⚡ Express'
+                                                   ? 'Express'
                                                    : entry.group.highestMethod === 'SPEED_POST'
-                                                     ? '🚀 Speed Post'
-                                                     : '📦 Book Post'}
+                                                     ? 'Speed Post'
+                                                     : 'Book Post'}
                                                </span>
                                                <span className="ml-0.5 rounded-full bg-white/20 px-1 py-0.2 text-[9px] font-black uppercase tracking-tight">
                                                  Bundle ({entry.group.totalBookCount || entry.group.items?.length || entry.group.orders?.length})
@@ -3837,7 +3837,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           {previewBook.coverUrl ? (
                             <img src={getImageUrl(previewBook.coverUrl)} alt={previewBook.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                           ) : (
-                            <span className="text-3xl">📖</span>
+                            <BookOpen className="h-10 w-10 text-slate-400" />
                           )}
                         </div>
 
@@ -4183,7 +4183,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-extrabold text-blue-900 flex items-center gap-1.5">
-                            📍 Delivery Destination & Consignee:
+                            Delivery Destination & Consignee:
                           </span>
                           <span className="text-[11px] font-bold text-blue-800 bg-white px-2.5 py-0.5 rounded-full border border-blue-200 shadow-sm">
                             India Post Speed Post Route
@@ -4226,7 +4226,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                               <div key={idx} className="p-3 flex items-center justify-between gap-3 bg-white">
                                 <div className="flex items-center gap-3">
                                   <div className="h-12 w-9 rounded border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                    {b.coverUrl ? <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} /> : <span>📖</span>}
+                                    {b.coverUrl ? <img src={getImageUrl(b.coverUrl)} alt={b.title} className="h-full w-full object-cover" loading="lazy" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} /> : <BookOpen className="h-4 w-4 text-slate-400" />}
                                   </div>
                                   <div>
                                     <h5 className="font-bold text-slate-900 line-clamp-1">{b.title || 'Book Title'}</h5>
@@ -4342,7 +4342,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           <span>{mergeModalOrder.items?.length || 0} Book(s)</span>
                         </div>
                         <div className="text-slate-600 flex justify-between">
-                          <span>Delivery Method: {mergeModalOrder.shippingMethod === 'SPEED_POST' ? '🚀 Speed Post' : mergeModalOrder.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express Local' : '📦 Standard Delivery'}</span>
+                          <span>Delivery Method: {mergeModalOrder.shippingMethod === 'SPEED_POST' ? 'Speed Post' : mergeModalOrder.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express Local' : 'Standard Delivery'}</span>
                           <span className="font-bold text-blue-700">Shipping Paid: {formatINR(mergeModalOrder.shippingCharge || 0)}</span>
                         </div>
                       </div>
@@ -4351,7 +4351,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       {mergeModalOrder.shippingCharge > 0 ? (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900">
                           <div className="font-extrabold flex items-center gap-1.5 text-emerald-800 mb-1">
-                            <span>💰</span> TechnoWallet Refund: {formatINR(mergeModalOrder.shippingCharge)}
+                            TechnoWallet Refund: {formatINR(mergeModalOrder.shippingCharge)}
                           </div>
                           <p className="text-[11px] leading-relaxed text-emerald-700">
                             The {formatINR(mergeModalOrder.shippingCharge)} delivery fee will be refunded directly to the customer's <b>TechnoWallet</b> balance upon merging.
@@ -4402,7 +4402,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                   </div>
                                   <div className="text-[11px] text-slate-500 mt-0.5">
                                     Placed: {new Date(cand.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}, {new Date(cand.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                                    {' · '}{cand.shippingMethod === 'SPEED_POST' ? '🚀 Speed Post' : cand.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : '📦 Standard'}
+                                    {' · '}{cand.shippingMethod === 'SPEED_POST' ? 'Speed Post' : cand.shippingMethod === 'EXPRESS_LOCAL' ? 'Express' : 'Standard'}
                                   </div>
                                   <div className="text-[11px] text-slate-600 mt-1 truncate">
                                     {cand.items?.map((it: any) => it.book?.title || 'Book').join(', ')}
@@ -5748,7 +5748,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             {r.bookCover ? (
                               <img src={getImageUrl(r.bookCover)} alt={r.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
+                              <div className="flex h-full w-full items-center justify-center text-slate-300"><BookOpen className="h-4 w-4 text-slate-400" /></div>
                             )}
                           </div>
 
@@ -5787,11 +5787,11 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             {/* Reviewer Info */}
                             <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-400">
                               <span className="font-bold text-slate-700 flex items-center gap-1">
-                                👤 {r.userName}
+                                {r.userName}
                               </span>
-                              {r.userEmail && <span>✉️ {r.userEmail.replace(/@example\.com/g, '@technoworldbooks.in')}</span>}
+                              {r.userEmail && <span>{r.userEmail.replace(/@example\.com/g, '@technoworldbooks.in')}</span>}
                               <span>•</span>
-                              <span>🕒 {new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                              <span>{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
                         </div>
@@ -5862,7 +5862,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             {q.bookCover ? (
                               <img src={getImageUrl(q.bookCover)} alt={q.bookTitle} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-slate-300">📖</div>
+                              <div className="flex h-full w-full items-center justify-center text-slate-300"><BookOpen className="h-4 w-4 text-slate-400" /></div>
                             )}
                           </div>
 
@@ -6591,7 +6591,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             {media.name}
                           </h4>
                           <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
-                            <span>📁 {folderName}</span>
+                            <span>{folderName}</span>
                             {media.format && <span>• {media.format.toUpperCase()}</span>}
                             {media.bytes && (
                               <span>• {(media.bytes / 1024).toFixed(0)} KB</span>
@@ -8823,7 +8823,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">Multi-Order Consignment Dispatch</h3>
                   <p className="text-xs text-slate-500">
-                    Customer: <span className="font-bold text-slate-800">{bundlePrompt.group.customerName}</span> (📞 {bundlePrompt.group.customerPhone})
+                    Customer: <span className="font-bold text-slate-800">{bundlePrompt.group.customerName}</span> ({bundlePrompt.group.customerPhone})
                   </p>
                 </div>
               </div>
@@ -8839,7 +8839,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
             <div className="p-6 space-y-4">
               <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5">
                 <div className="flex items-start gap-3">
-                  <span className="text-lg">📍</span>
+                  <MapPin className="h-5 w-5 text-blue-600 shrink-0" />
                   <div className="text-xs text-slate-700">
                     <p className="font-bold text-slate-900">
                       Destination: {bundlePrompt.group.postOffice}, {bundlePrompt.group.city} — {bundlePrompt.group.pincode}
@@ -8862,17 +8862,17 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? (
                         <>
                           <Zap className="h-4 w-4 text-purple-600" />
-                          <span>⚡ Express Local Courier (Priority Trip)</span>
+                          <span>Express Local Courier (Priority Trip)</span>
                         </>
                       ) : bundlePrompt.highestMethod === 'SPEED_POST' ? (
                         <>
                           <Truck className="h-4 w-4 text-orange-600" />
-                          <span>🚀 India Post Speed Post (Priority Transit)</span>
+                          <span>India Post Speed Post (Priority Transit)</span>
                         </>
                       ) : (
                         <>
                           <Package className="h-4 w-4 text-red-600" />
-                          <span>📦 Standard Book Post</span>
+                          <span>Standard Book Post</span>
                         </>
                       )}
                     </p>
@@ -8916,7 +8916,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                   ? 'bg-orange-50 text-orange-700 border-orange-200'
                                   : 'bg-slate-100 text-slate-700 border-slate-200'
                             }`}>
-                              {ordMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : ordMethod === 'SPEED_POST' ? '🚀 Speed Post' : '📦 Book Post'}
+                              {ordMethod === 'EXPRESS_LOCAL' ? 'Express' : ordMethod === 'SPEED_POST' ? 'Speed Post' : 'Book Post'}
                             </span>
                           </div>
                           <div className="text-right">
@@ -8995,7 +8995,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       Recommended Fulfillment
                     </span>
                     <p className="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">
-                      📦 Ship Whole Bundle (All {bundlePrompt.group.orders.length} Orders via {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? '⚡ Express' : bundlePrompt.highestMethod === 'SPEED_POST' ? '🚀 Speed Post' : '📦 Book Post'})
+                      Ship Whole Bundle (All {bundlePrompt.group.orders.length} Orders via {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? 'Express' : bundlePrompt.highestMethod === 'SPEED_POST' ? 'Speed Post' : 'Book Post'})
                     </p>
                     <p className="text-[11px] text-emerald-100/90 mt-0.5">
                       Fulfills all orders in one parcel with shared tracking number at the customer's highest chosen tier.
@@ -9037,7 +9037,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           Partial Fulfillment
                         </span>
                         <p className="text-xs font-bold text-slate-900 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                          <span>📄 Ship Only Order #{bundlePrompt.targetOrder.orderNumber || bundlePrompt.targetOrder.id.slice(-6)}</span>
+                          <span>Ship Only Order #{bundlePrompt.targetOrder.orderNumber || bundlePrompt.targetOrder.id.slice(-6)}</span>
                           {targetSkus && (
                             <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
                               SKU: {targetSkus}
@@ -9154,15 +9154,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1.5 text-xs">
                 <div className="flex items-center justify-between font-bold text-slate-800">
                   <span>Collector: {pickupSlotsModalOrder.pickupName || pickupSlotsModalOrder.user?.name || 'Customer'}</span>
-                  <span>📞 {pickupSlotsModalOrder.pickupPhone || pickupSlotsModalOrder.user?.phone || 'N/A'}</span>
+                  <span>Phone: {pickupSlotsModalOrder.pickupPhone || pickupSlotsModalOrder.user?.phone || 'N/A'}</span>
                 </div>
                 <div className="text-slate-500 flex items-start gap-1">
-                  <span className="shrink-0">📍</span>
+                  <MapPin className="h-4 w-4 text-slate-500 shrink-0 inline mr-1" />
                   <span><b>Takeaway Desk:</b> Techno World Books, 90/6A MG Rd, opp. Grace Cinema, College Street, Kolkata 700007</span>
                 </div>
                 {pickupSlotsModalOrder.selectedPickupSlot && (
                   <div className="mt-1 pt-1.5 border-t border-slate-200 text-emerald-800 font-bold flex items-center gap-1">
-                    <span>✅ Customer Currently Selected:</span>
+                    <span>Customer Currently Selected:</span>
                     <span className="bg-emerald-100 px-2 py-0.5 rounded font-mono text-emerald-900">
                       {pickupSlotsModalOrder.selectedPickupSlot}
                     </span>
@@ -9233,7 +9233,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               </div>
 
               <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-900 leading-relaxed">
-                💡 Offering slots sends an immediate notification to the customer with an interactive button to pick their preferred time. Once confirmed, their official tax invoice displays their appointment.
+                Note: Offering slots sends an immediate notification to the customer with an interactive button to pick their preferred time. Once confirmed, their official tax invoice displays their appointment.
               </div>
             </div>
 
