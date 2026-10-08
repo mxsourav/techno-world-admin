@@ -2140,45 +2140,52 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
       <div className="min-w-0 flex-1">
         {tab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Urgent Pending Orders Approval Banner */}
+            {/* Urgent Pending Orders Approval Banner (macOS Native Toast / Card) */}
             {pendingOrdersSummary.length > 0 && (
-              <div className="rounded-2xl border-2 border-amber-400 bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 p-6 shadow-md animate-in fade-in">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500 text-white shadow-md animate-bounce">
-                      <Bell className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-extrabold text-amber-950 flex items-center gap-2">
-                        <span>Action Required: {pendingOrdersSummary.length} New Order(s) Awaiting Decision</span>
-                        <span className="rounded-full bg-rose-600 text-white text-[10px] font-black px-2 py-0.5">Urgent</span>
-                      </h2>
-                      <p className="text-xs text-amber-900/80 mt-0.5">
-                        Customer orders placed on the bookstore require your review to accept, cancel, or notify regarding publisher stock delay.
-                      </p>
-                    </div>
+              <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60 shrink-0">
+                    <Bell className="h-4 w-4" />
                   </div>
-                  <button
-                    onClick={() => navigate('/admin/dashboard?tab=orders')}
-                    className="flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
-                  >
-                    Review Pending Orders <ArrowRight className="h-4 w-4" />
-                  </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                        Action Required: {pendingOrdersSummary.length} New Order(s) Awaiting Decision
+                      </h2>
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 rounded px-1.5 py-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Pending Review
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Customer orders placed on the bookstore require your review to accept, cancel, or notify regarding publisher stock.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => navigate('/admin/dashboard?tab=orders')}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3.5 py-2 text-xs font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors cursor-pointer shadow-xs"
+                >
+                  Review Orders <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
             )}
+
+            {/* Top 4 Metrics Cards (macOS Native HIG, High Contrast Typography, Monochrome Icons) */}
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {[
-                { icon: IndianRupee, t: 'Revenue (30d)', v: formatINR(stats.revenue), s: '+18.2% vs last month', c: 'emerald' },
-                { icon: ShoppingCart, t: 'Orders (30d)', v: (stats.totalOrders || 0).toLocaleString('en-IN'), s: '+12.4% vs last month', c: 'blue' },
-                { icon: BookOpen, t: 'Total Books', v: stats.totalBooks || 0, s: `${stats.outOfStock} out of stock`, c: 'amber' },
-                { icon: Users, t: 'Total Users', v: stats.totalUsers || 0, s: 'Active base', c: 'violet' },
+                { icon: IndianRupee, t: 'Revenue (30d)', v: formatINR(stats.revenue), s: '+18.2% vs last month' },
+                { icon: ShoppingCart, t: 'Orders (30d)', v: (stats.totalOrders || 0).toLocaleString('en-IN'), s: '+12.4% vs last month' },
+                { icon: BookOpen, t: 'Total Books', v: (stats.totalBooks || 0).toLocaleString('en-IN'), s: `${stats.outOfStock || 0} out of stock` },
+                { icon: Users, t: 'Total Users', v: (stats.totalUsers || 0).toLocaleString('en-IN'), s: 'Active customer base' },
               ].map((k) => (
-                <div key={k.t} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <k.icon className="h-5 w-5 text-emerald-700" />
-                  <p className="mt-3 text-2xl font-extrabold text-slate-900">{k.v}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-500">{k.t}</p>
-                  <p className="mt-1 text-xs font-medium text-emerald-600">{k.s}</p>
+                <div key={k.t} className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm transition-shadow hover:shadow">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-stone-700/60 text-gray-700 dark:text-gray-300 mb-3">
+                    <k.icon className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                  <p className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white font-mono">{k.v}</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">{k.t}</p>
+                  <p className="mt-2 text-[11px] font-medium text-gray-500 dark:text-gray-400">{k.s}</p>
                 </div>
               ))}
             </div>
@@ -2186,49 +2193,87 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Main Column */}
               <div className="lg:col-span-2 space-y-6">
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <p className="text-sm font-bold text-slate-800">Recent Orders</p>
-                    <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700">View All</button>
+                {/* Recent Orders (Strict Flex Table Alignment, Native macOS Dot Indicators) */}
+                <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-stone-700/60">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Recent Orders</h3>
+                    <button
+                      onClick={() => navigate('/admin/dashboard?tab=orders')}
+                      className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                      View all orders &rarr;
+                    </button>
                   </div>
-                  <div className="space-y-4">
-                    {((stats as any).recentOrders || []).map((o: any) => (
-                      <div key={o.id} className="flex items-center justify-between border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                        <div>
-                          <p className="font-bold text-slate-900 text-sm">{o.orderNumber}</p>
-                          <p className="text-xs text-slate-500 mt-1">{o.user?.name || 'Guest'} · {o.items?.length || 0} items</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-slate-900 text-sm">{formatINR(o.totalAmount)}</p>
-                          <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${o.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                            {o.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {!(stats as any).recentOrders?.length && <p className="text-sm text-slate-500">No recent orders found.</p>}
-                  </div>
-                </div>
+                  <div className="divide-y divide-gray-100 dark:divide-stone-700/60">
+                    {((stats as any).recentOrders || []).map((o: any) => {
+                      const getStatusDot = (st: string) => {
+                        switch (st) {
+                          case 'PENDING': return { dot: 'bg-amber-500', label: 'Pending' };
+                          case 'CONFIRMED': return { dot: 'bg-blue-500', label: 'Confirmed' };
+                          case 'PROCESSING': return { dot: 'bg-indigo-500', label: 'Processing' };
+                          case 'SHIPPED': return { dot: 'bg-sky-500', label: 'Shipped' };
+                          case 'DELIVERED': return { dot: 'bg-emerald-500', label: 'Delivered' };
+                          case 'CANCELLED':
+                          case 'REFUNDED': return { dot: 'bg-rose-500', label: st === 'CANCELLED' ? 'Cancelled' : 'Refunded' };
+                          default: return { dot: 'bg-gray-400', label: st || 'Unknown' };
+                        }
+                      };
+                      const statusConfig = getStatusDot(o.status);
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <p className="mb-4 text-sm font-bold text-slate-800">Top Categories</p>
-                    {categories.slice(0, 5).map((c, i) => {
-                      const pct = [92, 78, 64, 55, 41][i] || Math.floor(Math.random() * 50) + 10;
                       return (
-                        <div key={c.slug} className="mb-3.5 last:mb-0">
-                          <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold text-slate-700">{c.name}</span><span className="text-slate-500 font-medium">{pct}%</span></div>
-                          <div className="h-2 rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} /></div>
+                        <div key={o.id} className="py-3 flex items-center justify-between text-sm hover:bg-gray-50/60 dark:hover:bg-stone-750 px-2 -mx-2 rounded-lg transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{o.orderNumber}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {o.user?.name || 'Guest'} &bull; {o.items?.length || 0} item{(o.items?.length || 0) === 1 ? '' : 's'}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0 ml-4 flex items-center gap-6">
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm font-mono">{formatINR(o.totalAmount)}</p>
+                            <span className="w-24 inline-flex items-center justify-end gap-1.5 text-xs text-gray-600 dark:text-gray-300 font-medium">
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
+                              {statusConfig.label}
+                            </span>
+                          </div>
                         </div>
                       );
                     })}
+                    {!(stats as any).recentOrders?.length && (
+                      <p className="text-xs text-gray-400 py-6 text-center">No recent orders recorded.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Top Categories (Thin Elegant Progress Bars) */}
+                  <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Top Categories</h3>
+                    <div className="space-y-3.5">
+                      {categories.slice(0, 5).map((c, i) => {
+                        const pct = [92, 78, 64, 55, 41][i] || Math.floor(Math.random() * 50) + 10;
+                        return (
+                          <div key={c.slug}>
+                            <div className="flex justify-between text-xs mb-1.5">
+                              <span className="font-medium text-gray-700 dark:text-gray-200">{c.name}</span>
+                              <span className="text-gray-500 dark:text-gray-400 font-mono text-[11px]">{pct}%</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-gray-100 dark:bg-stone-700 overflow-hidden">
+                              <div className="h-full rounded-full bg-gray-900 dark:bg-gray-100 transition-all duration-500" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                   
-                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <p className="mb-4 text-sm font-bold text-slate-800">Coupon Usage & Marketing</p>
-                    <div className="flex flex-col h-full justify-center text-center text-sm text-slate-500 p-4 border-2 border-dashed border-slate-100 rounded-lg">
-                      <p className="font-medium text-slate-600 mb-1">Coupon System Pending</p>
-                      <p className="text-xs">Analytics will appear here once the coupon module is fully implemented.</p>
+                  {/* Marketing & Coupon Insights */}
+                  <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm flex flex-col">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Promotion Insights</h3>
+                    <div className="flex flex-col flex-1 items-center justify-center text-center p-4 border border-dashed border-gray-200 dark:border-stone-700 rounded-lg">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-0.5">Coupon Campaign Module</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 max-w-[200px]">
+                        Redemption analytics and discount trends will automatically display here.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2236,60 +2281,72 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
               {/* Sidebar Column */}
               <div className="space-y-6">
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-bold text-rose-800 flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Low Stock Alerts</p>
-                    <span className="bg-rose-200 text-rose-800 text-xs font-bold px-2 py-0.5 rounded-full">{stats.lowStock || 0}</span>
+                {/* Low Stock Alerts (Anti-Slop: Pure White Card, Subtle Red Indicator, Rigorous Alignment) */}
+                <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-stone-700/60">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Low Stock Alerts</h3>
+                    </div>
+                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200/60 dark:border-rose-900/40 font-mono">
+                      {stats.lowStock || 0}
+                    </span>
                   </div>
-                  <div className="space-y-3">
+                  <div className="divide-y divide-gray-100 dark:divide-stone-700/60">
                     {lowStockBooks.map((b) => (
-                      <div key={b.id} className="flex flex-col border-b border-rose-200/50 pb-3 text-sm last:border-0 last:pb-0">
-                        <span className="line-clamp-2 font-medium text-rose-900 leading-tight">{b.title}</span>
-                        <div className="mt-2 flex justify-between items-center">
-                          <span className="font-mono text-xs text-rose-700">{b.isbn || 'No ISBN'}</span>
-                          <span className="shrink-0 rounded bg-white px-2 py-0.5 text-xs font-bold text-rose-700 shadow-sm">
-                            {getStock(b.id, b.stock)} left
-                          </span>
+                      <div key={b.id} className="py-2.5 flex items-center justify-between text-xs gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 font-medium text-gray-900 dark:text-gray-100 text-xs" title={b.title}>{b.title}</p>
+                          <p className="font-mono text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{b.isbn || 'No ISBN'}</p>
                         </div>
+                        <span className="shrink-0 font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded border border-rose-200/50 dark:border-rose-900/40 text-[11px]">
+                          {getStock(b.id, b.stock)} left
+                        </span>
                       </div>
                     ))}
-                    {lowStockBooks.length === 0 && <p className="text-xs text-rose-600">All stock levels are healthy.</p>}
+                    {lowStockBooks.length === 0 && (
+                      <p className="text-xs text-gray-400 py-4 text-center">All inventory levels are healthy.</p>
+                    )}
                   </div>
-                  <button className="w-full mt-4 bg-white border border-rose-200 text-rose-700 text-xs font-bold py-2 rounded-lg hover:bg-rose-100 transition-colors">
+                  <button
+                    onClick={() => navigate('/admin/dashboard?tab=products')}
+                    className="w-full mt-4 bg-gray-50 dark:bg-stone-700/60 border border-gray-200 dark:border-stone-700 hover:bg-gray-100 dark:hover:bg-stone-700 text-gray-700 dark:text-gray-200 text-xs font-medium py-2 rounded-lg transition-colors cursor-pointer"
+                  >
                     Manage Inventory
                   </button>
                 </div>
                 
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-bold text-slate-800">Latest Reviews</p>
+                {/* Latest Reviews (macOS Native Card, High Contrast Hierarchy) */}
+                <div className="rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-stone-800 p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-stone-700/60">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Latest Reviews</h3>
                     <button
                       type="button"
                       onClick={() => navigate('/admin/dashboard?tab=reviews')}
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline"
+                      className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                     >
-                      View All
+                      View all &rarr;
                     </button>
                   </div>
-                  <div className="space-y-4">
+                  <div className="divide-y divide-gray-100 dark:divide-stone-700/60">
                     {adminReviews.length === 0 ? (
-                      <p className="text-xs text-slate-400 py-4 text-center">No customer reviews yet.</p>
+                      <p className="text-xs text-gray-400 py-4 text-center">No customer reviews yet.</p>
                     ) : (
                       adminReviews.slice(0, 3).map((r: any) => (
-                        <div key={r.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                        <div key={r.id} className="py-3 first:pt-0 last:pb-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-sm text-slate-800 truncate max-w-[170px]" title={r.title || r.bookTitle}>
+                            <span className="font-semibold text-xs text-gray-900 dark:text-white truncate max-w-[170px]" title={r.title || r.bookTitle}>
                               {r.title || r.bookTitle || 'Review'}
                             </span>
                             <span className="text-amber-500 text-xs tracking-wider">
                               {'★'.repeat(Math.max(1, Math.min(5, r.rating)))}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 line-clamp-2">"{r.content}"</p>
-                          <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400">
-                            <span className="font-semibold text-slate-600">{r.userName || 'Reader'}</span>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">"{r.content}"</p>
+                          <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{r.userName || 'Reader'}</span>
                             {r.isVerified && (
-                              <span className="text-emerald-700 font-bold">✓ Verified</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">&bull; Verified Purchase</span>
                             )}
                           </div>
                         </div>

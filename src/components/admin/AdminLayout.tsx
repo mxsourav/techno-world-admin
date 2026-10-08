@@ -244,87 +244,12 @@ export default function AdminLayout() {
 
   return (
     <div className={`flex h-screen overflow-hidden font-sans relative ${
-      isDarkMode ? 'dark bg-[#020713] text-white' : 'bg-[#f4f7fb] text-slate-900'
+      isDarkMode ? 'dark bg-[#18181b] text-neutral-100' : 'bg-[#F5F5F7] text-gray-900'
     }`}>
-      {/* Fluid Iridescent Aura UI Background (Full Window - spans both Sidebar & Main Content) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
-        {/* Base Atmosphere Canvas */}
-        <div className={`absolute inset-0 ${
-          isDarkMode ? 'bg-[#030712]' : 'bg-[#f4f7fb]'
-        }`} />
-
-        {/* Aura Wave 1: Sapphire & Royal Blue watercolor fold (Top-Right across main dashboard) */}
-        <div
-          className={`absolute -top-[10%] right-[5%] w-[900px] h-[900px] rounded-full filter blur-[140px] animate-fluid-aura-1 ${
-            isDarkMode ? 'opacity-90' : 'opacity-45'
-          }`}
-          style={{
-            background: isDarkMode
-              ? 'radial-gradient(ellipse at center, rgba(29, 78, 216, 0.65) 0%, rgba(67, 56, 202, 0.45) 40%, rgba(30, 27, 75, 0.20) 65%, transparent 80%)'
-              : 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.40) 0%, rgba(99, 102, 241, 0.22) 45%, transparent 75%)',
-          }}
-        />
-
-        {/* Aura Wave 2: Vibrant Electric Azure & Cobalt Core (Bottom-Left behind Sidebar) */}
-        <div
-          className={`absolute -bottom-[15%] -left-[10%] w-[950px] h-[950px] rounded-full filter blur-[150px] animate-fluid-aura-2 ${
-            isDarkMode ? 'opacity-95' : 'opacity-50'
-          }`}
-          style={{
-            background: isDarkMode
-              ? 'radial-gradient(ellipse at center, rgba(2, 132, 199, 0.65) 0%, rgba(14, 165, 233, 0.45) 40%, rgba(30, 58, 138, 0.20) 65%, transparent 80%)'
-              : 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.38) 0%, rgba(37, 99, 235, 0.20) 45%, transparent 75%)',
-          }}
-        />
-
-        {/* Aura Wave 3: Soft Aquamarine & Cyan Mist Glow (Center / Top-Left) */}
-        <div
-          className={`absolute top-[10%] left-[20%] w-[850px] h-[850px] rounded-full filter blur-[130px] animate-fluid-aura-3 ${
-            isDarkMode ? 'opacity-85' : 'opacity-40'
-          }`}
-          style={{
-            background: isDarkMode
-              ? 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.55) 0%, rgba(20, 184, 166, 0.35) 40%, rgba(14, 116, 144, 0.15) 65%, transparent 80%)'
-              : 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.32) 0%, rgba(45, 212, 191, 0.18) 40%, transparent 75%)',
-          }}
-        />
-
-        {/* Aura Wave 4: Deep Twilight Violet & Indigo Ribbon (Bottom-Right across main dashboard) */}
-        <div
-          className={`absolute -bottom-[10%] right-[10%] w-[900px] h-[900px] rounded-full filter blur-[160px] animate-fluid-aura-4 ${
-            isDarkMode ? 'opacity-90' : 'opacity-40'
-          }`}
-          style={{
-            background: isDarkMode
-              ? 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.60) 0%, rgba(124, 58, 237, 0.35) 40%, rgba(49, 46, 129, 0.15) 65%, transparent 80%)'
-              : 'radial-gradient(ellipse at center, rgba(129, 140, 248, 0.30) 0%, rgba(99, 102, 241, 0.16) 50%, transparent 80%)',
-          }}
-        />
-
-        {/* Aura Wave 5: Ambient Cerulean & Deep Sky Ocean (Directly beneath main workspace content) */}
-        <div
-          className={`absolute top-[35%] right-[25%] w-[850px] h-[850px] rounded-full filter blur-[150px] animate-fluid-aura-2 ${
-            isDarkMode ? 'opacity-85' : 'opacity-35'
-          }`}
-          style={{
-            background: isDarkMode
-              ? 'radial-gradient(ellipse at center, rgba(14, 165, 233, 0.50) 0%, rgba(37, 99, 235, 0.30) 45%, rgba(2, 6, 23, 0.10) 70%, transparent 85%)'
-              : 'radial-gradient(ellipse at center, rgba(56, 189, 248, 0.30) 0%, rgba(99, 102, 241, 0.15) 45%, transparent 80%)',
-          }}
-        />
-
-        {/* Photographic Tactile Film Grain Depth Layer (Hardcoded: Opacity 100%, Speed 27 [0.044s], Size 40px, Density 0.10) */}
-        <div
-          className="absolute -inset-[30%] w-[160%] h-[160%] pointer-events-none z-[3] mix-blend-overlay animate-grain-movement"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.10' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.7'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat',
-            backgroundSize: '40px 40px',
-            opacity: 1,
-            animationDuration: '0.044s',
-          }}
-        />
-      </div>
+      {/* Native Apple macOS System Canvas (Clean, zero slop gradients) */}
+      <div className={`absolute inset-0 pointer-events-none select-none z-0 ${
+        isDarkMode ? 'bg-[#18181b]' : 'bg-[#F5F5F7]'
+      }`} />
 
       {/* Mobile Backdrop Overlay */}
       <div
