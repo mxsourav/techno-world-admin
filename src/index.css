@@ -1297,3 +1297,106 @@ a[role="button"]:active {
 .dark-content ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.38);
 }
+
+/* ==========================================================================
+   Admin Dark Theme Tokens
+   Keep every admin workspace on the same neutral charcoal/navy palette.
+   ========================================================================== */
+
+.dark,
+.admin-dark-shell,
+.dark-content,
+.dark-sidebar {
+  --admin-dark-canvas: #18181b;
+  --admin-dark-header: #111113;
+  --admin-dark-sidebar: #0d1324;
+  --admin-dark-surface: #101827;
+  --admin-dark-surface-raised: #182033;
+  --admin-dark-surface-muted: #202a40;
+  --admin-dark-border: rgba(255, 255, 255, 0.10);
+  --admin-dark-border-subtle: rgba(255, 255, 255, 0.07);
+  --admin-dark-text: #f5f7fb;
+  --admin-dark-text-muted: #a8b0c0;
+}
+
+.admin-dark-shell,
+.admin-dark-canvas {
+  background: var(--admin-dark-canvas) !important;
+}
+
+.admin-dark-header {
+  background: var(--admin-dark-header) !important;
+}
+
+.admin-dark-popover {
+  background: var(--admin-dark-surface) !important;
+}
+
+.dark-sidebar.macos-sidebar,
+.dark .macos-sidebar {
+  background: var(--admin-dark-sidebar) !important;
+  border-right-color: var(--admin-dark-border) !important;
+}
+
+.dark-content {
+  background: var(--admin-dark-canvas) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+/* Normalize page cards and panels, including workspaces with their own
+   dark:bg-* utility values. Accent-colored panels are intentionally excluded. */
+.dark-content div.bg-white,
+.dark-content section.bg-white,
+.dark-content article.bg-white,
+.dark-content div[class*="dark:bg-[#0d1324]"],
+.dark-content div[class*="dark:bg-[#0f172a]"],
+.dark-content div[class*="dark:bg-[#0c1222]"],
+.dark-content div[class*="dark:bg-[#141418]"],
+.dark-content div[class*="bg-white/"],
+.dark-content section[class*="bg-white/"],
+.dark-content article[class*="bg-white/"],
+.dark-content .glass-card {
+  background: var(--admin-dark-surface) !important;
+  border-color: var(--admin-dark-border) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.dark-content div[class*="bg-slate-50"],
+.dark-content section[class*="bg-slate-50"],
+.dark-content div[class*="bg-slate-100"],
+.dark-content section[class*="bg-slate-100"],
+.dark-content div[class*="bg-slate-200"],
+.dark-content section[class*="bg-slate-200"],
+.dark-content div[class*="bg-gray-50"],
+.dark-content div[class*="bg-gray-100"] {
+  background: var(--admin-dark-surface-raised) !important;
+  border-color: var(--admin-dark-border-subtle) !important;
+}
+
+.dark-content input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+.dark-content select,
+.dark-content textarea {
+  background: var(--admin-dark-surface-raised) !important;
+  border-color: var(--admin-dark-border) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.dark-content table th {
+  background: var(--admin-dark-surface-raised) !important;
+  border-bottom-color: var(--admin-dark-border) !important;
+}
+
+.dark-content table td {
+  border-bottom-color: var(--admin-dark-border-subtle) !important;
+}
+
+.dark-content table tr:hover td {
+  background: var(--admin-dark-surface-muted) !important;
+}
+
+.dark-content .border-slate-100,
+.dark-content .border-slate-200,
+.dark-content .border-slate-300,
+.dark-content [class*="border-white/"] {
+  border-color: var(--admin-dark-border) !important;
+}

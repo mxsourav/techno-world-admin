@@ -266,11 +266,11 @@ export default function AdminLayout() {
 
   return (
     <div className={`flex h-screen overflow-hidden font-sans relative ${
-      isDarkMode ? 'dark bg-[#18181b] text-neutral-100' : 'bg-[#F5F5F7] text-gray-900'
+      isDarkMode ? 'dark admin-dark-shell text-neutral-100' : 'bg-[#F5F5F7] text-gray-900'
     }`}>
       {/* Native Apple macOS System Canvas (Clean, zero slop gradients) */}
       <div className={`absolute inset-0 pointer-events-none select-none z-0 ${
-        isDarkMode ? 'bg-[#18181b]' : 'bg-[#F5F5F7]'
+        isDarkMode ? 'admin-dark-canvas' : 'bg-[#F5F5F7]'
       }`} />
 
       {/* Mobile Backdrop Overlay */}
@@ -425,21 +425,21 @@ export default function AdminLayout() {
         {/* Top Header — Frosted Glass */}
         <header className={`h-16 flex items-center justify-between px-6 sm:px-8 flex-shrink-0 z-20 relative ${
           isDarkMode
-            ? 'bg-[#0a0a0c]/65 backdrop-blur-2xl border-b border-white/[0.08]'
+            ? 'admin-dark-header backdrop-blur-2xl border-b border-white/[0.08]'
             : 'bg-white/50 backdrop-blur-2xl border-b border-white/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
         }`}>
           {/* Breadcrumbs & Header Sidebar Toggle */}
           <div className="flex items-center text-sm font-medium min-w-0 pr-4">
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              title={isSidebarCollapsed ? "Expand Sidebar (Ctrl+B)" : "Collapse Sidebar (Ctrl+B)"}
-              className={`w-8 h-8 mr-2.5 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0 ${
-                isSidebarCollapsed ? 'flex' : 'flex md:hidden'
-              }`}
-            >
-              <PanelLeft className="w-4.5 h-4.5" />
-            </button>
+            {!isSidebarCollapsed && (
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Collapse Sidebar (Ctrl+B)"
+                className="w-8 h-8 mr-2.5 rounded-lg flex md:hidden items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-black/[0.05] dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
+              >
+                <PanelLeft className="w-4.5 h-4.5" />
+              </button>
+            )}
             <span className={isDarkMode ? 'text-neutral-400 shrink-0' : 'text-slate-400 shrink-0'}>Admin</span>
             <ChevronRight className={`h-4 w-4 mx-1.5 shrink-0 ${isDarkMode ? 'text-neutral-600' : 'text-slate-300'}`} />
             <span className={`font-bold truncate max-w-[180px] lg:max-w-[260px] ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tabName}</span>
@@ -518,7 +518,7 @@ export default function AdminLayout() {
               {isNotifOpen && (
                 <div className={`absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 ${
                   isDarkMode
-                    ? 'border border-white/[0.12] bg-[#141418]/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-white'
+                    ? 'admin-dark-popover border border-white/[0.12] backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12)] text-white'
                     : 'border border-white/50 bg-white/65 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] text-slate-900'
                 }`}>
                   <div className={`flex items-center justify-between px-4 py-3 ${
