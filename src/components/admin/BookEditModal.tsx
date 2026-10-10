@@ -585,7 +585,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           {hasRestoredDraft && (
             <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/90 px-4 py-2.5 text-xs text-blue-900 shadow-2xs">
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-blue-800">Unsaved Draft Restored:</span>
+                <span className="font-extrabold text-blue-800">💾 Unsaved Draft Restored:</span>
                 <span className="text-slate-600">Your previously entered book details & description have been restored.</span>
               </div>
               <button
@@ -831,7 +831,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                <span>Pricing & Profit Margins</span>
+                <span>💰 Pricing & Profit Margins</span>
               </h3>
               {formData.price && formData.costPrice && Number(formData.price) > 0 ? (
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${Number(formData.price) >= Number(formData.costPrice) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
@@ -864,7 +864,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           {/* Inventory & Warehouse Management */}
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-              <span>Inventory & Stock Thresholds</span>
+              <span>📦 Inventory & Stock Thresholds</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -1053,7 +1053,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
                 Search & SEO Keywords (Internal Indexing Only)
               </label>
               <span className="rounded-md bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                Admin Only &bull; Hidden from Customer Storefront
+                🔒 Admin Only &bull; Hidden from Customer Storefront
               </span>
             </div>
             <p className="text-[11px] text-slate-500 leading-relaxed">

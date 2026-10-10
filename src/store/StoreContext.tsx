@@ -57,7 +57,7 @@ const loadArray = <T,>(key: string): T[] => {
   }
 };
 
-// Coupons are now validated via the backend API - no hardcoded list needed
+// Coupons are now validated via the backend API — no hardcoded list needed
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => { const raw = loadArray<any>('twb_cart'); return raw.map(i => ({ bookId: i.bookId || i.id, qty: i.qty || i.quantity || 1 })).filter(i => i.bookId && typeof i.bookId === 'string' && i.bookId.startsWith('c')); });

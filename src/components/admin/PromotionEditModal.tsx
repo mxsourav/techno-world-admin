@@ -273,7 +273,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                 <RotateCcw className="h-3.5 w-3.5" /> Discard Draft
               </button>
             )}
-            <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
+            <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -565,7 +565,7 @@ export default function PromotionEditModal({ promotion, onClose, onSuccess }: Pr
                   <div className="text-center my-2 relative z-0">
                     <div className="inline-block border-y-2 border-amber-900/30 py-0.5 px-3 mb-1">
                       <span className="text-[11px] font-black tracking-[0.2em] text-amber-950 uppercase">
-                        ADMIT ONE VOUCHER
+                        ★ ADMIT ONE VOUCHER ★
                       </span>
                     </div>
                     

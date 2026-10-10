@@ -37,23 +37,23 @@ interface EditableKeyInfo {
 
 const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
   // Header (visible across all pages)
-  { key: 'header.top_strip', label: 'Announcement Bar', section: 'Header & Navigation', defaultText: 'Delivering across India - 27,000+ pincodes' },
+  { key: 'header.top_strip', label: 'Announcement Bar', section: 'Header & Navigation', defaultText: 'Delivering across India — 27,000+ pincodes' },
   { key: 'header.sub_tagline', label: 'Store Tagline', section: 'Header & Navigation', defaultText: 'India ka apna bookstore' },
   
   // Homepage Hero (page '/')
-  { key: 'home.hero_badge', label: 'Hero Sale Badge', section: 'Homepage Hero', defaultText: 'Grand Book Sale - Up to 60% off 10,000+ titles', page: '/' },
+  { key: 'home.hero_badge', label: 'Hero Sale Badge', section: 'Homepage Hero', defaultText: 'Grand Book Sale — Up to 60% off 10,000+ titles', page: '/' },
   { key: 'home.hero_title_1', label: 'Hero Headline Line 1', section: 'Homepage Hero', defaultText: 'Every book India reads,', page: '/' },
   { key: 'home.hero_title_2', label: 'Hero Headline Line 2', section: 'Homepage Hero', defaultText: 'one search away.', page: '/' },
   { key: 'home.hero_desc', label: 'Hero Subtitle Description', section: 'Homepage Hero', defaultText: 'From academic textbooks to bestselling fiction, get genuine books delivered straight to your doorstep with guaranteed lowest prices.', multiline: true, page: '/' },
 
   // Homepage Offers (page '/')
-  { key: 'home.offer_1_title', label: 'Offer 1 Title', section: 'Homepage Highlights', defaultText: 'STUDENT15 - 15% off', page: '/' },
+  { key: 'home.offer_1_title', label: 'Offer 1 Title', section: 'Homepage Highlights', defaultText: 'STUDENT15 — 15% off', page: '/' },
   { key: 'home.offer_1_desc', label: 'Offer 1 Subtitle', section: 'Homepage Highlights', defaultText: 'For students on exam & academic books', page: '/' },
   { key: 'home.offer_2_title', label: 'Offer 2 Title', section: 'Homepage Highlights', defaultText: 'Free Delivery', multiline: false, page: '/' },
   { key: 'home.offer_2_desc', label: 'Offer 2 Subtitle', section: 'Homepage Highlights', defaultText: 'On all orders above ₹999 across India', page: '/' },
   { key: 'home.offer_3_title', label: 'Offer 3 Title', section: 'Homepage Highlights', defaultText: 'Techno Rewards', page: '/' },
   { key: 'home.offer_3_desc', label: 'Offer 3 Subtitle', section: 'Homepage Highlights', defaultText: 'Earn 1 Techno Coin per ₹100 spent (excl. delivery)', page: '/' },
-  { key: 'home.exam_zone_title', label: 'Exam Zone Heading', section: 'Homepage Highlights', defaultText: 'NEET · JEE · UPSC · GATE · SSC - all prep books in one place', page: '/' },
+  { key: 'home.exam_zone_title', label: 'Exam Zone Heading', section: 'Homepage Highlights', defaultText: 'NEET · JEE · UPSC · GATE · SSC — all prep books in one place', page: '/' },
   { key: 'home.exam_zone_desc', label: 'Exam Zone Subtitle', section: 'Homepage Highlights', defaultText: "Previous year papers, toppers' booklists and combo packs at the best prices.", page: '/' },
 
   // Special Offer Floating Popup (page '/')
@@ -94,21 +94,21 @@ const REGISTERED_CMS_KEYS: EditableKeyInfo[] = [
 export interface CategoryOption {
   name: string;
   slug: string;
-  icon?: string;
+  icon: string;
   description?: string;
 }
 
 export const DEFAULT_CATEGORY_OPTIONS: CategoryOption[] = [
-  { name: 'Bengali Story Books', slug: 'bengali', description: 'Classic and modern Bengali literature, stories and novels' },
-  { name: 'Engineering & Technology Books', slug: 'engineering', description: 'B.Tech, CSE, Electrical, Civil and Mechanical engineering' },
-  { name: 'Medical & Healthcare Books', slug: 'medical', description: 'MBBS, Nursing, Pharmacy and Clinical reference textbooks' },
-  { name: 'Competitive Exam Books', slug: 'competitive-exams', description: 'UPSC, SSC, JEE, NEET, GATE, Bank and Govt exams' },
-  { name: 'School Books (NCERT / ICSE)', slug: 'school', description: 'NCERT, CBSE and ICSE syllabus school textbooks' },
-  { name: 'University & College Books', slug: 'university', description: 'Undergraduate and postgraduate degree courses' },
-  { name: 'Fiction & Novels', slug: 'fiction', description: 'Bestselling fiction, mysteries, thrillers and classics' },
-  { name: 'Non-Fiction Books', slug: 'non-fiction', description: 'Biographies, self-help, business, history and essays' },
-  { name: 'International Books', slug: 'international', description: 'Imported titles, global academic and bestsellers' },
-  { name: "Rare & Collector's Editions", slug: 'rare', description: 'Out-of-print, antique and collector editions' },
+  { name: 'Bengali Story Books', slug: 'bengali', icon: '📖', description: 'Classic & modern Bengali literature, stories & novels' },
+  { name: 'Engineering & Technology Books', slug: 'engineering', icon: '⚙️', description: 'B.Tech, CSE, Electrical, Civil & Mechanical engineering' },
+  { name: 'Medical & Healthcare Books', slug: 'medical', icon: '🩺', description: 'MBBS, Nursing, Pharmacy & Clinical reference textbooks' },
+  { name: 'Competitive Exam Books', slug: 'competitive-exams', icon: '📚', description: 'UPSC, SSC, JEE, NEET, GATE, Bank & Govt exams' },
+  { name: 'School Books (NCERT / ICSE)', slug: 'school', icon: '🏫', description: 'NCERT, CBSE & ICSE syllabus school textbooks' },
+  { name: 'University & College Books', slug: 'university', icon: '🎓', description: 'Undergraduate & postgraduate degree courses' },
+  { name: 'Fiction & Novels', slug: 'fiction', icon: '✍️', description: 'Bestselling fiction, mysteries, thrillers & classics' },
+  { name: 'Non-Fiction Books', slug: 'non-fiction', icon: '📜', description: 'Biographies, self-help, business, history & essays' },
+  { name: 'International Books', slug: 'international', icon: '🌐', description: 'Imported titles, global academic & bestsellers' },
+  { name: "Rare & Collector's Editions", slug: 'rare', icon: '💎', description: 'Out-of-print, antique & collector editions' },
 ];
 
 export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
@@ -636,7 +636,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                           <div className="absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800">
                             <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between sticky top-0 backdrop-blur-xs">
                               <span>Suggested Category Names</span>
-                              <span className="font-mono text-[9px] text-emerald-600 dark:text-emerald-400">Auto-syncs books</span>
+                              <span className="font-mono text-[9px] text-emerald-600 dark:text-emerald-400">⚡ Auto-syncs books</span>
                             </div>
                             {filteredCategorySuggestions.map((cat, idx) => {
                               const isHighlighted = idx === suggestionHighlightIndex;
@@ -653,7 +653,7 @@ export const VisualCmsEditor: React.FC<VisualCmsEditorProps> = () => {
                                   }`}
                                 >
                                   <div className="flex items-center gap-2 min-w-0">
-                                    <Tag className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                    <span className="text-sm shrink-0">{cat.icon}</span>
                                     <div className="min-w-0">
                                       <p className="font-semibold truncate leading-tight">{cat.name}</p>
                                       {cat.description && (

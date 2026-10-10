@@ -177,7 +177,7 @@ export default function B2BQuotesWorkspace() {
       case 'Contacted':
         return 'bg-sky-50 text-sky-800 border-sky-200';
       case 'Quoted':
-        return 'bg-indigo-50 text-indigo-800 border-indigo-200';
+        return 'bg-purple-50 text-purple-800 border-purple-200';
       case 'Closed':
         return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       default:
@@ -251,12 +251,12 @@ export default function B2BQuotesWorkspace() {
         </div>
 
         <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-2xs">
-          <span className="text-xs font-medium text-indigo-700 uppercase tracking-wider flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+          <span className="text-xs font-medium text-purple-700 uppercase tracking-wider flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
             Quoted / Contacted
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold tracking-tight text-indigo-900">
+            <span className="text-2xl font-bold tracking-tight text-purple-900">
               {metaCounts.contacted + metaCounts.quoted}
             </span>
             <span className="text-xs text-stone-400">In Negotiation</span>

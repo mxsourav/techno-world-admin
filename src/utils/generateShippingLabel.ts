@@ -826,7 +826,7 @@ export function generatePrintDocumentHtml(stickersHtml: string, size: ShippingLa
       <body>
         <div class="no-print" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: white; padding: 10px 18px; border-radius: 8px;">
           <div>
-            <b>Techno World Official Shipping Labels</b> - Ready for Thermal / Laser Print (${size})
+            <b>Techno World Official Shipping Labels</b> — Ready for Thermal / Laser Print (${size})
           </div>
           <div style="display: flex; gap: 8px;">
             <button onclick="window.print()" style="background: #047857; color: white; border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px;">

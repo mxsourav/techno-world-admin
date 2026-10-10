@@ -163,7 +163,7 @@ export function generateAndPrintInvoice(order: any) {
       <body>
         <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
           <button onclick="window.print()" style="background: #047857; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px;">
-            Print / Save as PDF (A4)
+            🖨️ Print / Save as PDF (A4)
           </button>
         </div>
 
@@ -195,7 +195,7 @@ export function generateAndPrintInvoice(order: any) {
           <div style="margin-top: 20px; padding: 14px; border-radius: 8px; background: ${isPickup ? '#f0fdf4' : '#f8fafc'}; border: 1px solid ${isPickup ? '#bbf7d0' : '#e2e8f0'};">
             ${isPickup ? `
               <div style="font-size: 12px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between;">
-                <span>STORE SELF-PICKUP (TAKEAWAY DESK)</span>
+                <span>🏪 STORE SELF-PICKUP (TAKEAWAY DESK)</span>
                 <span style="font-size: 11px; font-weight: 700; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px;">Weight: ${totalWeightDisplay}</span>
               </div>
               <div style="margin-top: 6px; font-size: 12px; color: #14532d; line-height: 1.4;">
@@ -205,12 +205,12 @@ export function generateAndPrintInvoice(order: any) {
               </div>
             ` : `
               <div style="font-size: 12px; font-weight: 800; color: #1e293b; display: flex; align-items: center; justify-content: space-between;">
-                <span>POSTAL DELIVERY (${order.shippingMethod === 'SPEED_POST' ? 'SPEED POST' : order.shippingMethod === 'EXPRESS_LOCAL' ? 'EXPRESS LOCAL' : 'INDIA POST / COURIER'})</span>
+                <span>🚚 POSTAL DELIVERY (${order.shippingMethod === 'SPEED_POST' ? 'SPEED POST' : order.shippingMethod === 'EXPRESS_LOCAL' ? 'EXPRESS LOCAL' : 'INDIA POST / COURIER'})</span>
                 <span style="font-size: 11px; font-weight: 700; background: #e2e8f0; color: #334155; padding: 2px 6px; border-radius: 4px;">Weight: ${totalWeightDisplay}</span>
               </div>
               <div style="margin-top: 6px; font-size: 12px; color: #475569; line-height: 1.4;">
                 <b>Deliver to:</b> ${customerName}<br/>
-                ${order.address?.addressLine1 || order.address?.line1 || ''}, ${order.address?.city || ''} - ${order.address?.pincode || ''}<br/>
+                ${order.address?.addressLine1 || order.address?.line1 || ''}, ${order.address?.city || ''} — ${order.address?.pincode || ''}<br/>
                 <b>Phone:</b> +91 ${customerPhone}
               </div>
             `}

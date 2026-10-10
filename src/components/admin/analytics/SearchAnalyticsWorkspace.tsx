@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, Calendar, ShoppingCart,
   BookOpen, RefreshCw, BarChart3, Users, Clock,
-  MousePointerClick, Monitor, Smartphone, ExternalLink, Store
+  MousePointerClick, Monitor, Smartphone, ExternalLink
 } from 'lucide-react';
 import { adminService, analyticsService , getImageUrl} from '@/services/api';
 import { formatINR } from '@/utils/helpers';
@@ -46,7 +46,7 @@ export default function SearchAnalyticsWorkspace() {
     todayVisitors: 16,
     todayPageviews: 52,
     livePages: [
-      { path: '/', title: 'Home  -  Techno World Books', viewers: 1, isBlog: false, isCheckout: false },
+      { path: '/', title: 'Home — Techno World Books', viewers: 1, isBlog: false, isCheckout: false },
     ],
     deviceDistribution: { desktop: 1, mobile: 0, tablet: 0 },
     lastUpdated: new Date().toISOString(),
@@ -174,7 +174,7 @@ export default function SearchAnalyticsWorkspace() {
       case 'NEET / Medical': return { bg: 'bg-emerald-500', light: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
       case 'JEE / Engineering': return { bg: 'bg-blue-500', light: 'bg-blue-50 text-blue-700 border-blue-200' };
       case 'UPSC / Govt Exams': return { bg: 'bg-amber-500', light: 'bg-amber-50 text-amber-700 border-amber-200' };
-      case 'School & Boards': return { bg: 'bg-indigo-500', light: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+      case 'School & Boards': return { bg: 'bg-purple-500', light: 'bg-purple-50 text-purple-700 border-purple-200' };
       default: return { bg: 'bg-slate-400', light: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
   };
@@ -380,7 +380,7 @@ export default function SearchAnalyticsWorkspace() {
               <p className="mt-2 text-[11px] text-slate-500">
                 {(liveData.deviceDistribution?.totalSessions || 0) > 0
                   ? `24h traffic share: ${liveData.deviceDistribution?.mobilePercent ?? 0}% mobile vs ${liveData.deviceDistribution?.desktopPercent ?? 0}% desktop`
-                  : 'Live telemetry active  -  visitor device sessions track automatically'}
+                  : 'Live telemetry active — visitor device sessions track automatically'}
               </p>
             </div>
           </div>
@@ -418,16 +418,16 @@ export default function SearchAnalyticsWorkspace() {
                         </td>
                         <td className="px-4 py-3">
                           {page.isBlog ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                              <BookOpen className="h-3 w-3" /> Blog / Study Guide
+                            <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                              📖 Blog / Study Guide
                             </span>
                           ) : page.isCheckout ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                              <ShoppingCart className="h-3 w-3" /> Checkout Funnel
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                              🛒 Checkout Funnel
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                              <Store className="h-3 w-3" /> Catalog / Storefront
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                              🛍️ Catalog / Storefront
                             </span>
                           )}
                         </td>
@@ -494,8 +494,8 @@ export default function SearchAnalyticsWorkspace() {
                 Blog-to-Book Click Rate
               </span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-indigo-700">{blogData.overview?.conversionRate || '0.0'}%</span>
-                <span className="text-xs font-bold text-indigo-600">click-through</span>
+                <span className="text-3xl font-black text-purple-700">{blogData.overview?.conversionRate || '0.0'}%</span>
+                <span className="text-xs font-bold text-purple-600">click-through</span>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">Readers showing purchase intent</p>
             </div>
@@ -917,8 +917,8 @@ export default function SearchAnalyticsWorkspace() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
               <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Editorial Reads</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-indigo-700">{overviewData?.blogEngagement?.totalViews || blogData.overview?.totalViews || 0}</span>
-                <span className="text-xs font-bold text-indigo-600">views</span>
+                <span className="text-3xl font-black text-purple-700">{overviewData?.blogEngagement?.totalViews || blogData.overview?.totalViews || 0}</span>
+                <span className="text-xs font-bold text-purple-600">views</span>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">Blog reader touchpoints</p>
             </div>
