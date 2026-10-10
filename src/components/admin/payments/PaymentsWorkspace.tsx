@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
-  CreditCard,
+  CreditCard, Landmark, Banknote, ShoppingCart, Package, Truck,
   Search,
   Download,
   RefreshCw,
@@ -308,7 +308,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               label: 'Refunds Monitoring',
               icon: <RotateCcw className="h-4 w-4" />,
               badge: overview?.counts?.refunded > 0 ? (
-                <span className="bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ml-1">
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full ml-1">
                   {overview.counts.refunded}
                 </span>
               ) : undefined,
@@ -512,9 +512,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                 <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
-                        💳
-                      </div>
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-xs"><CreditCard className="h-4 w-4" /></div>
                       <span className="text-xs font-bold text-slate-800 dark:text-white">Debit / Credit Cards</span>
                     </div>
                     <span className="text-xs font-black text-blue-700 dark:text-blue-400">
@@ -530,12 +528,10 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                 <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
-                        🏛️
-                      </div>
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs"><Landmark className="h-4 w-4" /></div>
                       <span className="text-xs font-bold text-slate-800 dark:text-white">Net Banking</span>
                     </div>
-                    <span className="text-xs font-black text-purple-700 dark:text-purple-400">
+                    <span className="text-xs font-black text-slate-700 dark:text-slate-300">
                       {overview ? formatINR(overview.methodBreakdown?.NETBANKING?.volume || 0) : '₹0'}
                     </span>
                   </div>
@@ -548,9 +544,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                 <div className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.04] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
-                        💵
-                      </div>
+                      <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-xs"><Banknote className="h-4 w-4" /></div>
                       <span className="text-xs font-bold text-slate-800 dark:text-white">Cash on Delivery</span>
                     </div>
                     <span className="text-xs font-black text-amber-700 dark:text-amber-400">
@@ -652,7 +646,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                                 <CheckCircle2 className="h-3 w-3" /> Successful
                               </span>
                             ) : tx.paymentStatus === 'REFUNDED' ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300">
                                 <RotateCcw className="h-3 w-3" /> Refunded
                               </span>
                             ) : tx.paymentStatus === 'FAILED' ? (
@@ -779,22 +773,22 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                 <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-lg">🛒</span>
+                  <ShoppingCart className="h-5 w-5 mx-auto text-slate-700 mb-1" />
                   <div className="text-xs font-bold text-slate-900">1. Order Placed</div>
                   <div className="text-[10px] text-slate-400">Customer pays via UPI/Card/COD</div>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-lg">📦</span>
+                  <Package className="h-5 w-5 mx-auto text-slate-700 mb-1" />
                   <div className="text-xs font-bold text-slate-900">2. Dispatched</div>
                   <div className="text-[10px] text-slate-400">India Post Speed Post booked</div>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                  <span className="text-lg">🚚</span>
+                  <Truck className="h-5 w-5 mx-auto text-slate-700 mb-1" />
                   <div className="text-xs font-bold text-slate-900">3. Delivered</div>
                   <div className="text-[10px] text-slate-400">Customer receives parcel</div>
                 </div>
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-300 space-y-1">
-                  <span className="text-lg">🏦</span>
+                  <Landmark className="h-5 w-5 mx-auto text-emerald-700 mb-1" />
                   <div className="text-xs font-extrabold text-emerald-800">4. Bank Deposit</div>
                   <div className="text-[10px] text-emerald-700">Direct settlement to SBI A/C</div>
                 </div>
@@ -945,7 +939,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                                 <CheckCircle2 className="h-3 w-3" /> Successful
                               </span>
                             ) : tx.paymentStatus === 'REFUNDED' ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300">
                                 <RotateCcw className="h-3 w-3" /> Refunded
                               </span>
                             ) : tx.paymentStatus === 'FAILED' ? (
@@ -1004,7 +998,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  <RotateCcw className="h-5 w-5 text-purple-600" />
+                  <RotateCcw className="h-5 w-5 text-slate-600" />
                   Refunds & Returns Monitoring Desk
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
@@ -1015,7 +1009,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <span className="text-xs text-slate-400 font-bold block">Total Refunded</span>
-                  <span className="text-lg font-black text-purple-700">
+                  <span className="text-lg font-black text-slate-700">
                     {overview ? formatINR(overview.refundedVolume) : '₹0'}
                   </span>
                 </div>
@@ -1071,14 +1065,14 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                           <td className="px-5 py-3.5 text-slate-600 font-bold">
                             {formatINR(tx.grossAmount)}
                           </td>
-                          <td className="px-5 py-3.5 text-purple-700 font-black">
+                          <td className="px-5 py-3.5 text-slate-700 font-black">
                             {formatINR(tx.refundInfo?.refundAmount || tx.grossAmount)}
                           </td>
                           <td className="px-5 py-3.5 text-slate-600 max-w-xs truncate font-medium">
                             {tx.refundInfo?.refundReason || 'Order cancellation / return refund'}
                           </td>
                           <td className="px-5 py-3.5">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300">
                               <RotateCcw className="h-3 w-3" /> Refund Settled
                             </span>
                           </td>
@@ -1221,7 +1215,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                     { val: 'PAID', label: 'Successful', color: 'emerald' },
                     { val: 'PENDING', label: 'Pending', color: 'amber' },
                     { val: 'FAILED', label: 'Failed', color: 'rose' },
-                    { val: 'REFUNDED', label: 'Refunded', color: 'purple' },
+                    { val: 'REFUNDED', label: 'Refunded', color: 'slate' },
                   ].map((s) => (
                     <button
                       key={s.val}
@@ -1235,7 +1229,7 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
                             ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
                             : s.val === 'FAILED'
                             ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
-                            : 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                            : 'bg-slate-700 text-white border-slate-700 shadow-sm'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -1261,27 +1255,27 @@ export default function PaymentsWorkspace({ onPreviewOrder }: PaymentsWorkspaceP
 
               {/* Conditional inputs when REFUNDED */}
               {updateStatus === 'REFUNDED' && (
-                <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/50 space-y-3">
+                <div className="p-4 rounded-xl border border-slate-300 bg-slate-100/50 space-y-3">
                   <div>
-                    <label className="font-extrabold text-purple-950 block mb-1">
+                    <label className="font-extrabold text-slate-900 block mb-1">
                       Refund Amount (₹)
                     </label>
                     <input
                       type="number"
                       value={refundAmount}
                       onChange={(e) => setRefundAmount(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs font-bold text-purple-950 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500/20"
                     />
                   </div>
 
                   <div>
-                    <label className="font-extrabold text-purple-950 block mb-1">
+                    <label className="font-extrabold text-slate-900 block mb-1">
                       Reason for Refund
                     </label>
                     <select
                       value={refundReason}
                       onChange={(e) => setRefundReason(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs font-medium text-purple-950 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-slate-500/20"
                     >
                       <option value="Damaged / Defective Book Returned">Damaged / Defective Book Returned</option>
                       <option value="Customer Return (Wrong Book / Edition)">Customer Return (Wrong Book / Edition)</option>

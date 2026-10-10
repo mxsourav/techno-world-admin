@@ -701,7 +701,7 @@ export default function BlogWorkspace() {
                           <span>&bull;</span>
                           <span>{post.readTime || '5 min read'}</span>
                           <span>&bull;</span>
-                          <span>👁️ {post.views} views</span>
+                          <span>{post.views} views</span>
                         </p>
                       </div>
                     </div>
@@ -1165,7 +1165,7 @@ export default function BlogWorkspace() {
                       className="rounded px-2 py-1 font-medium text-slate-700 hover:bg-slate-200 cursor-pointer"
                       title="Callout Quote (> Tip)"
                     >
-                      ❝ Quote
+                      Quote
                     </button>
                     <span className="text-slate-300 ml-auto">|</span>
                     <button
@@ -1317,7 +1317,7 @@ export default function BlogWorkspace() {
                           onClick={() => setShowBookSearchDropdown(false)}
                           className="text-slate-400 hover:text-slate-600 text-[10px] font-medium"
                         >
-                          Close [✕]
+                          Close [x]
                         </button>
                       </div>
 
@@ -1357,7 +1357,7 @@ export default function BlogWorkspace() {
                                 <p className="text-xs font-bold text-slate-900 truncate">{bk.title}</p>
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-slate-500">
                                   <span className="font-medium text-slate-700 truncate max-w-[180px]">
-                                    ✍️ {authors}
+                                    {authors}
                                   </span>
                                   {sku && (
                                     <span className="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded text-[10px] font-bold">
@@ -1441,7 +1441,7 @@ export default function BlogWorkspace() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h5 className="text-xs font-bold text-slate-900 truncate">{bk.title}</h5>
-                              <p className="text-[10px] text-slate-500 truncate">✍️ {authors}</p>
+                              <p className="text-[10px] text-slate-500 truncate">{authors}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 {sku && (
                                   <span className="font-mono text-[9px] bg-slate-100 text-slate-600 px-1 rounded font-bold">

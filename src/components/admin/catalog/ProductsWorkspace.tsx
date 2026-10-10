@@ -5,7 +5,7 @@ import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
-import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check } from 'lucide-react';
+import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check, Tag } from 'lucide-react';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 export default function ProductsWorkspace() {
@@ -409,7 +409,7 @@ export default function ProductsWorkspace() {
                                 }}
                                 className="rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-amber-700 font-bold hover:bg-amber-100 transition-colors cursor-pointer lowercase"
                               >
-                                ⚠️ Add description
+                                Add description
                               </button>
                             ) : (
                               <span className="text-emerald-700 font-bold lowercase flex items-center gap-0.5">
@@ -690,7 +690,7 @@ export default function ProductsWorkspace() {
                     <Search className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     <h4 className="font-bold text-slate-800 dark:text-white">Search & SEO Keywords</h4>
                     <span className="rounded-md bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-white/10">
-                      🔒 Admin Only
+                      Admin Only
                     </span>
                   </div>
                   {editingKeywordsId !== viewingBook.id ? (
@@ -814,7 +814,7 @@ export default function ProductsWorkspace() {
                         <div className="flex flex-wrap gap-1.5">
                           {kwArray.map((kw, i) => (
                             <span key={i} className="inline-flex items-center rounded-md bg-white dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-2xs">
-                              🏷️ {kw}
+                              <Tag className="h-3 w-3 mr-1 text-slate-400" /> {kw}
                             </span>
                           ))}
                         </div>

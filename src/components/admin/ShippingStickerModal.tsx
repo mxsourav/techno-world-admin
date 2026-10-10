@@ -202,7 +202,7 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-extrabold text-slate-900 text-base">
-                  {isBatch ? `Batch Shipping Labels (${orders.length} Parcels)` : `Shipping Label — #${currentOrder?.orderNumber}`}
+                  {isBatch ? `Batch Shipping Labels (${orders.length} Parcels)` : `Shipping Label  -  #${currentOrder?.orderNumber}`}
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-red-100 text-red-800 border border-red-200">
                   {size} Format
@@ -211,7 +211,7 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
                   {design.replace(/-/g, ' ')}
                 </span>
                 {showPrice && (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
                     Price Visible
                   </span>
                 )}
@@ -372,7 +372,7 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
                       <div className="text-[10px] text-slate-500">
                         {showPrice
                           ? '₹ Amount badge (Prepaid / C.O.D.) will be printed on footer'
-                          : 'Prices hidden — confidential / institutional / gift parcel'}
+                          : 'Prices hidden  -  confidential / institutional / gift parcel'}
                       </div>
                     </div>
                     <button
@@ -546,7 +546,7 @@ export const ShippingStickerModal: React.FC<ShippingStickerModalProps> = ({
               <div className="space-y-3 animate-in fade-in duration-100">
                 <div className="flex items-center justify-between border-b pb-2 border-slate-200">
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Building className="h-3.5 w-3.5 text-purple-600" /> Sender &amp; Return Address
+                    <Building className="h-3.5 w-3.5 text-slate-600" /> Sender &amp; Return Address
                   </label>
                   <span className="text-[10px] text-slate-500 font-medium">If Undelivered Address</span>
                 </div>

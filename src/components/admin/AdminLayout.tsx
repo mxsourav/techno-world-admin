@@ -422,7 +422,7 @@ export default function AdminLayout() {
       <div
         className={`flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden ${isDarkMode ? 'dark-content' : 'glass-light glass-light-canvas'}`}
       >
-        {/* Top Header — Frosted Glass */}
+        {/* Top Header  -  Frosted Glass */}
         <header className={`h-16 flex items-center justify-between px-6 sm:px-8 flex-shrink-0 z-20 relative ${
           isDarkMode
             ? 'admin-dark-header backdrop-blur-2xl border-b border-white/[0.08]'
@@ -475,7 +475,7 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={toggleDarkMode}
-              className="apple-pill-btn apple-pill-circle w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 outline-none focus:outline-none focus:ring-0 cursor-pointer overflow-hidden relative"
+              className="w-9 h-9 rounded-lg border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-zinc-800 flex items-center justify-center transition-all duration-200 outline-none focus:outline-none focus:ring-0 cursor-pointer overflow-hidden relative shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-700"
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               <div className={`relative w-4.5 h-4.5 flex items-center justify-center transition-transform duration-500 ${isDarkMode ? 'rotate-[360deg]' : 'rotate-0'}`}>
@@ -505,7 +505,7 @@ export default function AdminLayout() {
               <button
                 type="button"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="apple-pill-btn apple-pill-circle w-9 h-9 rounded-full flex items-center justify-center relative outline-none focus:outline-none focus:ring-0 cursor-pointer"
+                className="w-9 h-9 rounded-lg border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-zinc-800 flex items-center justify-center relative outline-none focus:outline-none focus:ring-0 cursor-pointer shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-700"
                 title="Orders requiring review"
               >
                 <Bell className={`h-4 w-4 ${isDarkMode ? 'text-neutral-300' : 'text-slate-600'}`} strokeWidth={1.8} />
@@ -607,7 +607,7 @@ export default function AdminLayout() {
               href="https://technoworldbooks.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="apple-pill-btn px-3.5 py-1.5 text-xs font-bold gap-1.5"
+              className="inline-flex items-center rounded-lg border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-zinc-800 px-3.5 py-1.5 text-xs font-bold gap-1.5 text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-2xs"
             >
               <Store className="h-3.5 w-3.5" />
               View Store
@@ -615,7 +615,7 @@ export default function AdminLayout() {
 
             <Link
               to="/admin/dashboard?tab=settings"
-              className="apple-pill-btn apple-pill-circle text-xs font-bold"
+              className="w-9 h-9 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-900 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center text-xs font-bold shadow-2xs hover:opacity-90 transition-opacity"
               title="Admin Profile & Outbound Email Settings"
             >
               AD
@@ -812,7 +812,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-purple-400' : 'text-purple-600')}`} />
+                <FileEdit className={`h-3.5 w-3.5 ${currentTab === 'products' && currentStatus === 'draft' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`} />
                 Draft Listings
               </span>
             </Link>
@@ -1136,7 +1136,7 @@ export default function AdminLayout() {
               }`}
             >
               <span className="flex items-center gap-2">
-                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'requests' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-purple-400' : 'text-purple-500')}`} />
+                <BookOpen className={`h-3.5 w-3.5 ${currentTab === 'reviews' && currentSub === 'requests' ? (isDarkMode ? 'text-[#3898ff]' : 'text-[#007aff]') : (isDarkMode ? 'text-slate-400' : 'text-slate-600')}`} />
                 Book Sourcing Requests
               </span>
             </Link>

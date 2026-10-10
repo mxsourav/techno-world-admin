@@ -315,7 +315,7 @@ export default function Dashboard() {
       if (res?.success) {
         setAutoAcceptEnabled(nextVal);
         if (nextVal) {
-          toast.success('⚡ Auto-Accept Orders ENABLED (Default). New orders will automatically confirm for packing.');
+          toast.success('Auto-Accept Orders ENABLED (Default). New orders will automatically confirm for packing.');
         } else {
           toast.info('Auto-Accept Orders DISABLED. New orders will wait in "To Accept" for manual approval.');
         }
@@ -1063,8 +1063,8 @@ export default function Dashboard() {
         );
       case 'REFUNDED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 backdrop-blur-sm shadow-2xs">
-            <RotateCcw className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 backdrop-blur-sm shadow-2xs">
+            <RotateCcw className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
             Refunded
           </span>
         );
@@ -2677,9 +2677,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         <button
                           type="button"
                           onClick={() => setUniversalOrderSearch('')}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
                         >
-                          ✕
+                          <X className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>
@@ -2758,10 +2758,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     {orderSearchQuery && (
                       <button
                         onClick={() => setOrderSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                         title="Clear search"
                       >
-                        ✕
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -2820,11 +2820,11 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         <Clock className={`h-4 w-4 ${isBefore2PM ? 'text-blue-600' : 'text-amber-700'}`} />
                         {isBefore2PM ? (
                           <span>
-                            ✓ <b>Same Day Dispatch Batch</b>: Orders placed before 2:00 PM ({toAcceptCount} pending approval for today's pickup)
+                            <b>Same Day Dispatch Batch</b>: Orders placed before 2:00 PM ({toAcceptCount} pending approval for today's pickup)
                           </span>
                         ) : (
                           <span>
-                            ✓ <b>Next Day Dispatch Batch</b>: Orders placed after 2:00 PM ({toAcceptCount} scheduled for tomorrow's pickup)
+                            <b>Next Day Dispatch Batch</b>: Orders placed after 2:00 PM ({toAcceptCount} scheduled for tomorrow's pickup)
                           </span>
                         )}
                       </div>
@@ -3269,7 +3269,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                           <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> <b>{grp.postOffice}</b>
                                         </p>
                                         <p className="text-[11px] text-slate-600">
-                                          {grp.city}, {grp.state} — <b>{grp.pincode}</b>
+                                          {grp.city}, {grp.state} - <b>{grp.pincode}</b>
                                         </p>
                                         {grp.landmark && (
                                           <p className="text-[10px] text-slate-500">
@@ -3368,7 +3368,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                             </button>
                                           ) : (
                                     <span className="rounded bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 text-[10px] font-bold">
-                                              ✅ Collected
+                                              Collected
                                             </span>
                                           )}
                                         </>
@@ -3712,7 +3712,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                         College Street Takeaway Desk
                                       </p>
                                       {ord.selectedPickupSlot && (
-                                        <p className="text-[10px] text-purple-700 font-bold bg-purple-50 rounded px-1 py-0.5 mt-0.5">
+                                        <p className="text-[10px] text-blue-700 font-bold bg-blue-50 rounded px-1 py-0.5 mt-0.5">
                                           {ord.selectedPickupSlot}
                                         </p>
                                       )}
@@ -3735,7 +3735,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                         <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> {ord.address?.postOffice || 'Local Post Office'}
                                       </p>
                                       <p className="text-[10px] text-slate-500">
-                                        {ord.address?.city || 'City'}, {ord.address?.state || 'State'} — <b>{ord.address?.pincode}</b>
+                                        {ord.address?.city || 'City'}, {ord.address?.state || 'State'} - <b>{ord.address?.pincode}</b>
                                       </p>
                                     </>
                                   )}
@@ -3807,7 +3807,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                           </button>
                                         ) : (
                                           <span className="rounded bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 text-[10px] font-bold">
-                                            ✅ Collected
+                                            Collected
                                           </span>
                                         )}
                                       </>
@@ -4163,7 +4163,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border shadow-2xs ${
                               lookupOrderDossier.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
                               lookupOrderDossier.status === 'CONFIRMED' ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' :
-                              lookupOrderDossier.status === 'PROCESSING' ? 'bg-purple-500/20 text-purple-300 border-purple-400/30' :
+                              lookupOrderDossier.status === 'PROCESSING' ? 'bg-sky-500/20 text-sky-300 border-sky-400/30' :
                               lookupOrderDossier.status === 'SHIPPED' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30' :
                               lookupOrderDossier.status === 'DELIVERED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
                               'bg-rose-500/20 text-rose-300 border-rose-400/30'
@@ -4179,9 +4179,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
                       <button
                         onClick={() => setLookupOrderDossier(null)}
-                        className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-xl font-bold"
+                        className="rounded-lg p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                       >
-                        ✕
+                        <X className="h-5 w-5" />
                       </button>
                     </div>
 
@@ -4241,7 +4241,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           </div>
                           {lookupOrderDossier.address && (
                             <p className="text-[11px] text-slate-600 pt-1 border-t border-blue-100">
-                              <b>Full Address:</b> {lookupOrderDossier.address.addressLine1 || lookupOrderDossier.address.line1}, {lookupOrderDossier.address.landmark ? `${lookupOrderDossier.address.landmark}, ` : ''}{lookupOrderDossier.address.city}, {lookupOrderDossier.address.state} — <b className="text-slate-900 font-mono">{lookupOrderDossier.address.pincode}</b>
+                              <b>Full Address:</b> {lookupOrderDossier.address.addressLine1 || lookupOrderDossier.address.line1}, {lookupOrderDossier.address.landmark ? `${lookupOrderDossier.address.landmark}, ` : ''}{lookupOrderDossier.address.city}, {lookupOrderDossier.address.state} - <b className="text-slate-900 font-mono">{lookupOrderDossier.address.pincode}</b>
                               {lookupOrderDossier.address.postOffice && (
                                 <span className="block text-slate-500 mt-0.5"><Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> Post Office: <b>{lookupOrderDossier.address.postOffice}</b></span>
                               )}
@@ -4434,7 +4434,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           <p><b>Phone:</b> {previewOrder.address?.phone || previewOrder.user?.phone || 'N/A'}</p>
                           <p><b>Recipient Email:</b> <span className="font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{previewOrder.customerEmail || previewOrder.address?.email || previewOrder.user?.email || 'N/A'}</span></p>
                           <p><b>Post Office:</b> <Building2 className="h-3 w-3 text-slate-500 inline mr-1" /> {previewOrder.address?.postOffice || 'Local Post Office'}</p>
-                          <p><b>Address:</b> {previewOrder.address?.addressLine1 || previewOrder.address?.line1 || 'Street Address'}, {previewOrder.address?.landmark ? `${previewOrder.address.landmark}, ` : ''}{previewOrder.address?.city || 'Kolkata'}, {previewOrder.address?.state || 'West Bengal'} — <b>{previewOrder.address?.pincode || '700001'}</b></p>
+                          <p><b>Address:</b> {previewOrder.address?.addressLine1 || previewOrder.address?.line1 || 'Street Address'}, {previewOrder.address?.landmark ? `${previewOrder.address.landmark}, ` : ''}{previewOrder.address?.city || 'Kolkata'}, {previewOrder.address?.state || 'West Bengal'} - <b>{previewOrder.address?.pincode || '700001'}</b></p>
                         </div>
 
                         {/* Customer Profile Link */}
@@ -4579,7 +4579,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           <span>{mergeModalOrder.items?.length || 0} Book(s)</span>
                         </div>
                         <div className="text-slate-600 flex justify-between">
-                          <span>Delivery Method: {mergeModalOrder.shippingMethod === 'SPEED_POST' ? 'Speed Post' : mergeModalOrder.shippingMethod === 'EXPRESS_LOCAL' ? '⚡ Express Local' : 'Standard Delivery'}</span>
+                          <span>Delivery Method: {mergeModalOrder.shippingMethod === 'SPEED_POST' ? 'Speed Post' : mergeModalOrder.shippingMethod === 'EXPRESS_LOCAL' ? 'Express Local' : 'Standard Delivery'}</span>
                           <span className="font-bold text-blue-700">Shipping Paid: {formatINR(mergeModalOrder.shippingCharge || 0)}</span>
                         </div>
                       </div>
@@ -4597,7 +4597,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                         </div>
                       ) : (
                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
-                          ℹ️ This child order had ₹0 delivery fee. Items will be bundled into the parent parcel at no additional charge.
+                          This child order had ₹0 delivery fee. Items will be bundled into the parent parcel at no additional charge.
                         </div>
                       )}
 
@@ -4612,7 +4612,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           </div>
                         ) : mergeCandidates.length === 0 ? (
                           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                            ⚠️ No eligible active parent orders found for this customer awaiting dispatch.
+                            No eligible active parent orders found for this customer awaiting dispatch.
                           </div>
                         ) : (
                           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -4776,9 +4776,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           setCustomerPhoneQuery('');
                           fetchCustomers(undefined, undefined, '');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                       >
-                        ✕
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -4802,9 +4802,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           setCustomerSearchQuery('');
                           fetchCustomers('');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                       >
-                        ✕
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
@@ -4855,10 +4855,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                     navigator.clipboard.writeText(c.customerId);
                                     toast.success(`Copied Customer ID: ${c.customerId}`);
                                   }}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold font-mono hover:bg-purple-100 transition-colors shadow-2xs"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-750 text-[11px] font-bold font-mono hover:bg-slate-200 transition-colors shadow-2xs"
                                   title="Click to copy Customer ID"
                                 >
-                                  <BadgeCheck className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                  <BadgeCheck className="h-3 w-3 text-slate-600 dark:text-slate-400" />
                                   <span>{c.customerId}</span>
                                 </button>
                               ) : (
@@ -5427,7 +5427,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     </div>
 
                     <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-[11px] text-amber-900 dark:text-amber-300">
-                      ✉️ A formal notification email will automatically be transmitted to <b>{statusModalCustomer.email}</b> informing them of this status change.
+                      A formal notification email will automatically be transmitted to <b>{statusModalCustomer.email}</b> informing them of this status change.
                     </div>
                   </div>
 
@@ -5486,10 +5486,10 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                 navigator.clipboard.writeText(selectedCustomerDetail.customerId);
                                 toast.success(`Copied ${selectedCustomerDetail.customerId}`);
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 cursor-pointer hover:bg-purple-200 transition-colors"
+                              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-mono text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 transition-colors"
                               title="Click to copy Customer ID"
                             >
-                              <Tag className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+                              <Tag className="h-2.5 w-2.5 text-slate-600 dark:text-slate-400" />
                               {selectedCustomerDetail.customerId}
                               <Copy className="h-2 w-2 opacity-60" />
                             </span>
@@ -6129,11 +6129,11 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             </div>
 
                             {/* Customer Question */}
-                            <div className="rounded-xl bg-purple-50/50 p-3 border border-purple-100">
-                              <p className="text-xs font-bold text-purple-950">
+                            <div className="rounded-xl bg-slate-100/70 p-3 border border-slate-200">
+                              <p className="text-xs font-bold text-slate-900">
                                 Q: {q.question}
                               </p>
-                              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-purple-700 font-medium">
+                              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600 font-medium">
                                 <span>Asked by: <b>{q.userName}</b> ({q.userEmail || 'Guest'})</span>
                                 <span>•</span>
                                 <span>{new Date(q.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
@@ -6157,16 +6157,16 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
                             {/* Inline Reply Form */}
                             {replyingQuestionId === q.id && (
-                              <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-md space-y-3 mt-2">
+                              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md space-y-3 mt-2">
                                 <h4 className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                                  <Send className="h-3.5 w-3.5 text-purple-600" /> Write Answer for Product Page
+                                  <Send className="h-3.5 w-3.5 text-blue-600" /> Write Answer for Product Page
                                 </h4>
                                 <textarea
                                   rows={3}
                                   value={replyText}
                                   onChange={(e) => setReplyText(e.target.value)}
                                   placeholder="Type verified answer here (e.g. Yes, this is the official 2026 revised syllabus edition with 2025 solved papers)..."
-                                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs outline-none focus:border-purple-600 font-medium"
+                                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs outline-none focus:border-blue-600 font-medium"
                                 />
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <div className="flex items-center gap-2">
@@ -6263,14 +6263,14 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     const cleanPhone = (req.phone || '').replace(/[^0-9]/g, '');
                     const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
                     const waText = encodeURIComponent(
-                      `Hello! Regarding your book request for "${req.title}" by ${req.author} on Techno World Books — College Street:`
+                      `Hello! Regarding your book request for "${req.title}" by ${req.author} on Techno World Books - College Street:`
                     );
-                    const mailSubject = encodeURIComponent(`Regarding your book request: "${req.title}" — Techno World Books`);
+                    const mailSubject = encodeURIComponent(`Regarding your book request: "${req.title}" - Techno World Books`);
 
                     const statusColors: Record<string, string> = {
                       PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
                       SOURCED: 'bg-blue-50 text-blue-800 border-blue-200',
-                      CONTACTED: 'bg-purple-50 text-purple-800 border-purple-200',
+                      CONTACTED: 'bg-indigo-50 text-indigo-800 border-indigo-200',
                       FULFILLED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
                       REJECTED: 'bg-rose-50 text-rose-800 border-rose-200',
                     };
@@ -6612,7 +6612,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5">
-                          When enabled, renders the green <b>✓ Verified Buyer</b> badge on the book page.
+                          When enabled, renders the green <b>Verified Buyer</b> badge on the book page.
                         </p>
                       </div>
 
@@ -6810,7 +6810,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                                 ? 'bg-blue-600'
                                 : media.type === 'VIDEO'
                                 ? 'bg-amber-600'
-                                : 'bg-purple-600'
+                                : 'bg-slate-700'
                             }`}
                           >
                             {media.type}
@@ -7734,7 +7734,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="apple-pill-btn bg-[#007aff] hover:bg-blue-600 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+                    className="bg-[#007aff] hover:bg-blue-600 !text-white px-5 py-2.5 text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap shrink-0"
                   >
                     {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin !text-white" /> : <CheckCircle2 className="h-4 w-4 !text-white" />}
                     Update Admin Profile
@@ -7769,7 +7769,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     type="button"
                     onClick={handleTerminateOtherSessions}
                     disabled={isTerminatingOthers || adminSessions.length <= 1}
-                    className="apple-pill-btn bg-red-600 hover:bg-red-700 !text-white text-xs px-4 py-2 font-bold rounded-full shadow-sm transition-all disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                    className="bg-red-600 hover:bg-red-700 !text-white text-xs px-4 py-2 font-bold rounded-xl shadow-sm transition-all disabled:opacity-40 flex items-center gap-1.5 whitespace-nowrap shrink-0"
                   >
                     {isTerminatingOthers ? <Loader2 className="h-3.5 w-3.5 animate-spin !text-white" /> : <LogOut className="h-3.5 w-3.5 !text-white" />}
                     Log Out All Other Devices
@@ -7912,7 +7912,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <button
                     type="button"
                     onClick={() => setIsComposeModalOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
                   >
                     <Pen className="h-3.5 w-3.5" /> Compose New Email
                   </button>
@@ -7920,7 +7920,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     type="button"
                     onClick={() => fetchEmailLogs()}
                     disabled={isLoadingEmails}
-                    className="apple-pill-btn px-3 py-1.5 text-xs font-bold gap-1.5"
+                    className="glass-action-button px-3 py-1.5 text-xs font-bold gap-1.5"
                   >
                     {isLoadingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                     Refresh
@@ -8138,7 +8138,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <button
                     type="submit"
                     disabled={isSavingSmtp}
-                    className="apple-pill-btn bg-slate-900 dark:bg-white dark:!text-slate-950 !text-white px-6 py-2.5 text-xs font-bold rounded-full shadow-md transition-all disabled:opacity-50"
+                    className="bg-slate-900 dark:bg-white dark:!text-slate-950 !text-white px-5 py-2.5 text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50"
                   >
                     {isSavingSmtp ? <Loader2 className="h-4 w-4 animate-spin !text-white dark:!text-slate-950" /> : <CheckCircle2 className="h-4 w-4 !text-white dark:!text-slate-950" />}
                     Save Outbound SMTP Settings
@@ -8233,7 +8233,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                     <button
                       type="button"
                       onClick={() => setIsComposeModalOpen(false)}
-                      className="rounded-full p-1 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -8385,7 +8385,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               </div>
             )}
 
-            {/* Outbound Sent Emails & Live Mailbox Center — Apple macOS Mail Interface */}
+            {/* Outbound Sent Emails & Live Mailbox Center - Apple macOS Mail Interface */}
             <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] space-y-4">
               {/* Mail Header */}
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200/60 dark:border-white/[0.08]">
@@ -8403,18 +8403,18 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <button
                     type="button"
                     onClick={() => setIsComposeModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer active:scale-95"
                   >
                     <Pen className="h-3.5 w-3.5" /> Compose New Email
                   </button>
-                  <span className="rounded-full bg-black/[0.06] dark:bg-white/[0.10] px-3 py-1 text-xs font-semibold text-slate-700 dark:text-neutral-300">
+                  <span className="rounded-md bg-black/[0.06] dark:bg-white/[0.10] px-3 py-1 text-xs font-semibold text-slate-700 dark:text-neutral-300">
                     {emailLogs.length} Total
                   </span>
                   <button
                     type="button"
                     onClick={() => fetchEmailLogs()}
                     disabled={isLoadingEmails}
-                    className="apple-pill-btn px-3 py-1.5 text-xs font-bold gap-1.5"
+                    className="glass-action-button px-3 py-1.5 text-xs font-bold gap-1.5"
                   >
                     {isLoadingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                     Refresh
@@ -8990,7 +8990,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <p className="font-bold uppercase text-[10px] text-slate-500 mb-1">From (Sender):</p>
                   <p className="font-bold text-slate-900">{shippingModalLabel.sender_name}</p>
                   <p className="text-slate-600">{shippingModalLabel.sender_address}</p>
-                  <p className="text-slate-600">{shippingModalLabel.sender_city} — {shippingModalLabel.sender_pin}</p>
+                  <p className="text-slate-600">{shippingModalLabel.sender_city} - {shippingModalLabel.sender_pin}</p>
                   <p className="text-slate-600">Mob: {shippingModalLabel.sender_mobile}</p>
                   <p className="mt-2 text-[10px] text-slate-500">Weight: {shippingModalLabel.weight || 450}g</p>
                 </div>
@@ -9278,7 +9278,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 onClick={() => setBundlePrompt(null)}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -9289,7 +9289,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   <MapPin className="h-5 w-5 text-blue-600 shrink-0" />
                   <div className="text-xs text-slate-700">
                     <p className="font-bold text-slate-900">
-                      Destination: {bundlePrompt.group.postOffice}, {bundlePrompt.group.city} — {bundlePrompt.group.pincode}
+                      Destination: {bundlePrompt.group.postOffice}, {bundlePrompt.group.city} - {bundlePrompt.group.pincode}
                     </p>
                     <p className="text-[11px] text-slate-600 mt-0.5">
                       This customer placed <b className="text-blue-700">{bundlePrompt.group.orders.length} separate orders</b> scheduled for the same 2 PM dispatch batch.
@@ -9299,16 +9299,16 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               </div>
 
               {/* Highest Method Highlight Badge */}
-              <div className="rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-3.5">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 block">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 block">
                       Highest Service Tier Paid By Customer
                     </span>
-                    <p className="text-sm font-black text-purple-950 flex items-center gap-1.5 mt-0.5">
+                    <p className="text-sm font-black text-slate-900 flex items-center gap-1.5 mt-0.5">
                       {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? (
                         <>
-                          <Zap className="h-4 w-4 text-purple-600" />
+                          <Zap className="h-4 w-4 text-blue-600" />
                           <span>Express Local Courier (Priority Trip)</span>
                         </>
                       ) : bundlePrompt.highestMethod === 'SPEED_POST' ? (
@@ -9324,7 +9324,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       )}
                     </p>
                   </div>
-                  <span className="rounded-full bg-purple-200/60 px-2.5 py-1 text-xs font-bold text-purple-900">
+                  <span className="rounded-md bg-slate-200 px-2.5 py-1 text-xs font-bold text-slate-800">
                     {bundlePrompt.highestMethod === 'EXPRESS_LOCAL' ? 'Full Paid Courier' : bundlePrompt.highestMethod === 'SPEED_POST' ? 'Priority Post' : 'Standard Post'}
                   </span>
                 </div>
@@ -9358,7 +9358,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             )}
                             <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                               ordMethod === 'EXPRESS_LOCAL'
-                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                                 : ordMethod === 'SPEED_POST'
                                   ? 'bg-orange-50 text-orange-700 border-orange-200'
                                   : 'bg-slate-100 text-slate-700 border-slate-200'
@@ -9530,7 +9530,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   value={expressPartner}
                   onChange={(e) => setExpressPartner(e.target.value)}
                   placeholder="e.g. Porter, Rapido, Borzo"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-500"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 />
               </div>
               <div>
@@ -9540,7 +9540,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   value={expressAgentPhone}
                   onChange={(e) => setExpressAgentPhone(e.target.value)}
                   placeholder="e.g. 7479135626"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-500"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -9558,7 +9558,7 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                   setExpressModalOrder(null);
                   setExpressBundledOrderIds([]);
                 }}
-                className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
               >
                 Confirm Dispatch
               </button>

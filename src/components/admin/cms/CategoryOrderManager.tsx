@@ -490,7 +490,7 @@ export const CategoryOrderManager: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <span className="text-xs">📚</span>
+                          <BookOpen className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                           <span className="truncate">{cat.name}</span>
                         </div>
                         <span className="text-[9px] font-mono text-slate-400">#{idx + 1}</span>
@@ -530,7 +530,7 @@ export const CategoryOrderManager: React.FC = () => {
 
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-neutral-800 text-center">
               <p className="text-[11px] text-slate-400 dark:text-neutral-500">
-                💡 Tip: Changes saved here immediately update the live website menu for all visitors without needing any code changes.
+                Tip: Changes saved here immediately update the live website menu for all visitors without needing any code changes.
               </p>
             </div>
           </div>
