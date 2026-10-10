@@ -864,11 +864,12 @@ export interface BookImageItem {
   updatedAt: string;
 }
 
-export type SiteMediaType = 'BANNER' | 'PROMOTIONAL' | 'FIXED' | 'VIDEO';
+export type SiteMediaType = 'ALL' | 'BANNER' | 'PROMOTIONAL' | 'FIXED' | 'VIDEO' | 'BOOK_COVER' | 'BOOK_GALLERY' | 'PDF';
 
 export interface SiteMediaItem {
   id: string;
   type: SiteMediaType;
+  role?: string;
   name: string;
   publicId: string;
   secureUrl: string;
@@ -882,6 +883,9 @@ export interface SiteMediaItem {
   sortOrder: number;
   altText?: string | null;
   targetUrl?: string | null;
+  parentTitle?: string | null;
+  parentId?: string | null;
+  parentSlug?: string | null;
   metadata?: string | null;
   createdAt: string;
   updatedAt: string;

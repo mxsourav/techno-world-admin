@@ -6711,9 +6711,12 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                 onChange={(cat) => setSelectedMediaCategory(cat as any)}
                 tabs={[
                   { key: 'ALL', label: 'All Media' },
-                  { key: 'BANNER', label: 'Banners' },
+                  { key: 'BOOK_COVER', label: 'Book Covers' },
+                  { key: 'BOOK_GALLERY', label: 'Book Gallery' },
+                  { key: 'PDF', label: 'PDFs & Samples' },
                   { key: 'PROMOTIONAL', label: 'Promotional' },
-                  { key: 'FIXED', label: 'Fixed Assets' },
+                  { key: 'BANNER', label: 'Banners' },
+                  { key: 'FIXED', label: 'Fixed & Brand' },
                   { key: 'VIDEO', label: 'Videos' },
                 ].map((cat) => ({
                   id: cat.key,
@@ -6768,8 +6771,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {siteMediaItems.map((media) => {
                   const isVideo = media.resourceType === 'video' || media.type === 'VIDEO';
+                  const isPdf = media.type === 'PDF' || media.format === 'pdf' || media.resourceType === 'raw';
                   const folderName =
-                    media.type === 'BANNER'
+                    media.type === 'BOOK_COVER'
+                      ? 'Home/books/covers'
+                      : media.type === 'BOOK_GALLERY'
+                      ? 'Home/books/gallery'
+                      : media.type === 'PDF'
+                      ? 'Home/books/documents'
+                      : media.type === 'BANNER'
                       ? 'Home/site/banners'
                       : media.type === 'PROMOTIONAL'
                       ? 'Home/site/promotional'
@@ -6777,12 +6787,41 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       ? 'Home/site/videos'
                       : 'Home/site/fixed';
 
+                  const badgeColor =
+                    media.type === 'BOOK_COVER'
+                      ? 'bg-emerald-700'
+                      : media.type === 'BOOK_GALLERY'
+                      ? 'bg-teal-700'
+                      : media.type === 'PDF'
+                      ? 'bg-rose-700'
+                      : media.type === 'BANNER'
+                      ? 'bg-emerald-600'
+                      : media.type === 'PROMOTIONAL'
+                      ? 'bg-blue-600'
+                      : media.type === 'VIDEO'
+                      ? 'bg-amber-600'
+                      : 'bg-purple-600';
+
+                  const roleLabel =
+                    media.role ||
+                    (media.type === 'BOOK_COVER'
+                      ? 'Book Cover'
+                      : media.type === 'BOOK_GALLERY'
+                      ? 'Book Gallery'
+                      : media.type === 'PDF'
+                      ? 'Sample PDF'
+                      : media.type === 'BANNER'
+                      ? 'Site Banner'
+                      : media.type === 'PROMOTIONAL'
+                      ? 'Promotional'
+                      : media.type);
+
                   return (
                     <div
                       key={media.id}
                       className="group flex flex-col rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden hover:border-slate-300 transition"
                     >
-                      {/* Media Preview (Video or Image) */}
+                      {/* Media Preview (Video, PDF, or Image) */}
                       <div className="relative aspect-[16/10] w-full bg-slate-900 overflow-hidden flex items-center justify-center">
                         {isVideo ? (
                           <video
@@ -6791,6 +6830,16 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             preload="metadata"
                             className="w-full h-full object-cover"
                           />
+                        ) : isPdf ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-rose-950 to-slate-900 text-white">
+                            <div className="h-10 w-10 rounded-xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center mb-2 shadow-xs">
+                              <FileText className="h-5 w-5 text-rose-400" />
+                            </div>
+                            <span className="text-[11px] font-bold tracking-wider uppercase text-rose-200">PDF Document</span>
+                            <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              {media.bytes ? `${(media.bytes / (1024 * 1024)).toFixed(2)} MB` : 'Look Inside Preview'}
+                            </span>
+                          </div>
                         ) : (
                           <img
                             src={getImageUrl(media.secureUrl)}
@@ -6802,18 +6851,8 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
                         {/* Badges on preview */}
                         <div className="absolute top-2 left-2 flex items-center gap-1">
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider text-white shadow-xs ${
-                              media.type === 'BANNER'
-                                ? 'bg-emerald-600'
-                                : media.type === 'PROMOTIONAL'
-                                ? 'bg-blue-600'
-                                : media.type === 'VIDEO'
-                                ? 'bg-amber-600'
-                                : 'bg-purple-600'
-                            }`}
-                          >
-                            {media.type}
+                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider text-white shadow-xs ${badgeColor}`}>
+                            {roleLabel}
                           </span>
                         </div>
 
@@ -6839,11 +6878,21 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                           <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
                             <span>{folderName}</span>
                             {media.format && <span>• {media.format.toUpperCase()}</span>}
+                            {media.width && media.height && (
+                              <span>• {media.width}×{media.height}</span>
+                            )}
                             {media.bytes && (
-                              <span>• {(media.bytes / 1024).toFixed(0)} KB</span>
+                              <span>• {media.bytes >= 1048576 ? `${(media.bytes / 1048576).toFixed(1)} MB` : `${(media.bytes / 1024).toFixed(0)} KB`}</span>
                             )}
                           </div>
                         </div>
+
+                        {media.parentTitle && (
+                          <div className="flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 font-medium truncate">
+                            <BookOpen className="h-3 w-3 shrink-0 text-emerald-600" />
+                            <span className="truncate">{media.parentTitle}</span>
+                          </div>
+                        )}
 
                         {media.targetUrl && (
                           <div className="flex items-center gap-1 text-[11px] text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate">
@@ -6851,6 +6900,20 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                             <span className="truncate">{media.targetUrl}</span>
                           </div>
                         )}
+
+                        {/* Timestamp added */}
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                          <span>Added:</span>
+                          <span className="font-medium text-slate-600">
+                            {new Date(media.createdAt).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
 
                         {/* Action buttons */}
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
