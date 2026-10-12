@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { adminService, categoryService, getImageUrl, bookMediaService, type BookImageItem } from '@/services/api';
 import { compressImageFile } from '@/utils/imageCompressor';
@@ -13,6 +13,14 @@ import {
   ChevronRight,
   ExternalLink,
   Loader2,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Heading,
+  Highlighter,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
@@ -42,10 +50,34 @@ function renderBookDescriptionPreview(text: string) {
   };
 
   const parseInline = (str: string): React.ReactNode => {
-    const parts = str.split(/(\**[^*]+\**)/g);
+    const parts = str.split(/(==[^=]+?==|<mark>.*?<\/mark>|\*\*[^*]+?\*\*|<b>.*?<\/b>|<strong>.*?<\/strong>|\*[^*]+?\*)/g);
     return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
+      if (!part) return null;
+      if (part.startsWith('==') && part.endsWith('==') && part.length >= 4) {
+        return (
+          <mark key={i} className="bg-yellow-200/90 text-amber-950 font-bold px-1.5 py-0.5 rounded shadow-2xs border border-amber-300">
+            {part.slice(2, -2)}
+          </mark>
+        );
+      }
+      if (part.startsWith('<mark>') && part.endsWith('</mark>')) {
+        return (
+          <mark key={i} className="bg-yellow-200/90 text-amber-950 font-bold px-1.5 py-0.5 rounded shadow-2xs border border-amber-300">
+            {part.slice(6, -7)}
+          </mark>
+        );
+      }
+      if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
         return <strong key={i} className="font-extrabold text-slate-950">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('<b>') && part.endsWith('</b>')) {
+        return <strong key={i} className="font-extrabold text-slate-950">{part.slice(3, -4)}</strong>;
+      }
+      if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+        return <strong key={i} className="font-extrabold text-slate-950">{part.slice(8, -9)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length >= 3) {
+        return <em key={i} className="italic text-slate-800">{part.slice(1, -1)}</em>;
       }
       return part;
     });
@@ -154,6 +186,14 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     return String(book.seoKeywords);
   })();
 
+  const isExistingSet = Boolean(
+    (book?.volume && (
+      book.volume.toLowerCase().includes('set') ||
+      book.volume.toLowerCase().includes('vol') ||
+      book.volume.toLowerCase().includes('part')
+    )) || book?.unitType === 'Set'
+  );
+
   const [formData, setFormData] = useState<any>({
     title: book?.title || '',
     publicationDate: book?.publicationDate ? new Date(book.publicationDate).toISOString().slice(0, 7) : '',
@@ -171,6 +211,8 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     pages: book?.pages || 0,
     description: book?.description || '',
     shortDescription: book?.shortDescription || '',
+    volume: book?.volume || '',
+    unitType: isExistingSet ? 'Set' : (book?.unitType || 'Unit'),
     edition: book?.edition || '1st Edition',
     language: book?.language || 'English',
     bindingType: book?.bindingType || 'Paperback',
@@ -183,7 +225,18 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     tags: book?.tags || []
   });
   
+  const descTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const featuresTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [authorsInput, setAuthorsInput] = useState<string>(() => {
+    const list = book?.authorsList || (book?.author ? [book.author] : []);
+    return list.join(', ');
+  });
+  const [subjectsInput, setSubjectsInput] = useState<string>(() => {
+    return (book?.subjects || []).join(', ');
+  });
+
   const [descTab, setDescTab] = useState<'edit' | 'preview'>('edit');
+  const [featuresTab, setFeaturesTab] = useState<'edit' | 'preview'>('edit');
   const [hasRestoredDraft, setHasRestoredDraft] = useState(false);
 
   // Auto-restore draft if adding new book
@@ -195,6 +248,12 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           const parsed = JSON.parse(saved);
           if (parsed && typeof parsed === 'object' && (parsed.title || parsed.description || parsed.isbn13)) {
             setFormData((prev: any) => ({ ...prev, ...parsed }));
+            if (Array.isArray(parsed.authorsList)) {
+              setAuthorsInput(parsed.authorsList.join(', '));
+            }
+            if (Array.isArray(parsed.subjects)) {
+              setSubjectsInput(parsed.subjects.join(', '));
+            }
             setHasRestoredDraft(true);
           }
         }
@@ -491,7 +550,23 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { ...formData };
+      const parsedAuthors = authorsInput.split(',').map(s => s.trim()).filter(Boolean);
+      const parsedSubjects = subjectsInput.split(',').map(s => s.trim()).filter(Boolean);
+      const isSet = formData.unitType === 'Set';
+      const resolvedVolume = isSet
+        ? (formData.volume?.trim() || 'Complete Set')
+        : (formData.volume?.trim() ? formData.volume.trim() : null);
+
+      const payload = {
+        ...formData,
+        authorsList: parsedAuthors,
+        author: parsedAuthors.join(', '),
+        subjects: parsedSubjects,
+        volume: resolvedVolume,
+        unitType: formData.unitType || 'Unit',
+        description: formData.description?.trim() || '',
+        shortDescription: formData.shortDescription?.trim() || null,
+      };
       if (payload.publicationDate && payload.publicationDate.length === 7) {
         payload.publicationDate = `${payload.publicationDate}-01T00:00:00.000Z`;
       }
@@ -559,15 +634,218 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleArrayChange = (field: string, val: string) => {
+  const handleAuthorsInputChange = (val: string) => {
+    setAuthorsInput(val);
     const arr = val.split(',').map(s => s.trim()).filter(Boolean);
-    setFormData({ ...formData, [field]: arr });
+    setFormData((prev: any) => ({ ...prev, authorsList: arr, author: arr.join(', ') }));
   };
 
-  const insertTemplate = (template: string) => {
-    const current = formData.description ? formData.description + '\n\n' : '';
-    setFormData({ ...formData, description: current + template });
-    toast.success('Template inserted into description');
+  const handleSubjectsInputChange = (val: string) => {
+    setSubjectsInput(val);
+    const arr = val.split(',').map(s => s.trim()).filter(Boolean);
+    setFormData((prev: any) => ({ ...prev, subjects: arr }));
+  };
+
+  const applyWrapToField = (
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>,
+    fieldName: 'description' | 'shortDescription',
+    prefix: string,
+    suffix: string,
+    fallback: string
+  ) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const text = textarea.value;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
+
+    if (start === end) {
+      let wordStart = start;
+      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
+      let wordEnd = end;
+      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
+      if (wordStart < wordEnd) {
+        start = wordStart;
+        end = wordEnd;
+      }
+    }
+
+    const selected = text.substring(start, end);
+    if (selected) {
+      const isSurrounded = start >= prefix.length && end <= text.length - suffix.length &&
+        text.substring(start - prefix.length, start) === prefix && text.substring(end, end + suffix.length) === suffix;
+      const hasWrapped = selected.startsWith(prefix) && selected.endsWith(suffix) && selected.length >= (prefix.length + suffix.length);
+
+      let newText = '';
+      let newStart = start;
+      let newEnd = end;
+
+      if (isSurrounded) {
+        newText = text.substring(0, start - prefix.length) + selected + text.substring(end + suffix.length);
+        newStart = start - prefix.length;
+        newEnd = end - prefix.length;
+      } else if (hasWrapped) {
+        const unwrapped = selected.slice(prefix.length, -suffix.length);
+        newText = text.substring(0, start) + unwrapped + text.substring(end);
+        newStart = start;
+        newEnd = start + unwrapped.length;
+      } else {
+        const wrapped = `${prefix}${selected}${suffix}`;
+        newText = text.substring(0, start) + wrapped + text.substring(end);
+        newStart = start;
+        newEnd = start + wrapped.length;
+      }
+
+      setFormData((prev: any) => ({ ...prev, [fieldName]: newText }));
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newStart, newEnd);
+      });
+    } else {
+      const snippet = `${prefix}${fallback}${suffix}`;
+      const newText = text.substring(0, start) + snippet + text.substring(end);
+      setFormData((prev: any) => ({ ...prev, [fieldName]: newText }));
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, start + prefix.length + fallback.length);
+      });
+    }
+  };
+
+  const applyBoldToField = (ref: React.RefObject<HTMLTextAreaElement | null>, field: 'description' | 'shortDescription') => {
+    applyWrapToField(ref, field, '**', '**', 'bold text');
+  };
+
+  const applyHighlightToField = (ref: React.RefObject<HTMLTextAreaElement | null>, field: 'description' | 'shortDescription') => {
+    applyWrapToField(ref, field, '==', '==', 'highlighted text');
+  };
+
+  const applyItalicToField = (ref: React.RefObject<HTMLTextAreaElement | null>, field: 'description' | 'shortDescription') => {
+    applyWrapToField(ref, field, '*', '*', 'italic text');
+  };
+
+  const insertPrefixToField = (
+    ref: React.RefObject<HTMLTextAreaElement | null>,
+    field: 'description' | 'shortDescription',
+    prefix: string,
+    placeholder = 'Item'
+  ) => {
+    const textarea = ref.current;
+    if (!textarea) return;
+    const text = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = text.substring(start, end) || placeholder;
+    const insertion = `${prefix}${selected}`;
+    const newText = text.substring(0, start) + insertion + text.substring(end);
+    setFormData((prev: any) => ({ ...prev, [field]: newText }));
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + insertion.length);
+    });
+  };
+
+  const insertTemplateToField = (
+    field: 'description' | 'shortDescription',
+    template: string
+  ) => {
+    const current = formData[field] ? formData[field] + '\n\n' : '';
+    setFormData((prev: any) => ({ ...prev, [field]: current + template }));
+    toast.success('Template inserted');
+  };
+
+  // Keyboard handler for list auto-numbering and formatting
+  const handleSmartKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    ref: React.RefObject<HTMLTextAreaElement | null>,
+    field: 'description' | 'shortDescription'
+  ) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      applyBoldToField(ref, field);
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      applyHighlightToField(ref, field);
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      applyItalicToField(ref, field);
+      return;
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const textarea = ref.current;
+      if (!textarea) return;
+
+      const text = textarea.value;
+      const selStart = textarea.selectionStart;
+      const selEnd = textarea.selectionEnd;
+
+      const lastNewline = text.lastIndexOf('\n', selStart - 1);
+      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+      const lineToCursor = text.substring(lineStart, selStart);
+
+      // Numbered list: e.g. "1. ", "4. ", "  10. "
+      const numMatch = lineToCursor.match(/^(\s*)(\d+)\.\s*(.*)$/);
+      if (numMatch) {
+        e.preventDefault();
+        const indent = numMatch[1];
+        const num = parseInt(numMatch[2], 10);
+        const itemContent = numMatch[3];
+
+        if (itemContent.trim().length > 0) {
+          const insertion = `\n${indent}${num + 1}. `;
+          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
+          setFormData((prev: any) => ({ ...prev, [field]: newText }));
+          const nextPos = selStart + insertion.length;
+          requestAnimationFrame(() => {
+            textarea.selectionStart = nextPos;
+            textarea.selectionEnd = nextPos;
+          });
+        } else {
+          // Empty number: remove it and exit list
+          const newText = text.substring(0, lineStart) + text.substring(selStart);
+          setFormData((prev: any) => ({ ...prev, [field]: newText }));
+          requestAnimationFrame(() => {
+            textarea.selectionStart = lineStart;
+            textarea.selectionEnd = lineStart;
+          });
+        }
+        return;
+      }
+
+      // Bullet list: e.g. "• ", "- ", "* "
+      const bulletMatch = lineToCursor.match(/^(\s*)([•\-\*])\s*(.*)$/);
+      if (bulletMatch) {
+        e.preventDefault();
+        const indent = bulletMatch[1];
+        const bulletChar = bulletMatch[2];
+        const itemContent = bulletMatch[3];
+
+        if (itemContent.trim().length > 0) {
+          const insertion = `\n${indent}${bulletChar} `;
+          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
+          setFormData((prev: any) => ({ ...prev, [field]: newText }));
+          const nextPos = selStart + insertion.length;
+          requestAnimationFrame(() => {
+            textarea.selectionStart = nextPos;
+            textarea.selectionEnd = nextPos;
+          });
+        } else {
+          const newText = text.substring(0, lineStart) + text.substring(selStart);
+          setFormData((prev: any) => ({ ...prev, [field]: newText }));
+          requestAnimationFrame(() => {
+            textarea.selectionStart = lineStart;
+            textarea.selectionEnd = lineStart;
+          });
+        }
+        return;
+      }
+    }
   };
 
   return (
@@ -891,40 +1169,132 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             </div>
           </div>
 
-          {/* Specifications */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Edition</label>
-              <input name="edition" placeholder="e.g. 2026 Edition" value={formData.edition || ''} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          {/* Specifications & Packaging Format (Unit vs Multi-Volume Set) */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+              <span>📋 Format & Packaging Specifications</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Layers className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Packaging / Unit Type *</span>
+                </label>
+                <select
+                  name="unitType"
+                  value={formData.unitType || 'Unit'}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      unitType: newType,
+                      volume: newType === 'Set' && !prev.volume ? 'Complete Set' : prev.volume,
+                    }));
+                  }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm font-bold outline-none transition-colors ${
+                    formData.unitType === 'Set'
+                      ? 'border-amber-400 bg-amber-50/70 text-amber-950 focus:border-amber-500'
+                      : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
+                  }`}
+                >
+                  <option value="Unit">Unit (Single Book)</option>
+                  <option value="Set">Set (Multi-Volume / Parts)</option>
+                </select>
+                <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  {formData.unitType === 'Set' ? 'Sold as multi-volume pack' : 'Default standard 1 unit'}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {formData.unitType === 'Set' ? 'Set Details / Volume Count *' : 'Volume / Part (Optional)'}
+                </label>
+                <input
+                  name="volume"
+                  placeholder={formData.unitType === 'Set' ? 'e.g. 4 Volume Set, 2 Parts' : 'e.g. Vol 1 (or leave blank)'}
+                  value={formData.volume || ''}
+                  onChange={handleChange}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm outline-none ${
+                    formData.unitType === 'Set'
+                      ? 'border-amber-300 bg-amber-50/40 font-bold text-amber-950 focus:border-amber-500'
+                      : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
+                  }`}
+                />
+                {formData.unitType === 'Set' && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['2 Volumes', '3 Volumes', '4 Volumes', 'Complete Set'].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setFormData((prev: any) => ({ ...prev, volume: chip }))}
+                        className="rounded bg-amber-100 hover:bg-amber-200 text-amber-900 px-1.5 py-0.5 text-[9px] font-bold transition-colors"
+                      >
+                        +{chip}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Edition</label>
+                <input
+                  name="edition"
+                  placeholder="e.g. 2026 Edition"
+                  value={formData.edition || ''}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Binding Format</label>
+                <select
+                  name="bindingType"
+                  value={formData.bindingType || 'Paperback'}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="Paperback">Paperback</option>
+                  <option value="Hardcover">Hardcover</option>
+                  <option value="Spiral Bound">Spiral Bound</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Language</label>
-              <select name="language" value={formData.language || 'English'} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white">
-                <option value="English">English</option>
-                <option value="Bengali">Bengali</option>
-                <option value="Hindi">Hindi</option>
-                <option value="Bilingual">Bilingual (English & Bengali)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Binding Format</label>
-              <select name="bindingType" value={formData.bindingType || 'Paperback'} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white">
-                <option value="Paperback">Paperback</option>
-                <option value="Hardcover">Hardcover</option>
-                <option value="Spiral Bound">Spiral Bound</option>
-              </select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Language</label>
+                <select
+                  name="language"
+                  value={formData.language || 'English'}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="English">English</option>
+                  <option value="Bengali">Bengali</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Bilingual">Bilingual (English & Bengali)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Dedicated Rich Book Description & Overview Section */}
+          {/* ================= BOX 1: BOOK DESCRIPTION ONLY (Overview & Synopsis) ================= */}
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/20 p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <label className="block text-xs font-extrabold text-slate-900 uppercase tracking-wide">
-                  Book Description & Syllabus Content *
-                </label>
-                <span className="text-[11px] text-slate-500">
-                  This description powers the product overview, highlights, and exam syllabus details.
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 text-white text-[11px] font-black">
+                    1
+                  </span>
+                  <label className="block text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                    Book Description (Product Overview Only) *
+                  </label>
+                </div>
+                <span className="text-[11px] text-slate-500 ml-6.5">
+                  General summary, editorial introduction, synopsis, and author context.
                 </span>
               </div>
 
@@ -940,52 +1310,205 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
               />
             </div>
 
-            {/* Quick-Insert Formatting Chips */}
+            {/* Toolbar for Description Box */}
             {descTab === 'edit' && (
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] font-bold uppercase text-slate-400">Quick Insert:</span>
-                <button
-                  type="button"
-                  onClick={() => insertTemplate('### Key Features:\n• Comprehensive chapter-wise coverage\n• 2500+ Practice MCQs with detailed explanations\n• Previous 5 Years Solved Papers included')}
-                  className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50"
-                >
-                  + Key Features List
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertTemplate('### Syllabus Breakdown:\n1. General Intelligence & Reasoning\n2. Quantitative Aptitude & Mathematics\n3. General Awareness & Current Affairs\n4. English & Language Comprehension')}
-                  className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50"
-                >
-                  + Syllabus Breakdown
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertTemplate('### Target Examination:\nIdeal for aspirants preparing for Competitive Examinations, State Service Commission Exams, and Academic Entrance Tests.')}
-                  className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50"
-                >
-                  + Target Exam Note
-                </button>
+              <div className="space-y-2 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 border border-slate-200 bg-slate-50/90 px-2.5 py-1.5 rounded-lg shadow-2xs">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => applyBoldToField(descTextareaRef, 'description')}
+                      title="Bold text (Ctrl+B)"
+                      className="flex h-7 px-2.5 items-center gap-1 rounded bg-white font-black text-xs text-slate-800 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-emerald-700 active:scale-95 transition-all"
+                    >
+                      <Bold className="h-3.5 w-3.5 stroke-[3]" />
+                      <span className="font-extrabold text-xs">Bold</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyHighlightToField(descTextareaRef, 'description')}
+                      title="Highlight text (Ctrl+H)"
+                      className="flex h-7 px-2.5 items-center gap-1 rounded bg-yellow-100 font-bold text-xs text-amber-900 shadow-2xs border border-yellow-300 hover:bg-yellow-200 active:scale-95 transition-all"
+                    >
+                      <Highlighter className="h-3.5 w-3.5 text-amber-700 stroke-[2.5]" />
+                      <span className="font-extrabold text-xs">Highlight</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyItalicToField(descTextareaRef, 'description')}
+                      title="Italic text (Ctrl+I)"
+                      className="flex h-7 px-2 items-center gap-1 rounded bg-white italic text-xs text-slate-800 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-emerald-700 active:scale-95 transition-all"
+                    >
+                      <Italic className="h-3.5 w-3.5" />
+                      <span className="font-serif italic font-bold text-xs">Italic</span>
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() => insertPrefixToField(descTextareaRef, 'description', '### ', 'Section Heading')}
+                      title="Section Heading (###)"
+                      className="flex h-7 px-2 items-center gap-1 rounded bg-white text-[11px] font-bold text-slate-700 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-emerald-700 active:scale-95 transition-all"
+                    >
+                      <Heading className="h-3.5 w-3.5 text-slate-600" />
+                      <span>Heading</span>
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-medium hidden md:inline">
+                    Select words to bold (Ctrl+B) or highlight (Ctrl+H)
+                  </span>
+                </div>
               </div>
             )}
 
             {descTab === 'edit' ? (
               <div className="relative">
-                <textarea 
-                  name="description" 
-                  value={formData.description || ''} 
-                  onChange={handleChange} 
-                  rows={8} 
-                  placeholder="Enter detailed description, chapters outline, key highlights, examination syllabus, and author notes..." 
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans" 
+                <textarea
+                  ref={descTextareaRef}
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleChange}
+                  onKeyDown={(e) => handleSmartKeyDown(e, descTextareaRef, 'description')}
+                  rows={6}
+                  placeholder="Enter editorial description, book synopsis, author background, or introduction..."
+                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
                 />
                 <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Formatting: Paragraphs, bullet points (• or -), and line breaks are fully supported.</span>
+                  <span>Press Ctrl+B to bold, Ctrl+H to highlight words</span>
                   <span>{(formData.description || '').length} characters · {(formData.description || '').split(/\s+/).filter(Boolean).length} words</span>
                 </div>
               </div>
             ) : (
-              <div className="min-h-36 rounded-lg border border-slate-200 bg-slate-50/40 p-4 text-xs text-slate-800 leading-relaxed shadow-inner">
+              <div className="min-h-32 rounded-lg border border-slate-200 bg-slate-50/40 p-4 text-xs text-slate-800 leading-relaxed shadow-inner">
                 {renderBookDescriptionPreview(formData.description)}
+              </div>
+            )}
+          </div>
+
+          {/* ================= BOX 2: KEY FEATURES BOX (Highlights & Breakdown) ================= */}
+          <div className="rounded-xl border border-blue-100 bg-blue-50/20 p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white text-[11px] font-black">
+                    2
+                  </span>
+                  <label className="text-xs font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Key Features & Syllabus Breakdown (Highlights)</span>
+                  </label>
+                </div>
+                <span className="text-[11px] text-slate-500 ml-6.5">
+                  Bullet points, volume contents, chapter coverage, or exam features. Auto-numbers on Enter.
+                </span>
+              </div>
+
+              {/* Edit / Preview Tabs */}
+              <AnimatedGlassTabs
+                tabs={[
+                  { id: 'edit', label: 'Write / Edit' },
+                  { id: 'preview', label: 'Live Preview' },
+                ]}
+                activeTab={featuresTab}
+                onChange={(id) => setFeaturesTab(id as 'edit' | 'preview')}
+                size="sm"
+              />
+            </div>
+
+            {/* Quick-Insert Formatting Chips & Rich Text Toolbar */}
+            {featuresTab === 'edit' && (
+              <div className="space-y-2 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 border border-slate-200 bg-slate-50/90 px-2.5 py-1.5 rounded-lg shadow-2xs">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => applyBoldToField(featuresTextareaRef, 'shortDescription')}
+                      title="Bold text (Ctrl+B)"
+                      className="flex h-7 px-2.5 items-center gap-1 rounded bg-white font-black text-xs text-slate-800 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-blue-700 active:scale-95 transition-all"
+                    >
+                      <Bold className="h-3.5 w-3.5 stroke-[3]" />
+                      <span className="font-extrabold text-xs">Bold</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyHighlightToField(featuresTextareaRef, 'shortDescription')}
+                      title="Highlight text (Ctrl+H)"
+                      className="flex h-7 px-2.5 items-center gap-1 rounded bg-yellow-100 font-bold text-xs text-amber-900 shadow-2xs border border-yellow-300 hover:bg-yellow-200 active:scale-95 transition-all"
+                    >
+                      <Highlighter className="h-3.5 w-3.5 text-amber-700 stroke-[2.5]" />
+                      <span className="font-extrabold text-xs">Highlight</span>
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() => insertPrefixToField(featuresTextareaRef, 'shortDescription', '1. ', 'Feature item')}
+                      title="Numbered List (Auto-increments next number on Enter)"
+                      className="flex h-7 px-2 items-center gap-1 rounded bg-white text-[11px] font-bold text-slate-700 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-blue-700 active:scale-95 transition-all"
+                    >
+                      <ListOrdered className="h-3.5 w-3.5 text-slate-600" />
+                      <span>1. Auto-Number</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => insertPrefixToField(featuresTextareaRef, 'shortDescription', '• ', 'Feature bullet')}
+                      title="Bullet List (Auto-continues on Enter)"
+                      className="flex h-7 px-2 items-center gap-1 rounded bg-white text-[11px] font-bold text-slate-700 shadow-2xs border border-slate-200 hover:bg-slate-100 hover:text-blue-700 active:scale-95 transition-all"
+                    >
+                      <List className="h-3.5 w-3.5 text-slate-600" />
+                      <span>• Bullet</span>
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-medium hidden md:inline">
+                    Press Enter after 1. or 4. for next number automatically
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Quick Insert:</span>
+                  <button
+                    type="button"
+                    onClick={() => insertTemplateToField('shortDescription', '1. Strictly updated as per latest curriculum & exam pattern\n2. Chapter-wise theoretical concepts with practice problems\n3. Previous years solved question papers included\n4. Verified answer keys with step-by-step solutions')}
+                    className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    + 4-Feature List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => insertTemplateToField('shortDescription', '• Volume 1: Core Fundamentals & Theory Notes\n• Volume 2: Applied Concepts & Dissection Protocols\n• Volume 3: Clinical Cases & Neuroanatomy\n• Volume 4: Previous Solved Papers & Mind Maps')}
+                    className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    + 4-Volume Set Breakdown
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => insertTemplateToField('shortDescription', '1. Module 1: Comprehensive Theory & Core Principles\n2. Module 2: High-Yield Practice MCQs & Question Bank\n3. Module 3: Mock Test Papers with Detailed Explanations')}
+                    className="rounded bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    + Syllabus Highlights
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {featuresTab === 'edit' ? (
+              <div className="relative">
+                <textarea
+                  ref={featuresTextareaRef}
+                  name="shortDescription"
+                  value={formData.shortDescription || ''}
+                  onChange={handleChange}
+                  onKeyDown={(e) => handleSmartKeyDown(e, featuresTextareaRef, 'shortDescription')}
+                  rows={6}
+                  placeholder={'1. First key feature...\n2. Second key feature...\n3. Third key feature...\n4. Fourth key feature...'}
+                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-xs leading-relaxed outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-sans"
+                />
+                <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>Auto-numbering active: pressing Enter on 1., 2., 3., 4... auto-creates the next number</span>
+                  <span>{(formData.shortDescription || '').length} characters · {(formData.shortDescription || '').split(/\s+/).filter(Boolean).length} words</span>
+                </div>
+              </div>
+            ) : (
+              <div className="min-h-32 rounded-lg border border-slate-200 bg-slate-50/40 p-4 text-xs text-slate-800 leading-relaxed shadow-inner">
+                {renderBookDescriptionPreview(formData.shortDescription)}
               </div>
             )}
           </div>
@@ -994,7 +1517,12 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Authors (comma separated)</label>
-              <input value={(formData.authorsList || []).join(', ')} onChange={e => handleArrayChange('authorsList', e.target.value)} placeholder="e.g. Dr. Rupa Acharya, Joydip Chakraborty" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input 
+                value={authorsInput} 
+                onChange={e => handleAuthorsInputChange(e.target.value)} 
+                placeholder="e.g. Dr. Rupa Acharya, Joydip Chakraborty" 
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" 
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Publisher</label>
@@ -1042,7 +1570,12 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Subjects (comma separated)</label>
-              <input value={(formData.subjects || []).join(', ')} onChange={e => handleArrayChange('subjects', e.target.value)} placeholder="e.g. Mathematics, Zoology" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input 
+                value={subjectsInput} 
+                onChange={e => handleSubjectsInputChange(e.target.value)} 
+                placeholder="e.g. Mathematics, Zoology" 
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" 
+              />
             </div>
           </div>
 

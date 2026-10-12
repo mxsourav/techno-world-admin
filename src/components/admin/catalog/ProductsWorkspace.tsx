@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { adminService, bookService, getImageUrl } from '@/services/api';
 import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
-import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check } from 'lucide-react';
+import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check, Bold, Italic, List, ListOrdered, Highlighter } from 'lucide-react';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
 
 export default function ProductsWorkspace() {
@@ -40,6 +40,238 @@ export default function ProductsWorkspace() {
   const [editingDescId, setEditingDescId] = useState<string | null>(null);
   const [descInput, setDescInput] = useState('');
   const [isSavingDesc, setIsSavingDesc] = useState(false);
+  const quickDescRef = useRef<HTMLTextAreaElement>(null);
+
+  const applyQuickBold = () => {
+    const textarea = quickDescRef.current;
+    if (!textarea) return;
+    const text = textarea.value;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
+    if (start === end) {
+      let wordStart = start;
+      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
+      let wordEnd = end;
+      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
+      if (wordStart < wordEnd) {
+        start = wordStart;
+        end = wordEnd;
+      }
+    }
+    const selected = text.substring(start, end);
+    if (selected) {
+      const isSurrounded = start >= 2 && end <= text.length - 2 &&
+        text.substring(start - 2, start) === '**' && text.substring(end, end + 2) === '**';
+      const hasWrapped = selected.startsWith('**') && selected.endsWith('**') && selected.length >= 4;
+      let newText = '';
+      let newStart = start;
+      let newEnd = end;
+      if (isSurrounded) {
+        newText = text.substring(0, start - 2) + selected + text.substring(end + 2);
+        newStart = start - 2;
+        newEnd = end - 2;
+      } else if (hasWrapped) {
+        const unwrapped = selected.slice(2, -2);
+        newText = text.substring(0, start) + unwrapped + text.substring(end);
+        newStart = start;
+        newEnd = start + unwrapped.length;
+      } else {
+        const wrapped = `**${selected}**`;
+        newText = text.substring(0, start) + wrapped + text.substring(end);
+        newStart = start;
+        newEnd = start + wrapped.length;
+      }
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newStart, newEnd);
+      });
+    } else {
+      const snippet = '**bold text**';
+      const newText = text.substring(0, start) + snippet + text.substring(end);
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 2, start + 11);
+      });
+    }
+  };
+
+  const applyQuickHighlight = () => {
+    const textarea = quickDescRef.current;
+    if (!textarea) return;
+    const text = textarea.value;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
+    if (start === end) {
+      let wordStart = start;
+      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
+      let wordEnd = end;
+      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
+      if (wordStart < wordEnd) {
+        start = wordStart;
+        end = wordEnd;
+      }
+    }
+    const selected = text.substring(start, end);
+    if (selected) {
+      const isSurrounded = start >= 2 && end <= text.length - 2 &&
+        text.substring(start - 2, start) === '==' && text.substring(end, end + 2) === '==';
+      let newText = '';
+      let newStart = start;
+      let newEnd = end;
+      if (isSurrounded) {
+        newText = text.substring(0, start - 2) + selected + text.substring(end + 2);
+        newStart = start - 2;
+        newEnd = end - 2;
+      } else {
+        const wrapped = `==${selected}==`;
+        newText = text.substring(0, start) + wrapped + text.substring(end);
+        newStart = start;
+        newEnd = start + wrapped.length;
+      }
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newStart, newEnd);
+      });
+    } else {
+      const snippet = '==highlighted text==';
+      const newText = text.substring(0, start) + snippet + text.substring(end);
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 2, start + 18);
+      });
+    }
+  };
+
+  const handleQuickDescKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      applyQuickBold();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      applyQuickHighlight();
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const textarea = quickDescRef.current;
+      if (!textarea) return;
+      const text = textarea.value;
+      const selStart = textarea.selectionStart;
+      const selEnd = textarea.selectionEnd;
+      const lastNewline = text.lastIndexOf('\n', selStart - 1);
+      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+      const lineToCursor = text.substring(lineStart, selStart);
+
+      const numMatch = lineToCursor.match(/^(\s*)(\d+)\.\s*(.*)$/);
+      if (numMatch) {
+        e.preventDefault();
+        const indent = numMatch[1];
+        const num = parseInt(numMatch[2], 10);
+        const itemContent = numMatch[3];
+        if (itemContent.trim().length > 0) {
+          const insertion = `\n${indent}${num + 1}. `;
+          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
+          setDescInput(newText);
+          const nextPos = selStart + insertion.length;
+          requestAnimationFrame(() => {
+            textarea.selectionStart = nextPos;
+            textarea.selectionEnd = nextPos;
+          });
+        } else {
+          const newText = text.substring(0, lineStart) + text.substring(selStart);
+          setDescInput(newText);
+          requestAnimationFrame(() => {
+            textarea.selectionStart = lineStart;
+            textarea.selectionEnd = lineStart;
+          });
+        }
+        return;
+      }
+
+      const bulletMatch = lineToCursor.match(/^(\s*)([•\-\*])\s*(.*)$/);
+      if (bulletMatch) {
+        e.preventDefault();
+        const indent = bulletMatch[1];
+        const bulletChar = bulletMatch[2];
+        const itemContent = bulletMatch[3];
+        if (itemContent.trim().length > 0) {
+          const insertion = `\n${indent}${bulletChar} `;
+          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
+          setDescInput(newText);
+          const nextPos = selStart + insertion.length;
+          requestAnimationFrame(() => {
+            textarea.selectionStart = nextPos;
+            textarea.selectionEnd = nextPos;
+          });
+        } else {
+          const newText = text.substring(0, lineStart) + text.substring(selStart);
+          setDescInput(newText);
+          requestAnimationFrame(() => {
+            textarea.selectionStart = lineStart;
+            textarea.selectionEnd = lineStart;
+          });
+        }
+        return;
+      }
+    }
+  };
+
+  const applyQuickItalic = () => {
+    const textarea = quickDescRef.current;
+    if (!textarea) return;
+    const text = textarea.value;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
+    if (start === end) {
+      let wordStart = start;
+      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
+      let wordEnd = end;
+      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
+      if (wordStart < wordEnd) {
+        start = wordStart;
+        end = wordEnd;
+      }
+    }
+    const selected = text.substring(start, end);
+    if (selected) {
+      const wrapped = `*${selected}*`;
+      const newText = text.substring(0, start) + wrapped + text.substring(end);
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + wrapped.length);
+      });
+    } else {
+      const snippet = '*italic text*';
+      const newText = text.substring(0, start) + snippet + text.substring(end);
+      setDescInput(newText);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 1, start + 12);
+      });
+    }
+  };
+
+  const insertQuickPrefix = (prefix: string) => {
+    const textarea = quickDescRef.current;
+    if (!textarea) return;
+    const text = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = text.substring(start, end) || 'Item';
+    const insertion = `${prefix}${selected}`;
+    const newText = text.substring(0, start) + insertion + text.substring(end);
+    setDescInput(newText);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, start + insertion.length);
+    });
+  };
 
   // Quick SEO Keywords Editor state
   const [editingKeywordsId, setEditingKeywordsId] = useState<string | null>(null);
@@ -617,10 +849,62 @@ export default function ProductsWorkspace() {
 
                 {editingDescId === viewingBook.id ? (
                   <div className="space-y-2">
+                    <div className="flex items-center justify-between border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] px-2 py-1 rounded-md">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={applyQuickBold}
+                          title="Bold text (Ctrl+B)"
+                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
+                        >
+                          <Bold className="h-3 w-3 stroke-[3]" />
+                          <span>Bold</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={applyQuickHighlight}
+                          title="Highlight text (Ctrl+H)"
+                          className="flex h-6 px-2 items-center gap-1 rounded bg-yellow-100 dark:bg-yellow-500/20 text-amber-900 dark:text-amber-300 text-xs font-bold border border-yellow-300 dark:border-yellow-500/30 hover:bg-yellow-200"
+                        >
+                          <Highlighter className="h-3 w-3 text-amber-700 dark:text-amber-400 stroke-[2.5]" />
+                          <span>Highlight</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={applyQuickItalic}
+                          title="Italic text"
+                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
+                        >
+                          <Italic className="h-3 w-3" />
+                          <span>Italic</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertQuickPrefix('1. ')}
+                          title="Numbered List"
+                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
+                        >
+                          <ListOrdered className="h-3 w-3" />
+                          <span>1. List</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertQuickPrefix('• ')}
+                          title="Bullet List"
+                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
+                        >
+                          <List className="h-3 w-3" />
+                          <span>• Bullet</span>
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-slate-400">Ctrl+B or Enter for auto-numbering</span>
+                    </div>
                     <textarea
+                      ref={quickDescRef}
                       rows={6}
                       value={descInput}
                       onChange={(e) => setDescInput(e.target.value)}
+                      onKeyDown={handleQuickDescKeyDown}
                       placeholder="Enter comprehensive book description, syllabus, chapters outline, and exam features..."
                       className="w-full rounded-lg border border-slate-300 dark:border-white/20 dark:bg-white/[0.06] dark:text-white p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
                     />
