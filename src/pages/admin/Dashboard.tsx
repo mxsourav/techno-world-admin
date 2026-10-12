@@ -292,16 +292,25 @@ export default function Dashboard() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  // Auto-Accept Orders Setting State (Default: ON)
-  const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(true);
+  // Auto-Accept Orders Setting State (Default: ON, persisted in DB & localStorage)
+  const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(() => {
+    const cached = localStorage.getItem('tw_admin_auto_accept');
+    return cached !== null ? cached === 'true' : true;
+  });
   const [isLoadingAutoAccept, setIsLoadingAutoAccept] = useState<boolean>(false);
   const [cmsSubTab, setCmsSubTab] = useState<'visual' | 'categories' | 'hero_cover' | 'legacy'>('visual');
 
   useEffect(() => {
     adminService.getAutoAcceptSetting()
       .then((res: any) => {
-        if (res?.success && typeof res.data?.enabled === 'boolean') {
-          setAutoAcceptEnabled(res.data.enabled);
+        const val = typeof res?.enabled === 'boolean'
+          ? res.enabled
+          : typeof res?.data?.enabled === 'boolean'
+          ? res.data.enabled
+          : null;
+        if (typeof val === 'boolean') {
+          setAutoAcceptEnabled(val);
+          localStorage.setItem('tw_admin_auto_accept', String(val));
         }
       })
       .catch(() => {});
@@ -314,6 +323,7 @@ export default function Dashboard() {
       const res: any = await adminService.updateAutoAcceptSetting(nextVal);
       if (res?.success) {
         setAutoAcceptEnabled(nextVal);
+        localStorage.setItem('tw_admin_auto_accept', String(nextVal));
         if (nextVal) {
           toast.success('⚡ Auto-Accept Orders ENABLED (Default). New orders will automatically confirm for packing.');
         } else {
