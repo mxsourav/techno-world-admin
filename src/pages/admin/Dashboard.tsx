@@ -1263,6 +1263,47 @@ export default function Dashboard() {
     }
   };
 
+  const handleBatchMoveToPackSelected = async () => {
+    let orderIdsToMove: string[] = [];
+    if (orderViewMode === 'smart_groups') {
+      const activeStageOrders = orders.filter((o: any) => o.status === 'PROCESSING');
+      const activeGroups = getSmartGroups(activeStageOrders);
+      selectedGroupKeys.forEach((k: string) => {
+        const found = activeGroups.find((g: any) => g.key === k);
+        if (found) {
+          if (Array.isArray((found as any).orders)) {
+            (found as any).orders.forEach((o: any) => orderIdsToMove.push(o.id));
+          } else if ((found as any).order) {
+            orderIdsToMove.push((found as any).order.id);
+          }
+        }
+      });
+    } else {
+      orderIdsToMove = Array.from(selectedOrderIds);
+    }
+
+    orderIdsToMove = Array.from(new Set(orderIdsToMove));
+    if (orderIdsToMove.length === 0) {
+      return toast.error('Please select at least one order to move back to To Pack');
+    }
+
+    try {
+      const res = await orderService.batchUpdateStatus({
+        orderIds: orderIdsToMove,
+        status: 'CONFIRMED',
+        notes: 'Moved back to packing by Admin',
+      });
+      if (res.success) {
+        toast.success(`Moved ${orderIdsToMove.length} order(s) back to "To Pack"!`);
+        setSelectedGroupKeys(new Set());
+        setSelectedOrderIds(new Set());
+        fetchOrders();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to move orders to pack');
+    }
+  };
+
   const handleDownloadBatchInvoices = async (orderIdsToDownload?: string[]) => {
     try {
       setIsDownloadingInvoices(true);
@@ -1578,9 +1619,9 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
   const handleAcceptOrder = async (order: any) => {
     try {
-      await orderService.updateStatus(order.id, 'PROCESSING', 'Order accepted by Admin for fulfillment');
-      toast.success(`Order #${order.orderNumber} accepted! Status changed to PROCESSING.`);
-      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'PROCESSING' } : o));
+      await orderService.updateStatus(order.id, 'CONFIRMED', 'Order accepted by Admin for packing');
+      toast.success(`Order #${order.orderNumber} accepted! Moved to "To Pack".`);
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'CONFIRMED' } : o));
     } catch (err: any) {
       toast.error(err.message || 'Failed to accept order');
     }
@@ -3052,6 +3093,19 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
                       >
                         {isBatchAccepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                         <span>Accept Orders</span>
+                      </button>
+                    )}
+
+                    {/* To Dispatch: Move back to Pack Action */}
+                    {forwardStage === 'to_dispatch' && (
+                      <button
+                        onClick={handleBatchMoveToPackSelected}
+                        disabled={selectedGroupKeys.size === 0 && selectedOrderIds.size === 0}
+                        className="glass-action-button-secondary text-slate-700 hover:text-slate-900 border border-slate-300 bg-white"
+                        title="Move selected orders back to To Pack for packaging"
+                      >
+                        <Package className="h-3.5 w-3.5 text-blue-600" />
+                        <span>Move to Pack {(selectedGroupKeys.size > 0 || selectedOrderIds.size > 0) ? `(${orderViewMode === 'smart_groups' ? selectedGroupKeys.size : selectedOrderIds.size})` : ''}</span>
                       </button>
                     )}
 
