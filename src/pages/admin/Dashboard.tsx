@@ -93,6 +93,7 @@ import { generateAndPrintInvoice } from '@/utils/generateInvoice';
 import { generateCode128Svg } from '@/utils/generateShippingLabel';
 import { ShippingStickerModal } from '@/components/admin/ShippingStickerModal';
 import IndiaPostManifestModal from '@/components/admin/IndiaPostManifestModal';
+import IndiaPostBatchExporterModal from '@/components/admin/IndiaPostBatchExporterModal';
 import AbandonedCartsWorkspace from '@/components/admin/AbandonedCartsWorkspace';
 import { toast } from 'sonner';
 import PromotionEditModal from '@/components/admin/PromotionEditModal';
@@ -141,6 +142,7 @@ export default function Dashboard() {
   const [shippingModalLabel, setShippingModalLabel] = useState<any | null>(null);
   const [shippingTrackingModal, setShippingTrackingModal] = useState<any | null>(null);
   const [isManifestModalOpen, setIsManifestModalOpen] = useState(false);
+  const [isIndiaPostBatchModalOpen, setIsIndiaPostBatchModalOpen] = useState(false);
   
   // Flipkart Seller Hub style Forward Orders State
   const [orderViewMode, setOrderViewMode] = useState<'smart_groups' | 'order_id'>('smart_groups');
@@ -3006,6 +3008,15 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
 
                       {isOtherActionsOpen && (
                         <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xl z-30 py-1.5 text-xs font-semibold text-slate-700">
+                          <button
+                            onClick={() => {
+                              setIsOtherActionsOpen(false);
+                              setIsIndiaPostBatchModalOpen(true);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-700 font-bold border-b border-slate-100 pb-2 mb-1"
+                          >
+                            <Truck className="h-3.5 w-3.5 text-red-600" /> India Post Batch Exporter (.csv)
+                          </button>
                           <button
                             onClick={async () => {
                               try {
@@ -9846,6 +9857,13 @@ orders@technoworldbooks.in | https://technoworldbooks.in`
         isOpen={isManifestModalOpen}
         onClose={() => setIsManifestModalOpen(false)}
         orders={orders.filter(o => o.trackingNumber)}
+      />
+
+      {/* Official India Post Bulk Booking Batch Exporter Modal */}
+      <IndiaPostBatchExporterModal
+        isOpen={isIndiaPostBatchModalOpen}
+        onClose={() => setIsIndiaPostBatchModalOpen(false)}
+        orders={orders.filter((o: any) => ['CONFIRMED', 'PROCESSING'].includes(o.status))}
       />
 
       <style>{`
