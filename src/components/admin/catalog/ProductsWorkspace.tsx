@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
 import { adminService, bookService, getImageUrl } from '@/services/api';
 import { formatINR, formatClientSku } from '@/utils/helpers';
 import { toast } from 'sonner';
 import BookEditModal from '@/components/admin/BookEditModal';
 import { ActivityLogsModal } from './ActivityLogsModal';
-import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check, Bold, Italic, List, ListOrdered, Highlighter } from 'lucide-react';
+import { Package, Download, Search, Settings2, Trash2, Edit2, Plus, X, AlertCircle, Eye, BarChart2, BookOpen, Check, Sparkles, Layers } from 'lucide-react';
 import { AnimatedGlassTabs } from '@/components/common/AnimatedGlassTabs';
+import { VisualRichEditor, sanitizeRichHtml } from '@/components/admin/VisualRichEditor';
 
 export default function ProductsWorkspace() {
   const location = useLocation();
@@ -40,238 +41,11 @@ export default function ProductsWorkspace() {
   const [editingDescId, setEditingDescId] = useState<string | null>(null);
   const [descInput, setDescInput] = useState('');
   const [isSavingDesc, setIsSavingDesc] = useState(false);
-  const quickDescRef = useRef<HTMLTextAreaElement>(null);
 
-  const applyQuickBold = () => {
-    const textarea = quickDescRef.current;
-    if (!textarea) return;
-    const text = textarea.value;
-    let start = textarea.selectionStart;
-    let end = textarea.selectionEnd;
-    if (start === end) {
-      let wordStart = start;
-      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
-      let wordEnd = end;
-      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
-      if (wordStart < wordEnd) {
-        start = wordStart;
-        end = wordEnd;
-      }
-    }
-    const selected = text.substring(start, end);
-    if (selected) {
-      const isSurrounded = start >= 2 && end <= text.length - 2 &&
-        text.substring(start - 2, start) === '**' && text.substring(end, end + 2) === '**';
-      const hasWrapped = selected.startsWith('**') && selected.endsWith('**') && selected.length >= 4;
-      let newText = '';
-      let newStart = start;
-      let newEnd = end;
-      if (isSurrounded) {
-        newText = text.substring(0, start - 2) + selected + text.substring(end + 2);
-        newStart = start - 2;
-        newEnd = end - 2;
-      } else if (hasWrapped) {
-        const unwrapped = selected.slice(2, -2);
-        newText = text.substring(0, start) + unwrapped + text.substring(end);
-        newStart = start;
-        newEnd = start + unwrapped.length;
-      } else {
-        const wrapped = `**${selected}**`;
-        newText = text.substring(0, start) + wrapped + text.substring(end);
-        newStart = start;
-        newEnd = start + wrapped.length;
-      }
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(newStart, newEnd);
-      });
-    } else {
-      const snippet = '**bold text**';
-      const newText = text.substring(0, start) + snippet + text.substring(end);
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 2, start + 11);
-      });
-    }
-  };
-
-  const applyQuickHighlight = () => {
-    const textarea = quickDescRef.current;
-    if (!textarea) return;
-    const text = textarea.value;
-    let start = textarea.selectionStart;
-    let end = textarea.selectionEnd;
-    if (start === end) {
-      let wordStart = start;
-      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
-      let wordEnd = end;
-      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
-      if (wordStart < wordEnd) {
-        start = wordStart;
-        end = wordEnd;
-      }
-    }
-    const selected = text.substring(start, end);
-    if (selected) {
-      const isSurrounded = start >= 2 && end <= text.length - 2 &&
-        text.substring(start - 2, start) === '==' && text.substring(end, end + 2) === '==';
-      let newText = '';
-      let newStart = start;
-      let newEnd = end;
-      if (isSurrounded) {
-        newText = text.substring(0, start - 2) + selected + text.substring(end + 2);
-        newStart = start - 2;
-        newEnd = end - 2;
-      } else {
-        const wrapped = `==${selected}==`;
-        newText = text.substring(0, start) + wrapped + text.substring(end);
-        newStart = start;
-        newEnd = start + wrapped.length;
-      }
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(newStart, newEnd);
-      });
-    } else {
-      const snippet = '==highlighted text==';
-      const newText = text.substring(0, start) + snippet + text.substring(end);
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 2, start + 18);
-      });
-    }
-  };
-
-  const handleQuickDescKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-      e.preventDefault();
-      applyQuickBold();
-      return;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
-      e.preventDefault();
-      applyQuickHighlight();
-      return;
-    }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      const textarea = quickDescRef.current;
-      if (!textarea) return;
-      const text = textarea.value;
-      const selStart = textarea.selectionStart;
-      const selEnd = textarea.selectionEnd;
-      const lastNewline = text.lastIndexOf('\n', selStart - 1);
-      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
-      const lineToCursor = text.substring(lineStart, selStart);
-
-      const numMatch = lineToCursor.match(/^(\s*)(\d+)\.\s*(.*)$/);
-      if (numMatch) {
-        e.preventDefault();
-        const indent = numMatch[1];
-        const num = parseInt(numMatch[2], 10);
-        const itemContent = numMatch[3];
-        if (itemContent.trim().length > 0) {
-          const insertion = `\n${indent}${num + 1}. `;
-          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
-          setDescInput(newText);
-          const nextPos = selStart + insertion.length;
-          requestAnimationFrame(() => {
-            textarea.selectionStart = nextPos;
-            textarea.selectionEnd = nextPos;
-          });
-        } else {
-          const newText = text.substring(0, lineStart) + text.substring(selStart);
-          setDescInput(newText);
-          requestAnimationFrame(() => {
-            textarea.selectionStart = lineStart;
-            textarea.selectionEnd = lineStart;
-          });
-        }
-        return;
-      }
-
-      const bulletMatch = lineToCursor.match(/^(\s*)([•\-\*])\s*(.*)$/);
-      if (bulletMatch) {
-        e.preventDefault();
-        const indent = bulletMatch[1];
-        const bulletChar = bulletMatch[2];
-        const itemContent = bulletMatch[3];
-        if (itemContent.trim().length > 0) {
-          const insertion = `\n${indent}${bulletChar} `;
-          const newText = text.substring(0, selStart) + insertion + text.substring(selEnd);
-          setDescInput(newText);
-          const nextPos = selStart + insertion.length;
-          requestAnimationFrame(() => {
-            textarea.selectionStart = nextPos;
-            textarea.selectionEnd = nextPos;
-          });
-        } else {
-          const newText = text.substring(0, lineStart) + text.substring(selStart);
-          setDescInput(newText);
-          requestAnimationFrame(() => {
-            textarea.selectionStart = lineStart;
-            textarea.selectionEnd = lineStart;
-          });
-        }
-        return;
-      }
-    }
-  };
-
-  const applyQuickItalic = () => {
-    const textarea = quickDescRef.current;
-    if (!textarea) return;
-    const text = textarea.value;
-    let start = textarea.selectionStart;
-    let end = textarea.selectionEnd;
-    if (start === end) {
-      let wordStart = start;
-      while (wordStart > 0 && /\w/.test(text[wordStart - 1])) wordStart--;
-      let wordEnd = end;
-      while (wordEnd < text.length && /\w/.test(text[wordEnd])) wordEnd++;
-      if (wordStart < wordEnd) {
-        start = wordStart;
-        end = wordEnd;
-      }
-    }
-    const selected = text.substring(start, end);
-    if (selected) {
-      const wrapped = `*${selected}*`;
-      const newText = text.substring(0, start) + wrapped + text.substring(end);
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start, start + wrapped.length);
-      });
-    } else {
-      const snippet = '*italic text*';
-      const newText = text.substring(0, start) + snippet + text.substring(end);
-      setDescInput(newText);
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + 1, start + 12);
-      });
-    }
-  };
-
-  const insertQuickPrefix = (prefix: string) => {
-    const textarea = quickDescRef.current;
-    if (!textarea) return;
-    const text = textarea.value;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = text.substring(start, end) || 'Item';
-    const insertion = `${prefix}${selected}`;
-    const newText = text.substring(0, start) + insertion + text.substring(end);
-    setDescInput(newText);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + insertion.length);
-    });
-  };
+  // Quick Key Features & Syllabus Breakdown Editor state
+  const [editingFeaturesId, setEditingFeaturesId] = useState<string | null>(null);
+  const [featuresInput, setFeaturesInput] = useState('');
+  const [isSavingFeatures, setIsSavingFeatures] = useState(false);
 
   // Quick SEO Keywords Editor state
   const [editingKeywordsId, setEditingKeywordsId] = useState<string | null>(null);
@@ -782,6 +556,22 @@ export default function ProductsWorkspace() {
                       <p className="text-slate-500 dark:text-neutral-400 text-xs mb-1">SKU</p>
                       <p className="font-mono font-medium text-slate-900 dark:text-white">{viewingBook.sku || 'N/A'}</p>
                     </div>
+                    <div>
+                      <p className="text-slate-500 dark:text-neutral-400 text-xs mb-1">Packaging Format</p>
+                      <div className="font-medium text-slate-900 dark:text-white">
+                        {viewingBook.unitType === 'Set' ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-xs font-bold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
+                            <Layers className="h-3 w-3" /> Set ({viewingBook.volume || 'Multi-Volume'})
+                          </span>
+                        ) : (
+                          <span className="text-slate-700 dark:text-neutral-200 text-xs font-semibold">Unit (Single Book)</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 dark:text-neutral-400 text-xs mb-1">Binding Format</p>
+                      <p className="font-medium text-slate-900 dark:text-white text-xs">{viewingBook.bindingType || 'Paperback'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -826,12 +616,13 @@ export default function ProductsWorkspace() {
                  </div>
               </div>
 
-              {/* Book Description & Syllabus Card with 1-Click Quick Editor */}
+              {/* ================= 1. BOOK DESCRIPTION & OVERVIEW CARD ================= */}
               <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 space-y-3 bg-white dark:bg-white/[0.03] shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <h4 className="font-bold text-slate-800 dark:text-white">Book Description & Syllabus</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-white">Book Description & Overview</h4>
+                    <span className="text-[10px] text-slate-400 font-medium">(Product Overview Only)</span>
                   </div>
                   {editingDescId !== viewingBook.id ? (
                     <button
@@ -842,112 +633,59 @@ export default function ProductsWorkspace() {
                       }}
                       className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
-                      <Edit2 className="h-3 w-3" /> Edit Description
+                      <Edit2 className="h-3 w-3" /> {viewingBook.description ? 'Edit Description' : '+ Add Description'}
                     </button>
                   ) : null}
                 </div>
 
                 {editingDescId === viewingBook.id ? (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] px-2 py-1 rounded-md">
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={applyQuickBold}
-                          title="Bold text (Ctrl+B)"
-                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
-                        >
-                          <Bold className="h-3 w-3 stroke-[3]" />
-                          <span>Bold</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={applyQuickHighlight}
-                          title="Highlight text (Ctrl+H)"
-                          className="flex h-6 px-2 items-center gap-1 rounded bg-yellow-100 dark:bg-yellow-500/20 text-amber-900 dark:text-amber-300 text-xs font-bold border border-yellow-300 dark:border-yellow-500/30 hover:bg-yellow-200"
-                        >
-                          <Highlighter className="h-3 w-3 text-amber-700 dark:text-amber-400 stroke-[2.5]" />
-                          <span>Highlight</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={applyQuickItalic}
-                          title="Italic text"
-                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
-                        >
-                          <Italic className="h-3 w-3" />
-                          <span>Italic</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => insertQuickPrefix('1. ')}
-                          title="Numbered List"
-                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
-                        >
-                          <ListOrdered className="h-3 w-3" />
-                          <span>1. List</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => insertQuickPrefix('• ')}
-                          title="Bullet List"
-                          className="flex h-6 px-2 items-center gap-1 rounded bg-white dark:bg-white/10 text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-white/10 hover:bg-slate-100"
-                        >
-                          <List className="h-3 w-3" />
-                          <span>• Bullet</span>
-                        </button>
-                      </div>
-                      <span className="text-[10px] text-slate-400">Ctrl+B or Enter for auto-numbering</span>
-                    </div>
-                    <textarea
-                      ref={quickDescRef}
-                      rows={6}
+                    <VisualRichEditor
                       value={descInput}
-                      onChange={(e) => setDescInput(e.target.value)}
-                      onKeyDown={handleQuickDescKeyDown}
-                      placeholder="Enter comprehensive book description, syllabus, chapters outline, and exam features..."
-                      className="w-full rounded-lg border border-slate-300 dark:border-white/20 dark:bg-white/[0.06] dark:text-white p-3 text-xs leading-relaxed outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                      onChange={(val) => setDescInput(val)}
+                      placeholder="Enter editorial description, book synopsis, author background, or introduction..."
+                      minHeight="140px"
+                      accentColor="emerald"
                     />
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-slate-400 dark:text-neutral-400">
-                        {descInput.length} characters
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditingDescId(null)}
-                          className="glass-action-button"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isSavingDesc}
-                          onClick={async () => {
-                            setIsSavingDesc(true);
-                            try {
-                              await adminService.updateBook(viewingBook.id, { description: descInput });
-                              toast.success('Book description updated successfully!');
-                              setViewingBook({ ...viewingBook, description: descInput });
-                              setEditingDescId(null);
-                              fetchData();
-                            } catch (err: any) {
-                              toast.error(err.message || 'Failed to update description');
-                            } finally {
-                              setIsSavingDesc(false);
-                            }
-                          }}
-                          className="glass-action-button-primary disabled:opacity-50"
-                        >
-                          {isSavingDesc ? 'Saving...' : 'Save Description'}
-                        </button>
-                      </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingDescId(null)}
+                        className="glass-action-button"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSavingDesc}
+                        onClick={async () => {
+                          setIsSavingDesc(true);
+                          try {
+                            const clean = sanitizeRichHtml(descInput);
+                            await adminService.updateBook(viewingBook.id, { description: clean });
+                            toast.success('Book description updated successfully!');
+                            setViewingBook({ ...viewingBook, description: clean });
+                            setEditingDescId(null);
+                            fetchData();
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to update description');
+                          } finally {
+                            setIsSavingDesc(false);
+                          }
+                        }}
+                        className="glass-action-button-primary disabled:opacity-50"
+                      >
+                        {isSavingDesc ? 'Saving...' : 'Save Description'}
+                      </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg bg-slate-50 dark:bg-white/[0.04] p-3.5 border border-slate-100 dark:border-white/10 text-xs text-slate-700 dark:text-neutral-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap">
-                    {viewingBook.description && viewingBook.description.trim() !== '' && viewingBook.description !== 'No description provided.' ? (
-                      viewingBook.description
+                  <div className="rounded-lg bg-slate-50 dark:bg-white/[0.04] p-3.5 border border-slate-100 dark:border-white/10 text-xs text-slate-700 dark:text-neutral-200 leading-relaxed max-h-60 overflow-y-auto">
+                    {viewingBook.description && sanitizeRichHtml(viewingBook.description) ? (
+                      <div
+                        className="space-y-2 [&>p]:mb-2.5 [&>p:last-child]:mb-0 [&>strong]:font-bold [&>b]:font-bold [&>mark]:bg-amber-100 [&>mark]:text-amber-950 dark:[&>mark]:bg-amber-400/20 dark:[&>mark]:text-amber-200 [&>mark]:px-1 [&>mark]:py-0.5 [&>mark]:rounded-xs [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-2.5 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2.5 [&>h1]:font-bold [&>h1]:text-sm [&>h2]:font-bold [&>h2]:text-sm [&>h3]:font-bold [&>h3]:text-xs [&>h3]:mb-1 [&>h3]:mt-2"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(viewingBook.description) }}
+                      />
                     ) : (
                       <div className="text-center py-3">
                         <p className="text-slate-400 dark:text-neutral-500 italic text-xs mb-2">No description provided yet for this book.</p>
@@ -960,6 +698,94 @@ export default function ProductsWorkspace() {
                           className="glass-action-button"
                         >
                           + Add Description Now
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ================= 2. KEY FEATURES & SYLLABUS BREAKDOWN CARD ================= */}
+              <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/40 p-4 space-y-3 bg-white dark:bg-white/[0.03] shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <h4 className="font-bold text-slate-800 dark:text-white">Key Features & Syllabus Breakdown</h4>
+                  </div>
+                  {editingFeaturesId !== viewingBook.id ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingFeaturesId(viewingBook.id);
+                        setFeaturesInput(viewingBook.shortDescription || '');
+                      }}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit2 className="h-3 w-3" /> {viewingBook.shortDescription ? 'Edit Key Features' : '+ Add Key Features'}
+                    </button>
+                  ) : null}
+                </div>
+
+                {editingFeaturesId === viewingBook.id ? (
+                  <div className="space-y-2">
+                    <VisualRichEditor
+                      value={featuresInput}
+                      onChange={(val) => setFeaturesInput(val)}
+                      placeholder="Enter exam features, syllabus breakdown, chapter outlines, or bullet points..."
+                      minHeight="140px"
+                      accentColor="blue"
+                    />
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingFeaturesId(null)}
+                        className="glass-action-button"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSavingFeatures}
+                        onClick={async () => {
+                          setIsSavingFeatures(true);
+                          try {
+                            const clean = sanitizeRichHtml(featuresInput);
+                            await adminService.updateBook(viewingBook.id, { shortDescription: clean || null });
+                            toast.success('Key features updated successfully!');
+                            setViewingBook({ ...viewingBook, shortDescription: clean || null });
+                            setEditingFeaturesId(null);
+                            fetchData();
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to update key features');
+                          } finally {
+                            setIsSavingFeatures(false);
+                          }
+                        }}
+                        className="glass-action-button-primary disabled:opacity-50"
+                      >
+                        {isSavingFeatures ? 'Saving...' : 'Save Key Features'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-blue-50/40 dark:bg-blue-950/20 p-3.5 border border-blue-100 dark:border-blue-900/30 text-xs text-slate-700 dark:text-neutral-200 leading-relaxed max-h-60 overflow-y-auto">
+                    {viewingBook.shortDescription && sanitizeRichHtml(viewingBook.shortDescription) ? (
+                      <div
+                        className="space-y-2 [&>p]:mb-2.5 [&>p:last-child]:mb-0 [&>strong]:font-bold [&>b]:font-bold [&>mark]:bg-amber-100 [&>mark]:text-amber-950 dark:[&>mark]:bg-amber-400/20 dark:[&>mark]:text-amber-200 [&>mark]:px-1 [&>mark]:py-0.5 [&>mark]:rounded-xs [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-2.5 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2.5 [&>h1]:font-bold [&>h1]:text-sm [&>h2]:font-bold [&>h2]:text-sm [&>h3]:font-bold [&>h3]:text-xs [&>h3]:mb-1 [&>h3]:mt-2"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(viewingBook.shortDescription) }}
+                      />
+                    ) : (
+                      <div className="text-center py-3">
+                        <p className="text-slate-400 dark:text-neutral-500 italic text-xs mb-2">No key features or syllabus breakdown provided yet.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingFeaturesId(viewingBook.id);
+                            setFeaturesInput('');
+                          }}
+                          className="glass-action-button"
+                        >
+                          + Add Key Features Now
                         </button>
                       </div>
                     )}
