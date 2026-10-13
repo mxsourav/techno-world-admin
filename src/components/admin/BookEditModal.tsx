@@ -16,7 +16,28 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import { VisualRichEditor } from './VisualRichEditor';
+import { VisualRichEditor, sanitizeRichHtml } from './VisualRichEditor';
+
+function splitAuthors(raw: string): string[] {
+  if (!raw || !raw.trim()) return [];
+  const normalized = raw.replace(/\)\s*(?=[A-Z])/g, '), ');
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    const ch = normalized[i];
+    if (ch === '(') depth++;
+    else if (ch === ')' && depth > 0) depth--;
+    if ((ch === ',' || ch === ';') && depth === 0) {
+      if (current.trim()) parts.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) parts.push(current.trim());
+  return parts;
+}
 
 export default function BookEditModal({ book, onClose, onSaved }: { book: any | null, onClose: () => void, onSaved: () => void }) {
   const initialCategory = (() => {
@@ -46,6 +67,11 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     )) || book?.unitType === 'Set'
   );
 
+  const initialAuthorsList = (() => {
+    const rawList = book?.authorsList || (book?.author ? [book.author] : []);
+    return rawList.flatMap((item: any) => splitAuthors(typeof item === 'string' ? item : item?.name || ''));
+  })();
+
   const [formData, setFormData] = useState<any>({
     title: book?.title || '',
     publicationDate: book?.publicationDate ? new Date(book.publicationDate).toISOString().slice(0, 7) : '',
@@ -61,15 +87,15 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     reorderLevel: book?.reorderLevel !== undefined && book?.reorderLevel !== null ? book.reorderLevel : 20,
     warehouse: book?.warehouse || 'Main Warehouse',
     pages: book?.pages || 0,
-    description: book?.description || '',
-    shortDescription: book?.shortDescription || '',
+    description: sanitizeRichHtml(book?.description || ''),
+    shortDescription: sanitizeRichHtml(book?.shortDescription || ''),
     volume: book?.volume || '',
     unitType: isExistingSet ? 'Set' : (book?.unitType || 'Unit'),
     edition: book?.edition || '1st Edition',
     language: book?.language || 'English',
     bindingType: book?.bindingType || 'Paperback',
     publisher: book?.publisherName || book?.publisher || '',
-    authorsList: book?.authorsList || (book?.author ? [book.author] : []),
+    authorsList: initialAuthorsList,
     subjects: book?.subjects || [],
     bookType: book?.bookType || '',
     category: initialCategory,
@@ -78,8 +104,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
   });
   
   const [authorsInput, setAuthorsInput] = useState<string>(() => {
-    const list = book?.authorsList || (book?.author ? [book.author] : []);
-    return list.join(', ');
+    return initialAuthorsList.join(', ');
   });
   const [subjectsInput, setSubjectsInput] = useState<string>(() => {
     return (book?.subjects || []).join(', ');
@@ -398,12 +423,15 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     e.preventDefault();
     setLoading(true);
     try {
-      const parsedAuthors = authorsInput.split(',').map(s => s.trim()).filter(Boolean);
+      const parsedAuthors = splitAuthors(authorsInput);
       const parsedSubjects = subjectsInput.split(',').map(s => s.trim()).filter(Boolean);
       const isSet = formData.unitType === 'Set';
       const resolvedVolume = isSet
         ? (formData.volume?.trim() || 'Complete Set')
         : (formData.volume?.trim() ? formData.volume.trim() : null);
+
+      const cleanDescription = sanitizeRichHtml(formData.description || '');
+      const cleanShortDescription = sanitizeRichHtml(formData.shortDescription || '');
 
       const payload = {
         ...formData,
@@ -412,8 +440,8 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         subjects: parsedSubjects,
         volume: resolvedVolume,
         unitType: formData.unitType || 'Unit',
-        description: formData.description?.trim() || '',
-        shortDescription: formData.shortDescription?.trim() || null,
+        description: cleanDescription,
+        shortDescription: cleanShortDescription || null,
       };
       if (payload.publicationDate && payload.publicationDate.length === 7) {
         payload.publicationDate = `${payload.publicationDate}-01T00:00:00.000Z`;
@@ -484,7 +512,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
 
   const handleAuthorsInputChange = (val: string) => {
     setAuthorsInput(val);
-    const arr = val.split(',').map(s => s.trim()).filter(Boolean);
+    const arr = splitAuthors(val);
     setFormData((prev: any) => ({ ...prev, authorsList: arr, author: arr.join(', ') }));
   };
 

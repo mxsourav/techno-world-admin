@@ -10,13 +10,54 @@ interface VisualRichEditorProps {
 }
 
 /**
- * Converts legacy markdown (**, ==, *, \n, lists) to standard visual HTML
+ * Sanitizes rich HTML to strip noisy inline styles (e.g. --tw-* variables pasted from web pages),
+ * normalize highlight spans into <mark>, and return '' when there is no actual text content.
+ */
+export function sanitizeRichHtml(raw: string): string {
+  if (!raw || !raw.trim()) return '';
+
+  let s = raw;
+
+  // Convert spans/fonts with background-color (from execCommand hiliteColor or web paste) into <mark>
+  s = s.replace(
+    /<(span|font)\b[^>]*style\s*=\s*(?:"[^"]*background(?:-color)?\s*:\s*(?!transparent|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)|inherit|none)[^"]*"|'[^']*background(?:-color)?\s*:\s*(?!transparent|rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)|inherit|none)[^']*')[^>]*>([\s\S]*?)<\/\1>/gi,
+    '<mark>$2</mark>'
+  );
+
+  // Convert spans with font-weight: bold/700/800/900 into <strong>
+  s = s.replace(
+    /<span\b[^>]*style\s*=\s*(?:"[^"]*font-weight\s*:\s*(?:bold|[6-9]00)[^"]*"|'[^']*font-weight\s*:\s*(?:bold|[6-9]00)[^']*')[^>]*>([\s\S]*?)<\/span>/gi,
+    '<strong>$1</strong>'
+  );
+
+  // Strip all attributes (style="--tw-...", class="...", etc.) from structural and inline tags
+  s = s.replace(/<(\/?)(p|div|h[1-6]|ul|ol|li|strong|b|em|i|u|mark|br)\b[^>]*>/gi, '<$1$2>');
+
+  // Unwrap any remaining span/font tags
+  s = s.replace(/<\/?(?:span|font)\b[^>]*>/gi, '');
+
+  // Strip trailing empty paragraphs or headings (<p><br></p>, <h3><br></h3>, etc.)
+  s = s.replace(/(<(p|div|h[1-6])>(\s|<br\s*\/?>|&nbsp;)*<\/\2>\s*)+$/gi, '');
+
+  // Check if there is any real visible text left
+  const plainText = s
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!plainText) return '';
+  return s.trim();
+}
+
+/**
+ * Converts legacy markdown (**, ==, *, \n, lists) or dirty HTML to clean visual HTML
  */
 function markdownToHtml(md: string): string {
   if (!md || !md.trim()) return '';
-  // If already contains HTML markup, return as is
-  if (/<(p|b|strong|i|em|mark|ul|ol|li|h[1-6]|br)[^>]*>/i.test(md)) {
-    return md;
+  // If already contains HTML markup, sanitize and return clean HTML
+  if (/<(p|div|b|strong|i|em|mark|ul|ol|li|h[1-6]|br|span)[^>]*>/i.test(md)) {
+    return sanitizeRichHtml(md);
   }
 
   const lines = md.split('\n');
@@ -34,7 +75,7 @@ function markdownToHtml(md: string): string {
         inOl = false;
       }
       if (!inUl) {
-        result += '<ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 8px;">';
+        result += '<ul>';
         inUl = true;
       }
       const content = trimmed.replace(/^[•\-*]\s+/, '');
@@ -50,7 +91,7 @@ function markdownToHtml(md: string): string {
         inUl = false;
       }
       if (!inOl) {
-        result += '<ol style="list-style-type: decimal; margin-left: 20px; margin-bottom: 8px;">';
+        result += '<ol>';
         inOl = true;
       }
       result += `<li>${formatInline(numMatch[2])}</li>`;
@@ -73,22 +114,22 @@ function markdownToHtml(md: string): string {
     }
 
     if (trimmed.startsWith('### ')) {
-      result += `<h3 style="font-weight: 800; margin-top: 10px; margin-bottom: 4px;">${formatInline(trimmed.slice(4))}</h3>`;
+      result += `<h3>${formatInline(trimmed.slice(4))}</h3>`;
       continue;
     }
 
-    result += `<p style="margin-bottom: 6px;">${formatInline(trimmed)}</p>`;
+    result += `<p>${formatInline(trimmed)}</p>`;
   }
 
   if (inUl) result += '</ul>';
   if (inOl) result += '</ol>';
 
-  return result;
+  return sanitizeRichHtml(result);
 }
 
 function formatInline(str: string): string {
   return str
-    .replace(/==([^=]+?)==/g, '<mark style="background-color: #fef08a; color: #78350f; font-weight: bold; padding: 1px 4px; border-radius: 3px;">$1</mark>')
+    .replace(/==([^=]+?)==/g, '<mark>$1</mark>')
     .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+?)\*/g, '<em>$1</em>');
 }
@@ -118,22 +159,47 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
     // Prevent cursor jumping if html hasn't changed meaningfully
     if (currentHtml !== formattedHtml && (value || '') !== (editorRef.current.innerText || '')) {
       editorRef.current.innerHTML = formattedHtml;
-      setCharacterCount((editorRef.current.innerText || '').length);
+      setCharacterCount((editorRef.current.innerText || '').trim().length);
     }
   }, [value]);
 
   const handleInput = () => {
     if (!editorRef.current) return;
     isInternalUpdate.current = true;
-    const html = editorRef.current.innerHTML;
-    const text = editorRef.current.innerText || '';
+    const rawHtml = editorRef.current.innerHTML;
+    const text = (editorRef.current.innerText || '').trim();
     setCharacterCount(text.length);
 
-    // If empty or only blank break, emit empty string
-    if (!text.trim() && (!html || html === '<br>' || html === '<p><br></p>')) {
+    // If empty or only blank break/empty tags, emit empty string so storefront hides the section
+    if (!text) {
       onChange('');
     } else {
-      onChange(html);
+      onChange(sanitizeRichHtml(rawHtml));
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const htmlData = e.clipboardData.getData('text/html');
+    const textData = e.clipboardData.getData('text/plain');
+
+    if (htmlData && htmlData.trim()) {
+      const clean = sanitizeRichHtml(htmlData);
+      if (clean) {
+        document.execCommand('insertHTML', false, clean);
+        handleInput();
+        return;
+      }
+    }
+
+    if (textData) {
+      const escaped = textData
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const htmlFromPlain = markdownToHtml(escaped);
+      document.execCommand('insertHTML', false, htmlFromPlain || escaped.replace(/\r?\n/g, '<br>'));
+      handleInput();
     }
   };
 
@@ -256,6 +322,7 @@ export const VisualRichEditor: React.FC<VisualRichEditorProps> = ({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         data-placeholder={placeholder}
         style={{ minHeight }}
