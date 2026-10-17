@@ -1,5 +1,5 @@
 import type { Book } from '@/types';
-import { Trophy, Stethoscope, Settings, Backpack, GraduationCap, BookOpen, Lightbulb, Flower2, Globe2, Gem } from 'lucide-react';
+import { Trophy, Stethoscope, Settings, Backpack, GraduationCap, BookOpen, Lightbulb, Flower2, Globe2, Gem, Atom, Bookmark } from 'lucide-react';
 
 const rv = (user: string, rating: number, title: string, body: string, date: string): import('@/types').Review => ({
   id: Math.random().toString(36).slice(2, 9),
@@ -7,6 +7,8 @@ const rv = (user: string, rating: number, title: string, body: string, date: str
 });
 
 export const CATEGORIES = [
+  { slug: 'techno-world-publication', name: 'Techno World Publication', icon: <Bookmark className="w-4 h-4" /> },
+  { slug: 'science', name: 'Science', icon: <Atom className="w-4 h-4" /> },
   { slug: 'competitive-exams', name: 'Competitive Exam', icon: <Trophy className="w-4 h-4" /> },
   { slug: 'medical', name: 'Medical', icon: <Stethoscope className="w-4 h-4" /> },
   { slug: 'engineering', name: 'Engineering', icon: <Settings className="w-4 h-4" /> },

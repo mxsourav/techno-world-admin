@@ -52,9 +52,18 @@ export default function ProductsWorkspace() {
   const [keywordsInput, setKeywordsInput] = useState('');
   const [isSavingKeywords, setIsSavingKeywords] = useState(false);
 
+  // Pagination state (Default: 100 books per page)
+  const [pageSize, setPageSize] = useState<number>(100);
+  const [page, setPage] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, search]);
+
   useEffect(() => {
     fetchData();
-  }, [activeTab, search]);
+  }, [activeTab, search, page, pageSize]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -63,13 +72,18 @@ export default function ProductsWorkspace() {
         const res = await adminService.getAdminCatalog({
           tab: activeTab,
           search,
+          page,
+          limit: pageSize,
         });
         setData(res.data || []);
         setKpis((res as any).kpis || {});
+        const total = (res as any).pagination?.total ?? (res as any).total ?? (res as any).kpis?.total ?? (res.data ? res.data.length : 0);
+        setTotalCount(total);
       } catch (catalogErr) {
         console.warn('Admin catalog endpoint error, falling back to standard books API:', catalogErr);
         const fallbackRes = await bookService.getBooks({
-          limit: 100,
+          page,
+          limit: pageSize,
           search: search || undefined,
         });
         const books = Array.isArray(fallbackRes.data)
@@ -83,6 +97,7 @@ export default function ProductsWorkspace() {
         else if (activeTab === 'out_of_stock') filteredBooks = books.filter((b: any) => (b.stock || 0) <= 0);
 
         setData(filteredBooks);
+        setTotalCount(books.length);
         setKpis({
           total: books.length,
           active: books.filter((b: any) => b.status === 'PUBLISHED').length,
@@ -335,6 +350,21 @@ export default function ProductsWorkspace() {
             <button className="glass-action-button">
               <Settings2 className="h-4 w-4" /> More Filters
             </button>
+            <div className="flex items-center gap-2 border-l border-slate-200 pl-4 dark:border-white/10">
+              <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">Page size:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white cursor-pointer"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100 (Default)</option>
+              </select>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
@@ -489,6 +519,55 @@ export default function ProductsWorkspace() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="border-t border-slate-200/80 bg-slate-50/90 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 dark:bg-white/[0.02] dark:border-white/[0.08]">
+          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-neutral-400">
+            <span>
+              Showing <strong className="text-slate-800 dark:text-white">{data.length ? (page - 1) * pageSize + 1 : 0}</strong> to{' '}
+              <strong className="text-slate-800 dark:text-white">{Math.min(page * pageSize, totalCount || data.length)}</strong> of{' '}
+              <strong className="text-slate-800 dark:text-white">{totalCount || data.length}</strong> books
+            </span>
+            <span className="text-slate-300 dark:text-white/20">•</span>
+            <div className="flex items-center gap-1.5">
+              <span>Page size:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-bold text-slate-800 outline-none dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white cursor-pointer"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100 (Default)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white cursor-pointer"
+            >
+              &larr; Previous
+            </button>
+            <span className="text-xs font-mono font-bold text-slate-800 px-2 dark:text-neutral-200">
+              Page {page} {totalCount > 0 ? `of ${Math.max(1, Math.ceil(totalCount / pageSize))}` : ''}
+            </span>
+            <button
+              type="button"
+              disabled={(totalCount > 0 ? page >= Math.ceil(totalCount / pageSize) : data.length < pageSize) || loading}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs dark:border-white/[0.12] dark:bg-white/[0.06] dark:text-white cursor-pointer"
+            >
+              Next &rarr;
+            </button>
+          </div>
         </div>
       </div>
 

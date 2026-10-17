@@ -15,6 +15,7 @@ import {
   Loader2,
   Layers,
   Sparkles,
+  Bookmark,
 } from 'lucide-react';
 import { VisualRichEditor, sanitizeRichHtml } from './VisualRichEditor';
 
@@ -40,7 +41,31 @@ function splitAuthors(raw: string): string[] {
 }
 
 export default function BookEditModal({ book, onClose, onSaved }: { book: any | null, onClose: () => void, onSaved: () => void }) {
-  const initialCategory = (() => {
+  const initialSelectedCategories = (() => {
+    const cats: string[] = [];
+    if (Array.isArray(book?.categories)) {
+      book.categories.forEach((c: any) => {
+        const name = typeof c === 'string' ? c : c?.name;
+        if (name && !cats.includes(name)) cats.push(name);
+      });
+    }
+    if (Array.isArray(book?.categoryNames)) {
+      book.categoryNames.forEach((name: string) => {
+        if (name && !cats.includes(name)) cats.push(name);
+      });
+    }
+    const catVal = (book?.categoryName || book?.category || '').trim();
+    if (catVal) {
+      const match = WEBSITE_CATEGORIES.find(
+        c => c.slug.toLowerCase() === catVal.toLowerCase() || c.name.toLowerCase() === catVal.toLowerCase()
+      );
+      const single = match ? match.name : catVal;
+      if (!cats.includes(single)) cats.push(single);
+    }
+    return cats;
+  })();
+
+  const initialCategory = initialSelectedCategories[0] || (() => {
     const catVal = (book?.categoryName || book?.category || '').trim();
     if (!catVal) return '';
     const match = WEBSITE_CATEGORIES.find(
@@ -71,6 +96,30 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
     const rawList = book?.authorsList || (book?.author ? [book.author] : []);
     return rawList.flatMap((item: any) => splitAuthors(typeof item === 'string' ? item : item?.name || ''));
   })();
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSelectedCategories);
+
+  const addCategory = (catName: string) => {
+    const trimmed = catName.trim();
+    if (trimmed && !selectedCategories.includes(trimmed)) {
+      setSelectedCategories(prev => [...prev, trimmed]);
+    }
+  };
+
+  const removeCategory = (catName: string) => {
+    setSelectedCategories(prev => prev.filter(c => c !== catName));
+  };
+
+  const toggleTechnoWorldPublication = () => {
+    const twp = 'Techno World Publication';
+    setSelectedCategories(prev => {
+      if (prev.includes(twp)) {
+        return prev.filter(c => c !== twp);
+      } else {
+        return [...prev, twp];
+      }
+    });
+  };
 
   const [formData, setFormData] = useState<any>({
     title: book?.title || '',
@@ -127,6 +176,9 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
             if (Array.isArray(parsed.subjects)) {
               setSubjectsInput(parsed.subjects.join(', '));
             }
+            if (Array.isArray(parsed.categories)) {
+              setSelectedCategories(parsed.categories);
+            }
             setHasRestoredDraft(true);
           }
         }
@@ -136,12 +188,12 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
 
   // Auto-save draft on form change
   React.useEffect(() => {
-    if (!book && (formData.title || formData.description || formData.isbn13 || formData.mrp)) {
+    if (!book && (formData.title || formData.description || formData.isbn13 || formData.mrp || selectedCategories.length > 0)) {
       try {
-        localStorage.setItem('tw_book_draft_new', JSON.stringify(formData));
+        localStorage.setItem('tw_book_draft_new', JSON.stringify({ ...formData, categories: selectedCategories }));
       } catch {}
     }
-  }, [formData]);
+  }, [formData, selectedCategories]);
 
   const clearDraft = () => {
     localStorage.removeItem('tw_book_draft_new');
@@ -433,6 +485,7 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
       const cleanDescription = sanitizeRichHtml(formData.description || '');
       const cleanShortDescription = sanitizeRichHtml(formData.shortDescription || '');
 
+      const primaryCategory = selectedCategories[0] || formData.category || 'General';
       const payload = {
         ...formData,
         authorsList: parsedAuthors,
@@ -440,6 +493,9 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
         subjects: parsedSubjects,
         volume: resolvedVolume,
         unitType: formData.unitType || 'Unit',
+        category: primaryCategory,
+        categories: selectedCategories,
+        categoryNames: selectedCategories,
         description: cleanDescription,
         shortDescription: cleanShortDescription || null,
       };
@@ -1026,51 +1082,141 @@ export default function BookEditModal({ book, onClose, onSaved }: { book: any | 
           </div>
 
           {/* Categories & Subject */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
-              {isAddingNewCategory ? (
-                <div className="flex gap-2">
-                  <input autoFocus name="category" placeholder="New category name..." value={formData.category} onChange={handleChange} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-                  <button type="button" onClick={() => setIsAddingNewCategory(false)} className="text-slate-400 hover:text-slate-600 px-2 text-xs font-bold">&times;</button>
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50/40 p-4">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800">
+                    Categories (Multi-Category Taxonomy)
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Tag this book under multiple disciplines (e.g. Engineering + Science + Techno World Publication)
+                  </p>
                 </div>
-              ) : (
+                
+                {/* Dedicated 1-Click Quick Stamping Button */}
+                <button
+                  type="button"
+                  onClick={toggleTechnoWorldPublication}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer shadow-2xs ${
+                    selectedCategories.includes('Techno World Publication')
+                      ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-500/20'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                  }`}
+                  title="1-Click toggle to stamp as in-house publication"
+                >
+                  <Bookmark className="h-3.5 w-3.5" />
+                  <span>
+                    {selectedCategories.includes('Techno World Publication')
+                      ? '✓ In-House Publication'
+                      : '+ Techno World Publication'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Selected Category Tag Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 min-h-[38px] p-2 rounded-lg border border-slate-300 bg-white">
+                {selectedCategories.length === 0 ? (
+                  <span className="text-xs text-slate-400 italic">No categories selected yet. Use the dropdown below to add tags.</span>
+                ) : (
+                  selectedCategories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-800 shadow-2xs"
+                    >
+                      <span>{cat}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCategory(cat)}
+                        className="text-slate-400 hover:text-rose-600 font-bold leading-none cursor-pointer"
+                        title={`Remove ${cat}`}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+
+              {/* Add Category Dropdown / New Input */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <select 
-                  name="category" 
-                  value={formData.category || ''} 
+                  value="" 
                   onChange={(e) => {
                     if (e.target.value === 'ADD_NEW') {
                       setIsAddingNewCategory(true);
-                      setFormData({ ...formData, category: '' });
-                    } else {
-                      handleChange(e as any);
+                    } else if (e.target.value) {
+                      addCategory(e.target.value);
                     }
                   }} 
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-emerald-500 bg-white text-slate-800 font-medium"
                 >
-                  <option value="">Select Category...</option>
-                  {categories.map(c => (
-                    <option key={c.id || c.slug} value={c.name}>{c.name}</option>
-                  ))}
-                  {formData.category && !categories.some(c => c.name.toLowerCase() === (formData.category || '').toLowerCase()) && (
-                    <option value={formData.category}>{formData.category}</option>
-                  )}
-                  <option value="ADD_NEW" className="font-bold text-emerald-600">+ Add New Category...</option>
+                  <option value="">+ Add category tag...</option>
+                  {categories
+                    .filter(c => !selectedCategories.includes(c.name))
+                    .map(c => (
+                      <option key={c.id || c.slug} value={c.name}>{c.name}</option>
+                    ))}
+                  <option value="ADD_NEW" className="font-bold text-emerald-700">+ Create Custom Category...</option>
                 </select>
-              )}
+
+                {isAddingNewCategory && (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      autoFocus
+                      placeholder="Category name..."
+                      id="customCategoryInput"
+                      className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 bg-white"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val) {
+                            addCategory(val);
+                            setIsAddingNewCategory(false);
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById('customCategoryInput') as HTMLInputElement;
+                        if (el && el.value.trim()) {
+                          addCategory(el.value.trim());
+                        }
+                        setIsAddingNewCategory(false);
+                      }}
+                      className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 cursor-pointer"
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewCategory(false)}
+                      className="text-slate-400 hover:text-slate-600 px-1 text-sm font-bold cursor-pointer"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Book Type</label>
-              <input name="bookType" value={formData.bookType || ''} onChange={handleChange} placeholder="e.g. Text Book, Guide, Cracker" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Subjects (comma separated)</label>
-              <input 
-                value={subjectsInput} 
-                onChange={e => handleSubjectsInputChange(e.target.value)} 
-                placeholder="e.g. Mathematics, Zoology" 
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" 
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/60">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Book Type</label>
+                <input name="bookType" value={formData.bookType || ''} onChange={handleChange} placeholder="e.g. Text Book, Guide, Cracker" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Subjects (comma separated)</label>
+                <input 
+                  value={subjectsInput} 
+                  onChange={e => handleSubjectsInputChange(e.target.value)} 
+                  placeholder="e.g. Mathematics, Zoology" 
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 bg-white" 
+                />
+              </div>
             </div>
           </div>
 
