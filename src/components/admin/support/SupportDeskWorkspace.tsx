@@ -1,762 +1,454 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  LifeBuoy,
-  RefreshCw,
-  Search,
-  Send,
-  CheckCircle2,
-  XCircle,
-  User,
-  Package,
-  Copy,
-  Check,
-  ShieldCheck,
-  Inbox,
-  MessageSquare,
-  CornerDownRight,
-} from 'lucide-react';
-import { supportService } from '@/services/api';
+import { useState } from 'react';
+import { SupportSidebar, type SupportSessionItem } from './SupportSidebar';
+import { ChatFeed, type ChatMessageItem } from './ChatFeed';
+import { UserContextBoard, type CustomerProfileData, type RecentOrderItem } from './UserContextBoard';
 import { toast } from 'sonner';
+import { PowerOff } from 'lucide-react';
 
-export interface TicketMessage {
+interface MockSessionDetail {
   id: string;
-  ticketId: string;
-  sender: 'CUSTOMER' | 'ADMIN';
-  body: string;
-  htmlBody?: string;
-  messageId?: string;
-  adminUserId?: string;
-  timestamp: string;
-}
-
-export interface TicketCustomer {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  customerId?: string;
-  technoPoints?: number;
-  technoWallet?: number;
-  createdAt?: string;
-}
-
-export interface Ticket {
-  id: string;
-  ticketId: string;
-  customerId?: string;
-  customerEmail: string;
-  customerName?: string;
-  department: 'SUPPORT' | 'TEAM';
-  subject: string;
-  status: 'OPEN' | 'PENDING' | 'SOLVED' | 'DISCARDED';
-  closureReason?: string;
+  customerPhone: string;
+  customerName: string;
+  customerInitials: string;
+  status: 'OPEN' | 'CLOSED';
+  unread: boolean;
   orderNumber?: string;
-  createdAt: string;
-  updatedAt: string;
-  customer?: TicketCustomer;
-  _count?: { messages: number };
-  messages?: TicketMessage[];
+  profile: CustomerProfileData;
+  recentOrders: RecentOrderItem[];
+  messages: ChatMessageItem[];
 }
+
+const INITIAL_MOCK_SESSIONS: MockSessionDetail[] = [
+  {
+    id: 'sess-1',
+    customerName: 'Washim Mallick',
+    customerPhone: '+91 74791 35626',
+    customerInitials: 'WM',
+    status: 'OPEN',
+    unread: true,
+    orderNumber: '#TW-20261017-1042',
+    profile: {
+      name: 'Washim Mallick',
+      phone: '+91 74791 35626',
+      accountAge: '2.4 yrs (Joined May 2024)',
+      verified: true,
+      lifetimeValue: '₹4,250',
+      ordersCount: 4,
+      shippingCity: 'Kolkata, West Bengal (700009)',
+    },
+    recentOrders: [
+      {
+        id: 'ord-1042',
+        orderNumber: '#TW-20261017-1042',
+        title: 'Higher Engineering Mathematics - B.S. Grewal (44th Ed.)',
+        status: 'In Transit',
+        amount: '₹1,250',
+        date: 'Today, 10:42 AM',
+      },
+      {
+        id: 'ord-0914',
+        orderNumber: '#TW-20260812-0914',
+        title: 'Introduction to Algorithms (CLRS) - 4th Edition',
+        status: 'Delivered',
+        amount: '₹1,850',
+        date: '12 Aug 2026',
+      },
+      {
+        id: 'ord-0501',
+        orderNumber: '#TW-20260501-0211',
+        title: 'Data Structures and Algorithms in C++ - Adam Drozdek',
+        status: 'Delivered',
+        amount: '₹1,150',
+        date: '01 May 2026',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        senderType: 'CUSTOMER',
+        content: 'Hi Techno World! I ordered my engineering maths book today morning with express delivery.',
+        timestamp: '11:15 AM',
+      },
+      {
+        id: 'm2',
+        senderType: 'CUSTOMER',
+        content: 'Could you please check if order #TW-20261017-1042 has shipped? Need it urgently for upcoming semester exams.',
+        timestamp: '11:16 AM',
+      },
+      {
+        id: 'm3',
+        senderType: 'ADMIN',
+        content: 'Hello Washim da! Thank you for reaching out to Techno World Books support. Let me check your shipment details directly with our College Street dispatch warehouse.',
+        timestamp: '11:18 AM',
+        status: 'read',
+      },
+      {
+        id: 'm4',
+        senderType: 'ADMIN',
+        content: 'Your copy of B.S. Grewal (44th Ed.) has been verified, bubble-wrapped, and handed over to BlueDart Express under AWB #BD88921042. You will receive an SMS when it reaches the central sorting hub in Kolkata this evening.',
+        timestamp: '11:20 AM',
+        status: 'read',
+      },
+      {
+        id: 'm5',
+        senderType: 'CUSTOMER',
+        content: 'That is really fast! Will it arrive by tomorrow afternoon at Amherst Street?',
+        timestamp: '11:22 AM',
+      },
+    ],
+  },
+  {
+    id: 'sess-2',
+    customerName: 'Debapriya Roy',
+    customerPhone: '+91 70034 56789',
+    customerInitials: 'DR',
+    status: 'OPEN',
+    unread: false,
+    orderNumber: '#TW-20261016-0812',
+    profile: {
+      name: 'Debapriya Roy',
+      phone: '+91 70034 56789',
+      accountAge: '3.8 yrs (Joined Jan 2023)',
+      verified: true,
+      lifetimeValue: '₹6,120',
+      ordersCount: 6,
+      shippingCity: 'Howrah, West Bengal (711101)',
+    },
+    recentOrders: [
+      {
+        id: 'ord-0812',
+        orderNumber: '#TW-20261016-0812',
+        title: 'Microelectronic Circuits - Sedra & Smith (8th Edition)',
+        status: 'Delivered',
+        amount: '₹1,480',
+        date: 'Yesterday, 04:30 PM',
+      },
+      {
+        id: 'ord-0610',
+        orderNumber: '#TW-20260410-0610',
+        title: 'Digital Signal Processing - Proakis & Manolakis',
+        status: 'Delivered',
+        amount: '₹1,240',
+        date: '10 Apr 2026',
+      },
+    ],
+    messages: [
+      {
+        id: 'm201',
+        senderType: 'CUSTOMER',
+        content: 'Hi team, I had asked for the courier tracking link yesterday.',
+        timestamp: 'Yesterday, 06:10 PM',
+      },
+      {
+        id: 'm202',
+        senderType: 'ADMIN',
+        content: 'Greetings Debapriya! Here is your India Post Speed Post tracking link: https://www.indiapost.gov.in/_layouts/15/dpt.cept.tracking/trackconsignment.aspx?consNo=EB449201992IN',
+        timestamp: 'Yesterday, 06:14 PM',
+        status: 'read',
+      },
+      {
+        id: 'm203',
+        senderType: 'CUSTOMER',
+        content: 'Thank you so much! The tracking link works perfectly now.',
+        timestamp: 'Yesterday, 06:18 PM',
+      },
+    ],
+  },
+  {
+    id: 'sess-3',
+    customerName: 'Dr. Anirban Mukherjee',
+    customerPhone: '+91 94330 98765',
+    customerInitials: 'AM',
+    status: 'OPEN',
+    unread: true,
+    orderNumber: '#TW-20261015-0421',
+    profile: {
+      name: 'Dr. Anirban Mukherjee',
+      phone: '+91 94330 98765',
+      accountAge: '4.2 yrs (Joined Aug 2022)',
+      verified: true,
+      lifetimeValue: '₹18,400',
+      ordersCount: 11,
+      shippingCity: 'Salt Lake City, Kolkata (700064)',
+    },
+    recentOrders: [
+      {
+        id: 'ord-0421',
+        orderNumber: '#TW-20261015-0421',
+        title: "Harper's Illustrated Biochemistry (32nd Ed.)",
+        status: 'Delivered',
+        amount: '₹2,100',
+        date: '15 Oct 2026',
+      },
+      {
+        id: 'ord-0312',
+        orderNumber: '#TW-20260901-0312',
+        title: 'Robbins & Cotran Pathologic Basis of Disease (10th Ed.)',
+        status: 'Delivered',
+        amount: '₹4,350',
+        date: '01 Sep 2026',
+      },
+    ],
+    messages: [
+      {
+        id: 'm301',
+        senderType: 'CUSTOMER',
+        content: "Hello, I received my copy of Harper's Illustrated Biochemistry today. The packaging box had a dent which resulted in a minor crease on the front cover.",
+        timestamp: '10:02 AM',
+      },
+      {
+        id: 'm302',
+        senderType: 'CUSTOMER',
+        content: 'As this is for our department reference library, can we get a quick direct replacement under your 7-day policy?',
+        timestamp: '10:04 AM',
+      },
+    ],
+  },
+  {
+    id: 'sess-4',
+    customerName: 'Priyanka Sengupta',
+    customerPhone: '+91 82405 12345',
+    customerInitials: 'PS',
+    status: 'OPEN',
+    unread: false,
+    orderNumber: '#TW-20261017-1102',
+    profile: {
+      name: 'Priyanka Sengupta',
+      phone: '+91 82405 12345',
+      accountAge: '1 month (Joined Oct 2026)',
+      verified: true,
+      lifetimeValue: '₹1,620',
+      ordersCount: 2,
+      shippingCity: 'Siliguri, West Bengal (734001)',
+    },
+    recentOrders: [
+      {
+        id: 'ord-1102',
+        orderNumber: '#TW-20261017-1102',
+        title: 'Organic Chemistry - Morrison & Boyd (7th Ed.)',
+        status: 'Processing',
+        amount: '₹540',
+        date: 'Today, 11:02 AM',
+      },
+    ],
+    messages: [
+      {
+        id: 'm401',
+        senderType: 'CUSTOMER',
+        content: 'Hi, my payment went through on UPI but cart took a moment to update. Has order #TW-20261017-1102 been recorded?',
+        timestamp: '11:05 AM',
+      },
+      {
+        id: 'm402',
+        senderType: 'ADMIN',
+        content: 'Yes Priyanka! We received payment confirmation from Razorpay (pay_OPq1948). Your order is confirmed and currently being packed for dispatch.',
+        timestamp: '11:08 AM',
+        status: 'read',
+      },
+    ],
+  },
+  {
+    id: 'sess-5',
+    customerName: 'Soumyajit Das',
+    customerPhone: '+91 91234 56780',
+    customerInitials: 'SD',
+    status: 'OPEN',
+    unread: false,
+    profile: {
+      name: 'Soumyajit Das',
+      phone: '+91 91234 56780',
+      accountAge: '1.7 yrs (Joined Feb 2025)',
+      verified: true,
+      lifetimeValue: '₹3,450',
+      ordersCount: 3,
+      shippingCity: 'Burdwan, West Bengal (713101)',
+    },
+    recentOrders: [
+      {
+        id: 'ord-0311',
+        orderNumber: '#TW-20260920-0311',
+        title: 'GATE Computer Science & IT Topicwise Solved Papers 2026',
+        status: 'Delivered',
+        amount: '₹1,180',
+        date: '20 Sep 2026',
+      },
+    ],
+    messages: [
+      {
+        id: 'm501',
+        senderType: 'CUSTOMER',
+        content: 'Do you have the latest 2026 GATE CSE chapterwise question bank in stock at College Street store?',
+        timestamp: '09:40 AM',
+      },
+      {
+        id: 'm502',
+        senderType: 'ADMIN',
+        content: 'Yes Soumyajit! We have 14 copies physically in stock at our College Street flagship shop (90/6A MG Road). You can purchase online with home delivery or pick up directly from the counter.',
+        timestamp: '09:45 AM',
+        status: 'read',
+      },
+    ],
+  },
+];
 
 export default function SupportDeskWorkspace() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
-  const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
-  void recentOrders;
-
-  const [loadingList, setLoadingList] = useState(false);
-  const [loadingTicket, setLoadingTicket] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [sendingReply, setSendingReply] = useState(false);
-
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN' | 'PENDING' | 'SOLVED' | 'DISCARDED'>('ALL');
-  const [deptFilter, setDeptFilter] = useState<'ALL' | 'SUPPORT' | 'TEAM'>('ALL');
+  const [sessions, setSessions] = useState<MockSessionDetail[]>(INITIAL_MOCK_SESSIONS);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('sess-1');
   const [searchQuery, setSearchQuery] = useState('');
-  const [stats, setStats] = useState({ all: 0, open: 0, pending: 0, solved: 0, discarded: 0 });
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
+  const [endSessionModalOpen, setEndSessionModalOpen] = useState(false);
 
-  // Reply Composer State
-  const [replyText, setReplyText] = useState('');
-  const [markPendingOnReply, setMarkPendingOnReply] = useState(true);
+  // Active session lookup
+  const activeSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
 
-  // Status Closure Modal State
-  const [modalOpen, setModalOpen] = useState(false);
-  const [targetStatus, setTargetStatus] = useState<'SOLVED' | 'DISCARDED' | 'OPEN' | null>(null);
-  const [closureNote, setClosureNote] = useState('');
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-
-  // Copy feedback
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    toast.success(`Copied "${text}" to clipboard`);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  // Fetch ticket list
-  const fetchTickets = useCallback(async () => {
-    setLoadingList(true);
-    try {
-      const res = await supportService.getTickets({
-        status: statusFilter !== 'ALL' ? statusFilter : undefined,
-        department: deptFilter !== 'ALL' ? deptFilter : undefined,
-        q: searchQuery.trim() || undefined,
-        limit: 50,
-      });
-
-      if (res.success && res.data) {
-        setTickets(res.data.tickets || []);
-        if (res.data.stats) {
-          setStats(res.data.stats);
-        }
-        // Auto-select first ticket if none selected
-        if (!selectedTicketId && res.data.tickets?.length > 0) {
-          setSelectedTicketId(res.data.tickets[0].ticketId);
-        }
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load tickets');
-    } finally {
-      setLoadingList(false);
-    }
-  }, [statusFilter, deptFilter, searchQuery, selectedTicketId]);
-
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
-
-  // Fetch full details of selected ticket
-  const fetchSelectedTicket = useCallback(async (id: string) => {
-    setLoadingTicket(true);
-    try {
-      const res = await supportService.getTicket(id);
-      if (res.success && res.data) {
-        setActiveTicket(res.data.ticket);
-        setRecentOrders(res.data.recentOrders || []);
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load ticket conversation');
-    } finally {
-      setLoadingTicket(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedTicketId) {
-      fetchSelectedTicket(selectedTicketId);
-    } else {
-      setActiveTicket(null);
-    }
-  }, [selectedTicketId, fetchSelectedTicket]);
-
-  // Trigger Hostinger IMAP Sync
-  const handleSyncMailbox = async () => {
-    setSyncing(true);
-    try {
-      const res = await supportService.syncInboxes();
-      if (res.success) {
-        toast.success(res.message || 'IMAP synchronization complete');
-        fetchTickets();
-        if (selectedTicketId) {
-          fetchSelectedTicket(selectedTicketId);
-        }
-      } else {
-        toast.error('IMAP sync finished with warnings');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to sync with Hostinger mail server');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // Submit Admin Reply
-  const handleSendReply = async () => {
-    if (!activeTicket) return;
-    if (!replyText.trim()) {
-      toast.error('Please enter a reply message before sending');
-      return;
-    }
-
-    setSendingReply(true);
-    try {
-      const res = await supportService.replyTicket(activeTicket.ticketId, {
-        body: replyText.trim(),
-        markAsPending: markPendingOnReply,
-      });
-
-      if (res.success) {
-        toast.success('Reply dispatched to customer email');
-        setReplyText('');
-        fetchSelectedTicket(activeTicket.ticketId);
-        fetchTickets();
-      } else {
-        toast.error(res.message || 'Failed to dispatch reply');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send reply');
-    } finally {
-      setSendingReply(false);
-    }
-  };
-
-  // Status Change Prompt
-  const promptStatusChange = (status: 'SOLVED' | 'DISCARDED' | 'OPEN') => {
-    setTargetStatus(status);
-    setClosureNote('');
-    setModalOpen(true);
-  };
-
-  const handleConfirmStatusChange = async () => {
-    if (!activeTicket || !targetStatus) return;
-
-    setUpdatingStatus(true);
-    try {
-      const res = await supportService.updateStatus(activeTicket.ticketId, {
-        status: targetStatus,
-        closureReason: closureNote.trim() || undefined,
-      });
-
-      if (res.success) {
-        toast.success(`Ticket marked as ${targetStatus}`);
-        setModalOpen(false);
-        fetchSelectedTicket(activeTicket.ticketId);
-        fetchTickets();
-      } else {
-        toast.error(res.message || 'Status update failed');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update ticket status');
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  // Format date helper
-  const formatDate = (isoStr?: string) => {
-    if (!isoStr) return '';
-    const d = new Date(isoStr);
-    return d.toLocaleString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const formatRelative = (isoStr?: string) => {
-    if (!isoStr) return '';
-    const diffMs = Date.now() - new Date(isoStr).getTime();
-    const mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'OPEN':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-            Open
-          </span>
-        );
-      case 'PENDING':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-            Pending
-          </span>
-        );
-      case 'SOLVED':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-100 text-stone-700 border border-stone-300">
-            Solved
-          </span>
-        );
-      case 'DISCARDED':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            Discarded
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-100 text-stone-700 border border-stone-200">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  const getDeptBadge = (dept: string) => {
-    if (dept === 'TEAM') {
-      return (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-stone-100 text-stone-700 border border-stone-200">
-          team@
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-        support@
-      </span>
+  // Selecting a session clears unread flag
+  const handleSelectSession = (id: string) => {
+    setSelectedSessionId(id);
+    setSessions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, unread: false } : s))
     );
   };
 
+  // Sending an admin reply
+  const handleSendMessage = (text: string) => {
+    const newMessage: ChatMessageItem = {
+      id: `msg-${Date.now()}`,
+      senderType: 'ADMIN',
+      content: text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'delivered',
+    };
+
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === selectedSessionId) {
+          return {
+            ...s,
+            messages: [...s.messages, newMessage],
+            lastMessage: text,
+            lastMessageTime: 'Just now',
+          };
+        }
+        return s;
+      })
+    );
+
+    toast.success('Reply queued & delivered via WhatsApp Business API');
+  };
+
+  // Ending a support session
+  const handleConfirmEndSession = () => {
+    if (!activeSession) return;
+    const sessionName = activeSession.customerName;
+
+    // Send closing automated message to mock customer feed
+    const closingMessage: ChatMessageItem = {
+      id: `msg-close-${Date.now()}`,
+      senderType: 'ADMIN',
+      content: 'Support session marked as RESOLVED by agent. Thank you for shopping with Techno World Books! This chat session is now closed.',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'read',
+    };
+
+    setSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === activeSession.id) {
+          return {
+            ...s,
+            status: 'CLOSED',
+            messages: [...s.messages, closingMessage],
+          };
+        }
+        return s;
+      })
+    );
+
+    setEndSessionModalOpen(false);
+    toast.success(`Support session for ${sessionName} successfully ended.`);
+  };
+
+  // Convert sessions for sidebar item representation
+  const sidebarSessionItems: SupportSessionItem[] = sessions
+    .filter((s) => s.status === 'OPEN')
+    .map((s) => ({
+      id: s.id,
+      customerName: s.customerName,
+      customerPhone: s.customerPhone,
+      customerInitials: s.customerInitials,
+      status: s.status,
+      unread: s.unread,
+      lastMessage: s.messages[s.messages.length - 1]?.content || 'Session started',
+      lastMessageTime: s.messages[s.messages.length - 1]?.timestamp || 'Today',
+      orderNumber: s.orderNumber,
+    }));
+
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] bg-white text-stone-900 border border-stone-200 rounded-lg overflow-hidden shadow-xs">
-      {/* 1. TOP HEADER & CRM ACTION BAR */}
-      <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-8 w-8 rounded-md bg-emerald-800 text-white shrink-0">
-            <LifeBuoy className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-serif text-base font-bold tracking-tight text-stone-900">Support Desk CRM</h2>
-              <span className="text-[11px] font-medium text-stone-500 font-mono">
-                {stats.all} Total Tickets
-              </span>
-            </div>
-            <p className="text-[11px] text-stone-500">
-              Hostinger IMAP Inbound Listener &bull; support@technoworldbooks.in &bull; team@technoworldbooks.in
-            </p>
-          </div>
-        </div>
+    <div className="h-[calc(100vh-6.5rem)] flex gap-4 min-w-0 overflow-hidden relative">
+      {/* Pane 1: Left Sidebar (Session List) */}
+      <SupportSidebar
+        sessions={sidebarSessionItems}
+        selectedSessionId={selectedSessionId}
+        onSelectSession={handleSelectSession}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+      />
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {/* Quick Metrics */}
-          <div className="hidden lg:flex items-center gap-1.5 mr-2">
-            <button
-              onClick={() => setStatusFilter('OPEN')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors border ${
-                statusFilter === 'OPEN'
-                  ? 'bg-emerald-800 text-white border-emerald-800'
-                  : 'bg-white text-stone-700 border-stone-200 hover:border-stone-300'
-              }`}
-            >
-              Open: <span className="font-mono">{stats.open}</span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('PENDING')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors border ${
-                statusFilter === 'PENDING'
-                  ? 'bg-amber-700 text-white border-amber-700'
-                  : 'bg-white text-stone-700 border-stone-200 hover:border-stone-300'
-              }`}
-            >
-              Pending: <span className="font-mono">{stats.pending}</span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('SOLVED')}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors border ${
-                statusFilter === 'SOLVED'
-                  ? 'bg-stone-800 text-white border-stone-800'
-                  : 'bg-white text-stone-700 border-stone-200 hover:border-stone-300'
-              }`}
-            >
-              Solved: <span className="font-mono">{stats.solved}</span>
-            </button>
-          </div>
+      {/* Pane 2: Center Window (Live Chat Feed) */}
+      <ChatFeed
+        customerName={activeSession.customerName}
+        customerPhone={activeSession.customerPhone}
+        customerInitials={activeSession.customerInitials}
+        sessionStatus={activeSession.status}
+        messages={activeSession.messages}
+        onSendMessage={handleSendMessage}
+        onEndSession={() => setEndSessionModalOpen(true)}
+        orderNumber={activeSession.orderNumber}
+      />
 
-          {/* Sync Inboxes Button */}
-          <button
-            onClick={handleSyncMailbox}
-            disabled={syncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            <span>{syncing ? 'Checking Hostinger...' : 'Sync Mailboxes'}</span>
-          </button>
-        </div>
-      </div>
+      {/* Pane 3: Right Sidebar (Customer Context) */}
+      <UserContextBoard
+        profile={activeSession.profile}
+        recentOrders={activeSession.recentOrders}
+      />
 
-      {/* 2. MAIN 2-PANE WORKSPACE */}
-      <div className="flex flex-1 min-h-0 divide-x divide-stone-200">
-        {/* LEFT PANE: SEARCH, FILTERS & TICKET LIST */}
-        <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col shrink-0 bg-stone-50/30">
-          {/* Search Bar & Filters */}
-          <div className="p-3 border-b border-stone-200 space-y-2 bg-white">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search ticket ID, email, name, subject..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-stone-200 bg-stone-50/50 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition-colors"
-              />
-            </div>
-
-            {/* Status Pills */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-              {(['ALL', 'OPEN', 'PENDING', 'SOLVED', 'DISCARDED'] as const).map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-semibold whitespace-nowrap transition-colors border ${
-                    statusFilter === st
-                      ? 'bg-stone-900 text-white border-stone-900'
-                      : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
-                  }`}
-                >
-                  {st === 'ALL' ? 'All' : st.charAt(0) + st.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-
-            {/* Department Filter Toggle */}
-            <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1 border-t border-stone-100">
-              <span className="font-medium">Mailbox:</span>
-              <div className="flex items-center gap-1">
-                {(['ALL', 'SUPPORT', 'TEAM'] as const).map((dept) => (
-                  <button
-                    key={dept}
-                    onClick={() => setDeptFilter(dept)}
-                    className={`px-2 py-0.5 rounded font-mono transition-colors ${
-                      deptFilter === dept
-                        ? 'font-bold text-stone-900 underline'
-                        : 'text-stone-500 hover:text-stone-800'
-                    }`}
-                  >
-                    {dept === 'ALL' ? 'All' : dept === 'SUPPORT' ? 'support@' : 'team@'}
-                  </button>
-                ))}
+      {/* macOS Liquid Glass Destructive Confirmation Modal */}
+      {endSessionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-2xl border border-stone-200/80 dark:border-white/10 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
+                <PowerOff className="h-5 w-5" />
               </div>
-            </div>
-          </div>
-
-          {/* Ticket Cards Stream */}
-          <div className="flex-1 overflow-y-auto divide-y divide-stone-100 [scrollbar-width:thin]">
-            {loadingList ? (
-              <div className="p-8 text-center text-xs text-stone-500">
-                <RefreshCw className="h-4 w-4 animate-spin mx-auto mb-2 text-stone-400" />
-                Loading support tickets...
-              </div>
-            ) : tickets.length === 0 ? (
-              <div className="p-10 text-center">
-                <Inbox className="h-8 w-8 mx-auto mb-2 text-stone-300" />
-                <p className="text-xs font-semibold text-stone-700">No tickets found</p>
-                <p className="text-[11px] text-stone-500 mt-1">
-                  Try clearing search filters or click "Sync Mailboxes" to fetch new emails.
+              <div>
+                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                  End Support Session?
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Customer: <span className="font-semibold text-stone-800 dark:text-stone-200">{activeSession.customerName}</span> ({activeSession.customerPhone})
                 </p>
               </div>
-            ) : (
-              tickets.map((t) => {
-                const isSelected = selectedTicketId === t.ticketId;
-                const latestMsg = t.messages?.[0];
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => setSelectedTicketId(t.ticketId)}
-                    className={`p-3.5 transition-colors cursor-pointer text-left ${
-                      isSelected
-                        ? 'bg-emerald-50/50 border-l-3 border-emerald-800'
-                        : 'bg-white hover:bg-stone-50/70'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {getDeptBadge(t.department)}
-                        <span className="font-mono text-xs font-bold text-stone-900 truncate">
-                          {t.ticketId}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {getStatusBadge(t.status)}
-                        <span className="text-[10px] text-stone-400 font-mono">
-                          {formatRelative(t.updatedAt)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <h4 className="font-semibold text-xs text-stone-900 line-clamp-1 mb-1">
-                      {t.subject}
-                    </h4>
-
-                    <p className="text-[11px] text-stone-600 line-clamp-2 leading-relaxed">
-                      {latestMsg?.body || 'No messages'}
-                    </p>
-
-                    <div className="mt-2 flex items-center justify-between text-[10.5px] text-stone-500 pt-1.5 border-t border-stone-100">
-                      <span className="truncate max-w-[190px]">
-                        {t.customerName || t.customerEmail}
-                      </span>
-                      {t.orderNumber && (
-                        <span className="font-mono text-stone-600 bg-stone-100 px-1 rounded text-[10px]">
-                          #{t.orderNumber}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT PANE: ACTIVE TICKET THREAD & RESOLUTION CONTROLS */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white">
-          {loadingTicket ? (
-            <div className="flex-1 flex items-center justify-center text-xs text-stone-500">
-              <RefreshCw className="h-5 w-5 animate-spin mr-2 text-stone-400" />
-              Loading ticket conversation...
-            </div>
-          ) : !activeTicket ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-stone-400">
-              <MessageSquare className="h-10 w-10 mb-2 stroke-[1.5]" />
-              <p className="text-sm font-semibold text-stone-700">Select a Ticket to View Thread</p>
-              <p className="text-xs text-stone-500 mt-1 max-w-sm">
-                Incoming customer emails received via IMAP are organized chronologically with direct reply capabilities.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Active Ticket Header */}
-              <div className="px-5 py-3 border-b border-stone-200 bg-stone-50/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-bold text-stone-900">
-                      {activeTicket.ticketId}
-                    </span>
-                    <button
-                      onClick={() => copyToClipboard(activeTicket.ticketId, 'tkt')}
-                      className="p-1 rounded text-stone-400 hover:text-stone-700 hover:bg-stone-200/50 transition-colors"
-                      title="Copy Ticket ID"
-                    >
-                      {copiedId === 'tkt' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
-                    {getStatusBadge(activeTicket.status)}
-                    {getDeptBadge(activeTicket.department)}
-                  </div>
-                  <h3 className="font-serif text-sm font-bold text-stone-900 truncate mt-0.5">
-                    {activeTicket.subject}
-                  </h3>
-                </div>
-
-                {/* Resolution Controls */}
-                <div className="flex items-center gap-2">
-                  {activeTicket.orderNumber && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-stone-100 text-stone-700 font-mono text-xs border border-stone-200">
-                      <Package className="h-3 w-3 text-stone-500" />
-                      #{activeTicket.orderNumber}
-                      <button
-                        onClick={() => copyToClipboard(activeTicket.orderNumber!, 'ord')}
-                        className="ml-1 text-stone-400 hover:text-stone-700"
-                        title="Copy Order Number"
-                      >
-                        {copiedId === 'ord' ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                      </button>
-                    </span>
-                  )}
-
-                  {activeTicket.status !== 'SOLVED' && (
-                    <button
-                      onClick={() => promptStatusChange('SOLVED')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>Mark as Solved</span>
-                    </button>
-                  )}
-
-                  {activeTicket.status !== 'DISCARDED' && (
-                    <button
-                      onClick={() => promptStatusChange('DISCARDED')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-                    >
-                      <XCircle className="h-3.5 w-3.5" />
-                      <span>Discard</span>
-                    </button>
-                  )}
-
-                  {(activeTicket.status === 'SOLVED' || activeTicket.status === 'DISCARDED') && (
-                    <button
-                      onClick={() => promptStatusChange('OPEN')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-stone-300 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      <span>Re-open Ticket</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Customer Snapshot Banner */}
-              <div className="px-5 py-2.5 bg-stone-100/60 border-b border-stone-200 flex flex-wrap items-center justify-between text-xs text-stone-600 gap-2 shrink-0">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-stone-400" />
-                    <strong className="text-stone-900">{activeTicket.customerName || 'Customer'}</strong>
-                    <span className="text-stone-500 font-mono">({activeTicket.customerEmail})</span>
-                  </span>
-                  {activeTicket.customer?.customerId && (
-                    <span className="font-mono text-stone-700 bg-white px-1.5 py-0.5 rounded border border-stone-200 text-[11px]">
-                      {activeTicket.customer.customerId}
-                    </span>
-                  )}
-                </div>
-
-                {activeTicket.closureReason && (
-                  <div className="text-[11px] text-stone-600 bg-white px-2 py-0.5 rounded border border-stone-200">
-                    <span className="font-semibold text-stone-700">Resolution Note: </span>
-                    {activeTicket.closureReason}
-                  </div>
-                )}
-              </div>
-
-              {/* Message Thread Stream */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 [scrollbar-width:thin] bg-stone-50/20">
-                {activeTicket.messages?.map((m) => {
-                  const isStaff = m.sender === 'ADMIN';
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex flex-col ${isStaff ? 'items-end' : 'items-start'}`}
-                    >
-                      <div
-                        className={`max-w-[85%] rounded-lg border p-4 shadow-2xs ${
-                          isStaff
-                            ? 'bg-emerald-50/60 border-emerald-200 text-stone-900'
-                            : 'bg-white border-stone-200 text-stone-900'
-                        }`}
-                      >
-                        {/* Header */}
-                        <div className="flex items-center justify-between gap-4 mb-2 pb-1.5 border-b border-stone-200/60">
-                          <div className="flex items-center gap-1.5">
-                            {isStaff ? (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-800 text-white text-[10px] font-bold uppercase tracking-wider">
-                                <ShieldCheck className="h-3 w-3" /> Staff Support
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 text-[10px] font-bold uppercase tracking-wider">
-                                <User className="h-3 w-3" /> {activeTicket.customerName || 'Customer'}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-stone-400 font-mono">
-                            {formatDate(m.timestamp)}
-                          </span>
-                        </div>
-
-                        {/* Body */}
-                        <div className="text-xs leading-relaxed whitespace-pre-wrap break-words">
-                          {m.body}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Admin Reply Composer */}
-              <div className="p-4 border-t border-stone-200 bg-white shrink-0">
-                <div className="flex items-center justify-between text-[11px] text-stone-500 mb-1.5">
-                  <span className="flex items-center gap-1">
-                    <CornerDownRight className="h-3.5 w-3.5 text-stone-400" />
-                    Sending email response from{' '}
-                    <strong className="text-stone-800 font-mono">
-                      {activeTicket.department === 'TEAM' ? 'team@technoworldbooks.in' : 'support@technoworldbooks.in'}
-                    </strong>
-                  </span>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-stone-600">
-                    <input
-                      type="checkbox"
-                      checked={markPendingOnReply}
-                      onChange={(e) => setMarkPendingOnReply(e.target.checked)}
-                      className="rounded border-stone-300 text-emerald-800 focus:ring-emerald-700"
-                    />
-                    <span>Set status to Pending on dispatch</span>
-                  </label>
-                </div>
-
-                <div className="space-y-2">
-                  <textarea
-                    rows={4}
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Type your official reply to the customer here. Your response will be emailed immediately via Nodemailer over TLS and added to this thread..."
-                    className="w-full p-3 text-xs rounded-md border border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-500 leading-relaxed [scrollbar-width:thin]"
-                  />
-
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={handleSendReply}
-                      disabled={sendingReply || !replyText.trim()}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
-                    >
-                      <Send className={`h-3.5 w-3.5 ${sendingReply ? 'animate-pulse' : ''}`} />
-                      <span>{sendingReply ? 'Sending to Customer...' : 'Send Reply & Email Customer'}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 3. STATUS CLOSURE MODAL */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-stone-200 shadow-xl max-w-md w-full p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
-              <h3 className="font-serif text-sm font-bold text-stone-900">
-                {targetStatus === 'SOLVED'
-                  ? 'Resolve & Close Ticket'
-                  : targetStatus === 'DISCARDED'
-                  ? 'Discard Ticket'
-                  : 'Re-open Ticket'}
-              </h3>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="text-stone-400 hover:text-stone-700 p-1"
-              >
-                &times;
-              </button>
             </div>
 
-            <p className="text-xs text-stone-600 leading-relaxed">
-              {targetStatus === 'SOLVED'
-                ? 'Mark this ticket as solved. You can optionally attach an internal resolution summary note.'
-                : targetStatus === 'DISCARDED'
-                ? 'Discard this ticket (e.g. spam, promotional, or out-of-scope). Please state the reason for compliance.'
-                : 'Re-open this ticket to move it back into active agent queue.'}
+            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed bg-stone-50 dark:bg-stone-800/60 p-3 rounded-xl border border-stone-200/60 dark:border-white/5">
+              Ending this session will mark the status as <b>CLOSED</b> in the database, disconnect the live Socket.io room, and dispatch an automated completion message to the customer&apos;s WhatsApp.
             </p>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-stone-600 uppercase tracking-wider mb-1">
-                Closure Reason / Note (Optional)
-              </label>
-              <textarea
-                rows={3}
-                value={closureNote}
-                onChange={(e) => setClosureNote(e.target.value)}
-                placeholder="e.g. Consignment tracking provided; replacement delivered; resolved over phone."
-                className="w-full p-2.5 text-xs rounded-md border border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
+            <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
-                onClick={() => setModalOpen(false)}
-                className="px-3 py-1.5 rounded-md border border-stone-200 bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-colors"
+                type="button"
+                onClick={() => setEndSessionModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={handleConfirmStatusChange}
-                disabled={updatingStatus}
-                className="px-4 py-1.5 rounded-md bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                type="button"
+                onClick={handleConfirmEndSession}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition-all shadow-sm cursor-pointer"
               >
-                {updatingStatus ? 'Updating...' : 'Confirm Update'}
+                Confirm End Session
               </button>
             </div>
           </div>
